@@ -1,0 +1,206 @@
+/**
+ * Idempotent seed: safe to run repeatedly (`pnpm db:seed`).
+ * Taxonomy is upserted by slug; demo products are upserted and their
+ * relations rebuilt on every run.
+ */
+import "dotenv/config";
+
+import { PrismaPg } from "@prisma/adapter-pg";
+
+import { PrismaClient, type Prisma } from "../../src/generated/prisma/client";
+import { settingDefaults, type SettingKey } from "../../src/validation/settings";
+
+import { demoProducts, demoSafety, demoUsage } from "./data/products";
+import { aromaProfiles, categories, demoBrands, needs, roles, tags } from "./data/taxonomy";
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL is not set");
+
+const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+
+async function seedRoles() {
+  for (const role of roles) {
+    await db.role.upsert({ where: { key: role.key }, create: role, update: role });
+  }
+}
+
+async function seedCategories() {
+  const ids = new Map<string, string>();
+  for (const [index, category] of categories.entries()) {
+    const data = {
+      name: category.name,
+      description: category.description,
+      position: index,
+      parentId: null,
+    };
+    const parent = await db.category.upsert({
+      where: { slug: category.slug },
+      create: { slug: category.slug, ...data },
+      update: data,
+    });
+    ids.set(parent.slug, parent.id);
+    for (const [childIndex, child] of category.children.entries()) {
+      const childData = {
+        name: child.name,
+        description: child.description,
+        position: childIndex,
+        parentId: parent.id,
+      };
+      const created = await db.category.upsert({
+        where: { slug: child.slug },
+        create: { slug: child.slug, ...childData },
+        update: childData,
+      });
+      ids.set(created.slug, created.id);
+    }
+  }
+  return ids;
+}
+
+async function upsertBySlug<T extends { slug: string }>(
+  items: readonly T[],
+  upsert: (item: T, position: number) => Promise<{ id: string; slug: string }>,
+) {
+  const ids = new Map<string, string>();
+  for (const [index, item] of items.entries()) {
+    const row = await upsert(item, index);
+    ids.set(row.slug, row.id);
+  }
+  return ids;
+}
+
+function requireId(map: Map<string, string>, slug: string, kind: string): string {
+  const id = map.get(slug);
+  if (!id) throw new Error(`Seed references unknown ${kind} "${slug}"`);
+  return id;
+}
+
+async function seedSettings() {
+  for (const [key, value] of Object.entries(settingDefaults) as Array<[SettingKey, unknown]>) {
+    // Only create: never overwrite settings an admin may have edited.
+    await db.siteSetting.upsert({
+      where: { key },
+      create: { key, value: value as Prisma.InputJsonValue },
+      update: {},
+    });
+  }
+}
+
+async function main() {
+  await seedRoles();
+  const categoryIds = await seedCategories();
+
+  const needIds = await upsertBySlug(needs, (n, position) =>
+    db.need.upsert({
+      where: { slug: n.slug },
+      create: { ...n, position },
+      update: { ...n, position },
+    }),
+  );
+  const aromaIds = await upsertBySlug(aromaProfiles, (a, position) =>
+    db.aromaProfile.upsert({
+      where: { slug: a.slug },
+      create: { ...a, position },
+      update: { ...a, position },
+    }),
+  );
+  const tagIds = await upsertBySlug(tags, (t) =>
+    db.tag.upsert({ where: { slug: t.slug }, create: t, update: t }),
+  );
+  const brandIds = await upsertBySlug(demoBrands, (b) =>
+    db.brand.upsert({
+      where: { slug: b.slug },
+      create: { ...b, isDemo: true },
+      update: { ...b, isDemo: true },
+    }),
+  );
+
+  // Pass 1: products themselves.
+  const productIds = new Map<string, string>();
+  const now = Date.now();
+  for (const p of demoProducts) {
+    const data = {
+      name: p.name,
+      sku: p.sku,
+      brandId: requireId(brandIds, p.brand, "brand"),
+      categoryId: requireId(categoryIds, p.category, "category"),
+      productType: p.productType,
+      shortDescription: p.shortDescription,
+      description: p.description,
+      usageInfo: demoUsage,
+      safetyInfo: demoSafety,
+      price: p.price,
+      compareAtPrice: p.compareAtPrice ?? null,
+      stock: p.stock,
+      featured: p.featured ?? false,
+      active: true,
+      isDemo: true,
+      createdAt: new Date(now - p.daysAgo * 24 * 60 * 60 * 1000),
+    };
+    const row = await db.product.upsert({
+      where: { slug: p.slug },
+      create: { slug: p.slug, ...data },
+      update: data,
+    });
+    productIds.set(p.slug, row.id);
+  }
+
+  // Pass 2: relations (rebuilt from scratch for demo products).
+  for (const p of demoProducts) {
+    const productId = requireId(productIds, p.slug, "product");
+    await db.$transaction([
+      db.productTag.deleteMany({ where: { productId } }),
+      db.productNeed.deleteMany({ where: { productId } }),
+      db.productAromaProfile.deleteMany({ where: { productId } }),
+      db.productRelation.deleteMany({ where: { productId } }),
+      db.kitItem.deleteMany({ where: { kitId: productId } }),
+      db.productTag.createMany({
+        data: (p.tags ?? []).map((slug) => ({ productId, tagId: requireId(tagIds, slug, "tag") })),
+      }),
+      db.productNeed.createMany({
+        data: (p.needs ?? []).map(([slug, relevance]) => ({
+          productId,
+          needId: requireId(needIds, slug, "need"),
+          relevance,
+        })),
+      }),
+      db.productAromaProfile.createMany({
+        data: (p.aromas ?? []).map(([slug, intensity]) => ({
+          productId,
+          aromaProfileId: requireId(aromaIds, slug, "aroma profile"),
+          intensity,
+        })),
+      }),
+      db.productRelation.createMany({
+        data: (p.related ?? []).map((slug, position) => ({
+          productId,
+          relatedId: requireId(productIds, slug, "product"),
+          type: "RELATED" as const,
+          position,
+        })),
+      }),
+      db.kitItem.createMany({
+        data: (p.kitItems ?? []).map(([slug, quantity], position) => ({
+          kitId: productId,
+          componentId: requireId(productIds, slug, "product"),
+          quantity,
+          position,
+        })),
+      }),
+    ]);
+  }
+
+  await seedSettings();
+
+  console.log(
+    `Seeded: ${categoryIds.size} categories, ${needIds.size} needs, ${aromaIds.size} aroma profiles, ` +
+      `${tagIds.size} tags, ${brandIds.size} demo brands, ${productIds.size} demo products.`,
+  );
+}
+
+main()
+  .catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  })
+  .finally(() => db.$disconnect());
