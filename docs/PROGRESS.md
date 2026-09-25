@@ -157,3 +157,28 @@
 - Replace the in-memory rate limiter with a shared store (Redis/Upstash) if running more than one
   instance. Email change flow (with re-verification). Account deletion / data export requests
   (currently by email, per the privacy policy).
+
+## Phase 6 — Recommendation engine, quiz and need discovery
+
+- One pure, deterministic engine (`services/recommendation/engine.ts`): weighted signals (needs,
+  aromas, tags, product types) from quiz answers, selected needs or — only with PERSONALIZATION
+  consent — the customer's favourites/saved routines/purchases. Tie-breaks: featured → rating →
+  review count → stock → name. Excludes inactive, out-of-stock, excluded and already-purchased
+  products and anything without a positive match. Budget is a configurable penalty. Every result
+  carries an explanation ("Recomandat pentru că ai ales: Relaxare + Seară + Floral.").
+  `rankProfiles` is the hook for routines and articles (Phase 7).
+- All question texts, answers and weights (incl. product-type and budget effects) are in the DB;
+  engine multipliers are the `recommendation` SiteSetting. Seeded 8-question quiz.
+- `/quiz`: intro, one question per screen, progress, animated direction-aware transitions (plain
+  fade with reduced motion), back/skip, native radio/checkbox semantics, keys 1–9 + Enter,
+  tap-to-advance for single choice, focus moved to each question, mobile-first layout.
+- `/quiz/rezultat/[id]` "Descoperă ce ți se potrivește": primary recommendation with "De ce",
+  secondary picks with reasons, add to cart/favorites. Results are saved for signed-in users;
+  guests get an httpOnly `ar_quiz` id, can only see their own result and are invited to create an
+  account — results are claimed on sign-in.
+- `/descopera` "Ce cauți?" need picker and `/descopera/[nevoie]` using the same engine, with routine
+  and article slots ready for Phase 7. `/cont/quiz` (history) and `/cont/recomandari` (latest quiz +
+  "Pe baza favoritelor tale" with consent).
+- Tests: engine (scoring, weights, ranking, tie-breaks, exclusions, budget, context, explanations,
+  criteria builders), submission rules; integration (saving results with reasons, budget penalty,
+  invalid answers, owner-only guest results + claim, consent-gated personal context).

@@ -26,7 +26,7 @@ export async function getAccountOverview(userId: string) {
       select: {
         id: true,
         createdAt: true,
-        products: { orderBy: { rank: "asc" }, take: 1, select: { productId: true } },
+        products: { orderBy: { rank: "asc" }, take: 1, select: { productId: true, reason: true } },
       },
     }),
     db.savedRoutine.findFirst({

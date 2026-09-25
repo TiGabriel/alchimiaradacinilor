@@ -37,3 +37,10 @@ export const getAromasWithCounts = cache(async (): Promise<TaxonomyEntry[]> => {
   });
   return aromas.map(({ _count, ...a }) => ({ ...a, productCount: _count.products }));
 });
+
+export async function getNeedBySlug(slug: string) {
+  return db.need.findUnique({
+    where: { slug },
+    select: { slug: true, name: true, description: true },
+  });
+}

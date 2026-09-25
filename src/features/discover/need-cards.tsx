@@ -35,7 +35,7 @@ export function NeedCards({ needs }: { needs: TaxonomyEntry[] }) {
         return (
           <StaggerItem key={need.slug}>
             <Link
-              href={`/produse?nevoie=${need.slug}`}
+              href={`/descopera/${need.slug}`}
               className="group flex h-full flex-col gap-3 rounded-xl border border-line bg-surface p-6 shadow-xs transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lifted motion-reduce:hover:translate-y-0"
             >
               <span className="grid size-11 place-items-center rounded-full bg-forest-soft text-forest">

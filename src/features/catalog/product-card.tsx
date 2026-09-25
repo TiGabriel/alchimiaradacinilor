@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -22,6 +22,8 @@ type ProductCardProps = {
   priority?: boolean;
   sizes?: string;
   className?: string;
+  /** Why it was recommended ("Recomandat pentru că ai ales: …"). */
+  reason?: string | null;
 };
 
 /**
@@ -33,6 +35,7 @@ export function ProductCard({
   priority,
   sizes = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 46vw",
   className,
+  reason,
 }: ProductCardProps) {
   const { addItem } = useCart();
   const [quickView, setQuickView] = useState(false);
@@ -127,9 +130,16 @@ export function ProductCard({
             {product.name}
           </Link>
         </h3>
-        <p className="line-clamp-2 text-sm text-ink-muted max-md:hidden">
-          {product.shortDescription}
-        </p>
+        {reason ? (
+          <p className="flex items-start gap-1.5 rounded-md bg-forest-soft/60 px-2 py-1.5 text-xs leading-snug text-forest-deep">
+            <Sparkles aria-hidden className="mt-0.5 size-3 shrink-0" />
+            <span>{reason}</span>
+          </p>
+        ) : (
+          <p className="line-clamp-2 text-sm text-ink-muted max-md:hidden">
+            {product.shortDescription}
+          </p>
+        )}
         {product.rating != null ? (
           <RatingStars
             value={product.rating}

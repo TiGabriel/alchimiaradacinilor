@@ -651,6 +651,8 @@ model Quiz {
 model QuizQuestion {
   id        String           @id @default(uuid(7))
   quizId    String
+  /// Stable identifier within the quiz (seed/admin upserts).
+  key       String
   position  Int              @default(0)
   text      String
   helpText  String?
@@ -662,6 +664,7 @@ model QuizQuestion {
   quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
   answers QuizAnswer[]
 
+  @@unique([quizId, key])
   @@index([quizId, position])
   @@map("quiz_questions")
 }
@@ -669,9 +672,13 @@ model QuizQuestion {
 model QuizAnswer {
   id         String   @id @default(uuid(7))
   questionId String
+  /// Stable identifier within the question (seed/admin upserts).
+  key        String
   position   Int      @default(0)
   text       String
   icon       String?
+  /// Budget ceiling this answer expresses (bani); products above it are penalised.
+  maxPrice   Int?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -679,8 +686,10 @@ model QuizAnswer {
   tags          QuizAnswerTag[]
   needs         QuizAnswerNeed[]
   aromaProfiles QuizAnswerAromaProfile[]
+  productTypes  QuizAnswerProductType[]
   resultAnswers QuizResultAnswer[]
 
+  @@unique([questionId, key])
   @@index([questionId, position])
   @@map("quiz_answers")
 }
@@ -725,6 +734,18 @@ model QuizAnswerAromaProfile {
   @@map("quiz_answer_aroma_profiles")
 }
 
+/// Weight towards (or, when negative, away from) a product type, e.g. "Am deja un difuzor".
+model QuizAnswerProductType {
+  answerId    String
+  productType ProductType
+  weight      Int         @default(1)
+
+  answer QuizAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@id([answerId, productType])
+  @@map("quiz_answer_product_types")
+}
+
 model QuizResult {
   id                   String   @id @default(uuid(7))
   quizId               String
@@ -760,8 +781,11 @@ model QuizResultAnswer {
 model QuizResultProduct {
   resultId  String
   productId String
+  /// Engine score × 100 at the time of the quiz.
   score     Int
   rank      Int
+  /// Human-readable explanation shown to the customer ("Recomandat pentru că…").
+  reason    String?
 
   result  QuizResult @relation(fields: [resultId], references: [id], onDelete: Cascade)
   product Product    @relation(fields: [productId], references: [id], onDelete: Cascade)

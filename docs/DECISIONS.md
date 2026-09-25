@@ -257,3 +257,33 @@ for `/admin` so the area is not advertised.
 
 `pnpm test:integration` migrates `DATABASE_URL_TEST`, truncates tables between tests and exercises
 services against PostgreSQL (constraints, transactions and unique indexes are part of the logic).
+
+## Phase 6 — Recommendations and quiz
+
+### D-040 · A single rule-based engine
+
+Quiz, need pages, account recommendations and (later) homepage/routines/articles all call
+`recommendProducts` / `rankProfiles`. Scores are sums of weight × engine multiplier × product
+relevance (aroma intensity normalised to 3). No randomness; explanations are generated from the
+largest positive contributions, so the customer always sees why.
+
+### D-041 · Weights in data, multipliers in settings
+
+Answer → need/aroma/tag/product-type weights (negative allowed) and budget ceilings live in quiz
+tables; the engine's global multipliers and budget penalty are the `recommendation` SiteSetting.
+Changing either changes results without code changes (admin UI in Phase 12).
+
+### D-042 · Budget as a penalty, not a filter
+
+A product above the chosen budget loses `budgetPenalty` points (default 12), so exact matches
+within budget win while a strong match slightly above budget can still appear if nothing else fits.
+
+### D-043 · Guest quiz results
+
+Guests' results are stored with a random httpOnly `ar_quiz` id; only that browser (or the account
+after sign-in) can open them. Results store a snapshot of rank, score and reason.
+
+### D-044 · Personal context only with consent
+
+Wishlist, saved-routine and purchase signals are loaded only when the latest PERSONALIZATION
+consent is granted. Purchased products are excluded ("already owned").

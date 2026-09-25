@@ -41,6 +41,21 @@ export const settingSchemas = {
     /** Minor units (bani); orders at or above this subtotal ship free. null disables free shipping. */
     freeShippingThreshold: z.number().int().nonnegative().nullable(),
   }),
+  /** Multipliers of the recommendation engine (answer/need weights themselves live in quiz tables). */
+  recommendation: z.object({
+    need: z.number().min(0).max(10),
+    aroma: z.number().min(0).max(10),
+    tag: z.number().min(0).max(10),
+    productType: z.number().min(0).max(10),
+    /** Points subtracted from products above the chosen budget. */
+    budgetPenalty: z.number().min(0).max(50),
+    /** Weight of one selected need on /descopera/[nevoie]. */
+    needSelection: z.number().min(0).max(10),
+    /** Personal context (only with PERSONALIZATION consent). */
+    wishlistAffinity: z.number().min(0).max(10),
+    routineAffinity: z.number().min(0).max(10),
+    viewedAffinity: z.number().min(0).max(10),
+  }),
   legal: z.object({
     /** Bump whenever the privacy policy text changes; stored with every consent record. */
     privacyPolicyVersion: z.string().min(1),
@@ -76,6 +91,17 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
   shipping: {
     flatFee: 1999,
     freeShippingThreshold: 25000,
+  },
+  recommendation: {
+    need: 2,
+    aroma: 1.5,
+    tag: 1,
+    productType: 1.5,
+    budgetPenalty: 12,
+    needSelection: 3,
+    wishlistAffinity: 1,
+    routineAffinity: 1,
+    viewedAffinity: 0.5,
   },
   legal: {
     privacyPolicyVersion: "2026-09-draft",

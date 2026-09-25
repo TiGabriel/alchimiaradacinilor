@@ -11,6 +11,7 @@ import { PrismaClient, type Prisma } from "../../src/generated/prisma/client";
 import { settingDefaults, type SettingKey } from "../../src/validation/settings";
 
 import { demoProducts, demoSafety, demoUsage } from "./data/products";
+import { quiz, quizQuestions } from "./data/quiz";
 import { aromaProfiles, categories, demoBrands, needs, roles, tags } from "./data/taxonomy";
 
 const connectionString = process.env.DATABASE_URL;
@@ -83,6 +84,75 @@ async function seedSettings() {
       create: { key, value: value as Prisma.InputJsonValue },
       update: {},
     });
+  }
+}
+
+/** Upserts the quiz by stable keys; answer weights are rebuilt from the seed on every run. */
+async function seedQuiz(ids: {
+  needs: Map<string, string>;
+  aromas: Map<string, string>;
+  tags: Map<string, string>;
+}) {
+  const q = await db.quiz.upsert({ where: { slug: quiz.slug }, create: quiz, update: quiz });
+  for (const [position, question] of quizQuestions.entries()) {
+    const data = {
+      text: question.text,
+      helpText: question.helpText ?? null,
+      type: question.type,
+      required: question.required,
+      position,
+    };
+    const row = await db.quizQuestion.upsert({
+      where: { quizId_key: { quizId: q.id, key: question.key } },
+      create: { quizId: q.id, key: question.key, ...data },
+      update: data,
+    });
+    for (const [answerPosition, answer] of question.answers.entries()) {
+      const answerData = {
+        text: answer.text,
+        position: answerPosition,
+        maxPrice: answer.maxPrice ?? null,
+      };
+      const a = await db.quizAnswer.upsert({
+        where: { questionId_key: { questionId: row.id, key: answer.key } },
+        create: { questionId: row.id, key: answer.key, ...answerData },
+        update: answerData,
+      });
+      await db.$transaction([
+        db.quizAnswerNeed.deleteMany({ where: { answerId: a.id } }),
+        db.quizAnswerAromaProfile.deleteMany({ where: { answerId: a.id } }),
+        db.quizAnswerTag.deleteMany({ where: { answerId: a.id } }),
+        db.quizAnswerProductType.deleteMany({ where: { answerId: a.id } }),
+        db.quizAnswerNeed.createMany({
+          data: (answer.needs ?? []).map(([slug, weight]) => ({
+            answerId: a.id,
+            needId: requireId(ids.needs, slug, "need"),
+            weight,
+          })),
+        }),
+        db.quizAnswerAromaProfile.createMany({
+          data: (answer.aromas ?? []).map(([slug, weight]) => ({
+            answerId: a.id,
+            aromaProfileId: requireId(ids.aromas, slug, "aroma profile"),
+            weight,
+          })),
+        }),
+        db.quizAnswerTag.createMany({
+          data: (answer.tags ?? []).map(([slug, weight]) => ({
+            answerId: a.id,
+            tagId: requireId(ids.tags, slug, "tag"),
+            weight,
+          })),
+        }),
+        db.quizAnswerProductType.createMany({
+          data: (answer.productTypes ?? []).map(([productType, weight]) => ({
+            answerId: a.id,
+            productType,
+            weight,
+          })),
+        }),
+      ]);
+    }
   }
 }
 
@@ -190,6 +260,7 @@ async function main() {
     ]);
   }
 
+  await seedQuiz({ needs: needIds, aromas: aromaIds, tags: tagIds });
   await seedSettings();
 
   console.log(

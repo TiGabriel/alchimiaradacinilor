@@ -7,6 +7,7 @@ import { BotanicalFloat, Reveal } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { CategoryTiles } from "@/features/discover/category-cards";
 import { NeedCards } from "@/features/discover/need-cards";
+import { NeedPicker } from "@/features/discover/need-picker";
 import { getCategoryTree } from "@/services/catalog/categories";
 import { getAromasWithCounts, getNeedsWithCounts } from "@/services/catalog/taxonomy";
 
@@ -36,6 +37,8 @@ export default async function DiscoverPage() {
           <p className="text-lg text-ink-muted">
             Pornește de la un moment, de la o aromă preferată sau lasă-ne pe noi să te ghidăm.
           </p>
+          <p className="pt-4 font-display text-2xl">Ce cauți?</p>
+          <NeedPicker needs={needs} />
         </Reveal>
       </section>
 
