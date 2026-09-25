@@ -139,9 +139,10 @@ export async function getArticleCards(ids: string[]): Promise<ArticleCardData[]>
   return ids.flatMap((id) => byId.get(id) ?? []);
 }
 
-export const getArticleBySlug = cache(async (slug: string) => {
+/** Published article by slug; `includeUnpublished` is for editors' previews only. */
+export const getArticleBySlug = cache(async (slug: string, includeUnpublished = false) => {
   const article = await db.article.findFirst({
-    where: { slug, ...published },
+    where: { slug, ...(includeUnpublished ? {} : published) },
     include: {
       author: { select: { firstName: true, lastName: true } },
       category: { select: { id: true, slug: true, name: true } },

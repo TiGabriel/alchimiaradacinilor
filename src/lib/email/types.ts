@@ -4,6 +4,8 @@ export type EmailMessage = {
   html: string;
   text: string;
   replyTo?: string;
+  /** Display name for the sender; the address always comes from EMAIL_FROM. */
+  fromName?: string;
   /** Extra headers, e.g. List-Unsubscribe for newsletters. */
   headers?: Record<string, string>;
 };

@@ -2,24 +2,30 @@ import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/layout/providers";
 import { cn } from "@/lib/utils";
-import { SITE_NAME, siteUrl } from "@/lib/seo";
+import { siteUrl } from "@/lib/seo";
+import { getSettings } from "@/services/settings";
 
 import { fontDisplay, fontSans } from "./fonts";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: {
-    default: `${SITE_NAME} — Uleiuri esențiale și ritualuri botanice`,
-    template: `%s · ${SITE_NAME}`,
-  },
-  description:
-    "Uleiuri esențiale, amestecuri, kit-uri și difuzoare, alese cu grijă pentru ritualurile tale de zi cu zi.",
-  applicationName: SITE_NAME,
-  openGraph: { type: "website", locale: "ro_RO", siteName: SITE_NAME },
-  formatDetection: { telephone: false },
-};
+/** Site-wide defaults come from the `seo` and `brand` settings (editable in the admin). */
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo, brand } = await getSettings();
+  return {
+    metadataBase: new URL(siteUrl()),
+    title: { default: seo.defaultTitle, template: seo.titleTemplate },
+    description: seo.defaultDescription,
+    applicationName: brand.siteName,
+    openGraph: {
+      type: "website",
+      locale: "ro_RO",
+      siteName: brand.siteName,
+      ...(seo.ogImageUrl ? { images: [{ url: seo.ogImageUrl }] } : {}),
+    },
+    formatDetection: { telephone: false },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f8f4ec",

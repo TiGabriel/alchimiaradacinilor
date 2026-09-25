@@ -43,6 +43,13 @@ export function resolveEmailProvider(config: ServerEnv): Resolution {
   }
 }
 
+/** "Name <addr>" or "addr" → "New name <addr>" (quotes stripped from the name). */
+export function withDisplayName(from: string, name: string): string {
+  const address = from.match(/<([^>]+)>/)?.[1] ?? from.trim();
+  const safe = name.replace(/["<>\r\n]/g, "").trim();
+  return safe ? `${safe} <${address}>` : from;
+}
+
 export async function sendEmail(message: EmailMessage): Promise<SendResult> {
   const resolution = resolveEmailProvider(env());
   if ("disabled" in resolution) {
@@ -51,7 +58,10 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     );
     return { status: "disabled", reason: resolution.disabled };
   }
-  const result = await resolution.provider.send({ ...message, from: resolution.from });
+  const result = await resolution.provider.send({
+    ...message,
+    from: message.fromName ? withDisplayName(resolution.from, message.fromName) : resolution.from,
+  });
   if (result.status === "failed")
     console.error(`[email] ${resolution.provider.name} failed:`, result.error);
   return result;

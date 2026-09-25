@@ -37,9 +37,9 @@ const answerInclude = {
   productTypes: true,
 } as const;
 
-async function loadQuiz(slug: string) {
+async function loadQuiz(slug: string, includeInactive = false) {
   return db.quiz.findFirst({
-    where: { slug, active: true },
+    where: { slug, ...(includeInactive ? {} : { active: true }) },
     include: {
       questions: {
         orderBy: { position: "asc" },
@@ -95,6 +95,19 @@ export function toAnswerConfig(a: LoadedAnswer): AnswerConfig {
 }
 
 export class QuizError extends Error {}
+
+/**
+ * Admin preview: runs the same engine on a set of answers without saving
+ * anything and without personal context. Partial answer sets are allowed.
+ */
+export async function previewQuiz(answerIds: string[], slug = QUIZ_SLUG) {
+  const quiz = await loadQuiz(slug, true);
+  if (!quiz) throw new QuizError("Quiz-ul nu există.");
+  const chosen = quiz.questions.flatMap((q) => q.answers).filter((a) => answerIds.includes(a.id));
+  const criteria = criteriaFromAnswers(chosen.map(toAnswerConfig));
+  const recommendations = await recommendProducts(criteria, { limit: RESULT_SIZE });
+  return { criteria, recommendations };
+}
 
 /**
  * Validates answers against the DB, runs the shared engine and stores the

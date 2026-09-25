@@ -432,3 +432,33 @@ their snapshots regardless.
 
 The dashboard needs a handful of bar/column charts. Small SVG/CSS components (with data tables for
 screen readers) avoid a large client bundle and render on the server.
+
+## Phase 12 — Admin, part 2
+
+### D-067 · SEO defaults and email sender come from settings
+
+The site title, title template, default description and social image, and the sender name and
+reply-to for customer emails, are site settings rather than constants. The sending address itself
+stays in `EMAIL_FROM` (it must match the provider's verified domain).
+
+### D-068 · The quiz preview runs the production engine
+
+`previewQuiz` loads the quiz (including inactive answers) and calls the same
+`criteriaFromAnswers` + `recommendProducts` path as `submitQuiz`, without personal signals and
+without storing a result, so what the editor sees is what a customer with no history would get.
+
+### D-069 · Answers chosen by customers are never deleted
+
+Saved quiz results reference answers (customers see their past choices). Deleting a used answer or
+question is refused; the editor changes the text or weights instead.
+
+### D-070 · Drafts are previewed on the real page
+
+Article drafts open on `/jurnal/[slug]?previzualizare=1` for users with `content:edit`, with a
+banner and `noindex`. Everyone else gets a 404, as for any unpublished article.
+
+### D-071 · CSV exports guard against formula injection
+
+Cells starting with `=`, `+`, `-`, `@`, tab or CR are prefixed with an apostrophe, and the file
+starts with a UTF-8 BOM so spreadsheet apps show diacritics correctly. The export route checks the
+session and permission itself (route handlers do not inherit the admin layout's check).

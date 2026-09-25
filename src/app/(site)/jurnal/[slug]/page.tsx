@@ -7,6 +7,7 @@ import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { SmartImage } from "@/components/media/smart-image";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
+import { getCurrentUser } from "@/features/auth/session";
 import { ProductCard } from "@/features/catalog/product-card";
 import { ArticleCard, articleDate } from "@/features/journal/article-card";
 import { ArticleContent } from "@/features/journal/article-content";
@@ -21,6 +22,7 @@ import {
   getRelatedArticles,
   listArticles,
 } from "@/services/journal/journal";
+import { can } from "@/services/auth/permissions";
 import { getRoutineCards } from "@/services/routines/routines";
 
 type Props = PageProps<"/jurnal/[slug]">;
@@ -36,8 +38,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       alternates: { canonical: `/jurnal/${category.slug}` },
     };
   }
-  const article = await getArticleBySlug(slug);
+  const preview = (await props.searchParams).previzualizare === "1" && (await canPreview());
+  const article = await getArticleBySlug(slug, preview);
   if (!article) return {};
+  if (preview)
+    return { title: `Previzualizare: ${article.title}`, robots: { index: false, follow: false } };
   const title = article.seo?.seoTitle ?? article.title;
   const description = article.seo?.metaDescription ?? article.excerpt ?? undefined;
   return {
@@ -53,6 +58,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
       images: article.seo?.ogImage?.url ?? article.coverImage?.url,
     },
   };
+}
+
+async function canPreview() {
+  const user = await getCurrentUser();
+  return Boolean(user && can(user.roles, "content:edit"));
 }
 
 export default async function JournalSlugPage(props: Props) {
@@ -80,8 +90,13 @@ export default async function JournalSlugPage(props: Props) {
     );
   }
 
-  const article = await getArticleBySlug(slug);
+  // Editors can open drafts and scheduled articles with ?previzualizare=1 (never indexed).
+  const { previzualizare } = await props.searchParams;
+  const preview = previzualizare === "1" && (await canPreview());
+  const article = await getArticleBySlug(slug, preview);
   if (!article) notFound();
+  const unpublished =
+    article.status !== "PUBLISHED" || !article.publishedAt || article.publishedAt > new Date();
 
   const [products, routines, related] = await Promise.all([
     getProductCards(article.products.map((p) => p.productId)),
@@ -91,6 +106,14 @@ export default async function JournalSlugPage(props: Props) {
 
   return (
     <article className="pb-(--spacing-section)">
+      {unpublished ? (
+        <p
+          role="status"
+          className="bg-ochre-soft px-4 py-3 text-center text-sm font-semibold text-warning"
+        >
+          Previzualizare: acest articol nu este publicat încă și este vizibil doar echipei.
+        </p>
+      ) : null}
       <JsonLd
         data={{
           "@context": "https://schema.org",

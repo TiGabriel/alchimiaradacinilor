@@ -15,7 +15,7 @@
 | 9     | Checkout, orders, coupons                            | Done    |
 | 10    | Reviews, newsletter, cookie consent, analytics       | Done    |
 | 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done    |
-| 12    | Admin part 2 (quiz, content, marketing, settings)    | Pending |
+| 12    | Admin part 2 (quiz, content, marketing, settings)    | Done    |
 | 13    | SEO, performance, security, accessibility audit      | Pending |
 | 14    | Final UX review, tests, documentation                | Pending |
 
@@ -344,3 +344,40 @@
   guard, dashboard helpers (unit); service authorisation per role, product create/update with
   relations, slug clashes, image reorder/thumbnail/removal, delete rules, category cycles, order
   status/payment (integration).
+
+## Phase 12 — Admin, part 2
+
+- Sidebar groups: Conținut (routines, journal, quiz, reviews), Marketing (coupons, newsletter) and
+  Configurare (settings). Content needs `content:edit` (editors); coupons need `orders:manage`,
+  subscribers `users:manage` and settings `settings:manage` (admin only).
+- Quiz manager (`/admin/quiz`): questions (text, help text, single/multiple choice, required,
+  order) and answers with weights for needs, aroma profiles, tags and product types (−10…10, zero
+  refused) plus an optional budget ceiling. Each answer shows how often customers chose it; answers
+  and questions that appear in saved results cannot be deleted (edit them instead). A preview panel
+  runs the real recommendation engine on any combination of answers (signals, budget, ranked
+  products with score and explanation) without storing anything.
+- Routines: CRUD with a step editor (add, reorder, remove, optional product per step), products
+  (optional flag, note), needs, tags, cover image, time of day, difficulty, duration, SEO.
+- Journal: CRUD with a Markdown editor (toolbar for headings, emphasis, lists, quotes, links and
+  product/routine cards), live preview with the same renderer as the site, status and publication
+  date (Bucharest days), category, tags, linked products/routines, cover and SEO. Cards that point at
+  missing products or routines are refused on the content field. Drafts open on the site with
+  `?previzualizare=1` for content editors only (banner, `noindex`).
+- Reviews: moderation queue by status with photo, verified-purchase badge and rejection reason;
+  approving/rejecting recomputes the product rating cache.
+- Newsletter: subscribers with status, search, source, interest and "customers only" filters;
+  CSV export of the current filter (UTF-8 BOM, formula-injection guard). Campaigns (draft, audience
+  preview by segment, send) are available only when an email provider is configured.
+- Coupons: CRUD (percentage with optional cap, fixed amount, free shipping; minimum subtotal,
+  validity in whole Bucharest days, total and per-customer limits, product/category restrictions)
+  with stats — uses, discount given and revenue of non-cancelled orders. Used coupons cannot be
+  deleted (deactivate instead).
+- Settings (`/admin/setari`): brand and logo upload, contact and social links, delivery methods and
+  prices with the free-shipping threshold, payment texts and bank details, email sender name and
+  reply-to, SEO defaults (title, template, description, social image upload), homepage, legal and
+  VAT, recommendation weights. Every section is validated by the same schema used when reading.
+  The root layout's metadata and every customer email now use these settings.
+- Tests: coupon, content and quiz validation, Bucharest date helpers, CSV (unit); quiz weights
+  changing the preview ranking, the delete guard for used answers, coupon code clashes, stats and
+  delete guard, routine slug clashes, article embed checks, settings validation and permissions,
+  subscriber CSV export (integration).

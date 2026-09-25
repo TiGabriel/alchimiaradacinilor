@@ -1,10 +1,10 @@
 import "server-only";
 
-import { emailConfigured, isDelivered, sendEmail } from "@/lib/email";
+import { emailConfigured, isDelivered } from "@/lib/email";
+import { emailBrand, sendShopEmail } from "@/services/email";
 import { campaignEmail, newsletterConfirmEmail } from "@/lib/email/templates/newsletter";
 import { env } from "@/lib/env";
 import { db } from "@/lib/db";
-import { getSetting } from "@/services/settings";
 import { campaignSegmentSchema } from "@/validation/newsletter";
 
 import { generateToken, hashToken } from "../auth/tokens";
@@ -19,10 +19,7 @@ function secret() {
   return env().AUTH_SECRET ?? "dev-only-secret-change-me-in-production";
 }
 
-async function brand() {
-  const { siteName } = await getSetting("brand");
-  return { siteName, siteUrl: env().APP_URL.replace(/\/$/, "") };
-}
+const brand = emailBrand;
 
 export type SubscribeOutcome =
   /** Confirmation email sent (or the address was already active — not revealed to the visitor). */
@@ -68,7 +65,7 @@ export async function requestSubscription(input: {
   });
   const b = await brand();
   const url = `${b.siteUrl}/newsletter/confirmare?token=${encodeURIComponent(token)}`;
-  const result = await sendEmail({
+  const result = await sendShopEmail({
     to: input.email,
     ...newsletterConfirmEmail({ url, hours: CONFIRMATION_HOURS }, b),
   });
@@ -194,7 +191,7 @@ export async function sendCampaign(campaignId: string) {
   let failed = 0;
   for (const recipient of recipients) {
     const links = subscriberUnsubscribeLinks(recipient.id);
-    const result = await sendEmail({
+    const result = await sendShopEmail({
       to: recipient.email,
       ...campaignEmail({ ...campaign, unsubscribeUrl: links.page }, b),
       headers: {

@@ -17,6 +17,22 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
+    title: "Conținut",
+    items: [
+      { href: "/admin/rutine", label: "Rutine", permission: "content:edit", icon: "moon" },
+      { href: "/admin/jurnal", label: "Jurnal", permission: "content:edit", icon: "book" },
+      { href: "/admin/quiz", label: "Quiz", permission: "content:edit", icon: "sparkles" },
+      { href: "/admin/recenzii", label: "Recenzii", permission: "content:edit", icon: "star" },
+    ],
+  },
+  {
+    title: "Marketing",
+    items: [
+      { href: "/admin/cupoane", label: "Cupoane", permission: "orders:manage", icon: "ticket" },
+      { href: "/admin/newsletter", label: "Newsletter", permission: "users:manage", icon: "mail" },
+    ],
+  },
+  {
     title: "Catalog",
     items: [
       { href: "/admin/produse", label: "Produse", permission: "catalog:edit", icon: "package" },
@@ -31,6 +47,12 @@ export const ADMIN_NAV: AdminNavGroup[] = [
         permission: "catalog:edit",
         icon: "flower",
       },
+    ],
+  },
+  {
+    title: "Configurare",
+    items: [
+      { href: "/admin/setari", label: "Setări", permission: "settings:manage", icon: "settings" },
     ],
   },
 ];

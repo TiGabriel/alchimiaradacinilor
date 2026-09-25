@@ -107,6 +107,24 @@ export const settingSchemas = {
       paymentTermDays: z.number().int().min(1).max(30),
     }),
   }),
+  /** Defaults for pages without their own SEO fields. */
+  seo: z.object({
+    defaultTitle: z.string().min(1).max(70),
+    /** "%s" is replaced by the page title. */
+    titleTemplate: z
+      .string()
+      .min(1)
+      .max(70)
+      .refine((v) => v.includes("%s"), "Folosește %s pentru titlul paginii."),
+    defaultDescription: z.string().min(1).max(160),
+    /** Image shared on social networks when a page has none (absolute URL or /path). */
+    ogImageUrl: z.string().max(500).nullable(),
+  }),
+  /** Sender details for customer emails (the address itself comes from EMAIL_FROM). */
+  email: z.object({
+    senderName: z.string().max(80).nullable(),
+    replyTo: z.email().nullable(),
+  }),
   /** VAT included in catalogue prices (shown on orders). Confirm the rate with your accountant. */
   tax: z.object({
     vatRatePercent: z.number().min(0).max(100),
@@ -196,6 +214,17 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
   },
   tax: {
     vatRatePercent: 21,
+  },
+  seo: {
+    defaultTitle: "Alchimia Rădăcinilor — Uleiuri esențiale și ritualuri botanice",
+    titleTemplate: "%s · Alchimia Rădăcinilor",
+    defaultDescription:
+      "Uleiuri esențiale, amestecuri, kit-uri și difuzoare, alese cu grijă pentru ritualurile tale de zi cu zi.",
+    ogImageUrl: null,
+  },
+  email: {
+    senderName: null,
+    replyTo: null,
   },
   recommendation: {
     need: 2,

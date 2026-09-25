@@ -1,9 +1,8 @@
 import "server-only";
 
-import { emailConfigured, isDelivered, sendEmail } from "@/lib/email";
+import { emailConfigured, isDelivered } from "@/lib/email";
+import { emailBrand, sendShopEmail } from "@/services/email";
 import { orderConfirmationEmail, orderStatusEmail } from "@/lib/email/templates/orders";
-import { env } from "@/lib/env";
-import { getSetting } from "@/services/settings";
 
 import { db } from "@/lib/db";
 
@@ -12,10 +11,7 @@ import type { PaymentStart } from "../payments/methods";
 import { formatAddressLines } from "./format";
 import { orderStatusDescriptions, orderStatusLabels, paymentMethodLabels } from "./status";
 
-async function brand() {
-  const { siteName } = await getSetting("brand");
-  return { siteName, siteUrl: env().APP_URL.replace(/\/$/, "") };
-}
+const brand = emailBrand;
 
 /** Order confirmation — only when an email provider is configured; never faked. */
 export async function sendOrderConfirmation(orderId: string, payment: PaymentStart) {
@@ -30,7 +26,7 @@ export async function sendOrderConfirmation(orderId: string, payment: PaymentSta
   });
   const b = await brand();
   const address = order.addresses[0];
-  const result = await sendEmail({
+  const result = await sendShopEmail({
     to: order.email,
     ...orderConfirmationEmail(
       {
@@ -77,7 +73,7 @@ export async function sendOrderStatusEmail(eventId: string) {
     },
   });
   const b = await brand();
-  const result = await sendEmail({
+  const result = await sendShopEmail({
     to: event.order.email,
     ...orderStatusEmail(
       {

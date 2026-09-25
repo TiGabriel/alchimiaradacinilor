@@ -2,6 +2,13 @@
 
 import {
   BadgeCheck,
+  BookOpen,
+  Mail,
+  Moon,
+  Settings,
+  Sparkles,
+  Star,
+  Ticket,
   Compass,
   Flower2,
   Folder,
@@ -33,6 +40,13 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   tag: Tag,
   compass: Compass,
   flower: Flower2,
+  moon: Moon,
+  book: BookOpen,
+  sparkles: Sparkles,
+  star: Star,
+  ticket: Ticket,
+  mail: Mail,
+  settings: Settings,
 };
 
 function NavList({ groups, onNavigate }: { groups: AdminNavGroup[]; onNavigate?: () => void }) {
