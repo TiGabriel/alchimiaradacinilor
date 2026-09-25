@@ -30,7 +30,9 @@ export function CartSummary({ cart, className }: { cart: CartView; className?: s
         <dt className="font-semibold">Total</dt>
         <dd className="text-xl font-semibold tabular-nums">{formatMoney(cart.total)}</dd>
       </div>
-      <p className="text-xs text-ink-muted">Prețurile includ TVA.</p>
+      <p className="text-xs text-ink-muted">
+        Prețurile includ TVA{cart.tax > 0 ? ` (${formatMoney(cart.tax)})` : ""}.
+      </p>
     </dl>
   );
 }

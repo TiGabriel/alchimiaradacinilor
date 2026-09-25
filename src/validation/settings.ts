@@ -1,5 +1,40 @@
 import { z } from "zod";
 
+const shippingMethodSchema = z.object({
+  /** Stable identifier stored on orders. */
+  code: z.string().regex(/^[a-z0-9-]{2,40}$/),
+  name: z.string().min(1).max(80),
+  description: z.string().max(200).optional(),
+  /** Minor units (bani). */
+  price: z.number().int().nonnegative(),
+  /** Whether the free-shipping threshold and free-shipping coupons apply to this method. */
+  freeShippingEligible: z.boolean(),
+  active: z.boolean(),
+});
+
+export type ShippingMethod = z.infer<typeof shippingMethodSchema>;
+
+/** Values stored before delivery methods existed: `{ flatFee, freeShippingThreshold }`. */
+function upgradeLegacyShipping(value: unknown): unknown {
+  if (value && typeof value === "object" && "flatFee" in value && !("methods" in value)) {
+    const legacy = value as { flatFee: unknown; freeShippingThreshold?: unknown };
+    return {
+      freeShippingThreshold: legacy.freeShippingThreshold ?? null,
+      methods: [
+        {
+          code: "curier",
+          name: "Curier",
+          description: "Livrare la adresa ta.",
+          price: legacy.flatFee,
+          freeShippingEligible: true,
+          active: true,
+        },
+      ],
+    };
+  }
+  return value;
+}
+
 /**
  * Registry of SiteSetting keys. Each key's JSON value is validated by its
  * schema; defaults keep the site usable before anything is stored.
@@ -35,11 +70,46 @@ export const settingSchemas = {
     facebookUrl: z.url().optional(),
     instagramUrl: z.url().optional(),
   }),
-  shipping: z.object({
-    /** Minor units (bani). */
-    flatFee: z.number().int().nonnegative(),
-    /** Minor units (bani); orders at or above this subtotal ship free. null disables free shipping. */
-    freeShippingThreshold: z.number().int().nonnegative().nullable(),
+  shipping: z.preprocess(
+    upgradeLegacyShipping,
+    z
+      .object({
+        /** Minor units (bani); orders at or above this subtotal (after discounts) ship free. null disables it. */
+        freeShippingThreshold: z.number().int().nonnegative().nullable(),
+        /** Delivery methods offered at checkout, in display order. The first active one is the cart estimate. */
+        methods: z.array(shippingMethodSchema).min(1).max(10),
+      })
+      .refine((v) => v.methods.some((m) => m.active), "Cel puțin o metodă de livrare activă.")
+      .refine(
+        (v) => new Set(v.methods.map((m) => m.code)).size === v.methods.length,
+        "Codurile metodelor de livrare trebuie să fie unice.",
+      ),
+  ),
+  /**
+   * Offline payment methods. Card payments need a provider integration
+   * (see docs/PAYMENTS.md) and are never simulated.
+   */
+  payment: z.object({
+    cashOnDelivery: z.object({
+      enabled: z.boolean(),
+      label: z.string().min(1).max(60),
+      description: z.string().max(240),
+    }),
+    /** Offered only when enabled and the account details are filled in. */
+    bankTransfer: z.object({
+      enabled: z.boolean(),
+      label: z.string().min(1).max(60),
+      description: z.string().max(240),
+      accountHolder: z.string().max(120).nullable(),
+      iban: z.string().max(40).nullable(),
+      bankName: z.string().max(80).nullable(),
+      /** Days the order is held while waiting for the transfer. */
+      paymentTermDays: z.number().int().min(1).max(30),
+    }),
+  }),
+  /** VAT included in catalogue prices (shown on orders). Confirm the rate with your accountant. */
+  tax: z.object({
+    vatRatePercent: z.number().min(0).max(100),
   }),
   /** Multipliers of the recommendation engine (answer/need weights themselves live in quiz tables). */
   recommendation: z.object({
@@ -96,8 +166,36 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
     instagramUrl: undefined,
   },
   shipping: {
-    flatFee: 1999,
     freeShippingThreshold: 25000,
+    methods: [
+      {
+        code: "curier",
+        name: "Curier rapid",
+        description: "Livrare la adresa ta, de obicei în 1–3 zile lucrătoare.",
+        price: 1999,
+        freeShippingEligible: true,
+        active: true,
+      },
+    ],
+  },
+  payment: {
+    cashOnDelivery: {
+      enabled: true,
+      label: "Plată la livrare",
+      description: "Plătești la primirea coletului.",
+    },
+    bankTransfer: {
+      enabled: true,
+      label: "Transfer bancar",
+      description: "Îți trimitem datele de plată; expediem comanda după confirmarea plății.",
+      accountHolder: null,
+      iban: null,
+      bankName: null,
+      paymentTermDays: 5,
+    },
+  },
+  tax: {
+    vatRatePercent: 21,
   },
   recommendation: {
     need: 2,

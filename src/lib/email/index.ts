@@ -56,3 +56,8 @@ export async function sendEmail(message: EmailMessage): Promise<SendResult> {
     console.error(`[email] ${resolution.provider.name} failed:`, result.error);
   return result;
 }
+
+/** True when a real (or, in development, console) provider is set up. Optional emails check this first. */
+export function emailConfigured(): boolean {
+  return !("disabled" in resolveEmailProvider(env()));
+}

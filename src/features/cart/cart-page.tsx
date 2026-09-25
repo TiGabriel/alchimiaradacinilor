@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ArrowRight, Lock, TicketPercent } from "lucide-react";
+import { AlertCircle, ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { useCart } from "./cart-context";
 import { CartLine } from "./cart-line";
 import { SUGGESTIONS_TITLE, useCartSuggestions } from "./cart-suggestions";
 import { CartSummary } from "./cart-summary";
+import { CouponForm } from "./coupon-form";
 import { FreeShippingProgress } from "./free-shipping-progress";
 
 export function CartPage() {
@@ -98,26 +99,7 @@ export function CartPage() {
             <p className="-mt-3 text-sm text-ink-muted">
               {pluralRo(cart.itemCount, "produs", "produse")}
             </p>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="cupon" className="flex items-center gap-2 text-sm font-semibold">
-                <TicketPercent aria-hidden className="size-4 text-forest" /> Cod de reducere
-              </label>
-              <div className="flex gap-2">
-                <input
-                  id="cupon"
-                  disabled
-                  placeholder="În curând"
-                  aria-describedby="cupon-hint"
-                  className="h-10 min-w-0 flex-1 rounded-md border border-line bg-paper-deep px-3 text-sm disabled:cursor-not-allowed"
-                />
-                <Button size="sm" variant="outline" disabled className="h-10">
-                  Aplică
-                </Button>
-              </div>
-              <p id="cupon-hint" className="text-xs text-ink-muted">
-                Codurile de reducere vor putea fi folosite în curând.
-              </p>
-            </div>
+            <CouponForm />
             <CartSummary cart={cart} />
             <Button asChild size="lg" block>
               <Link href="/finalizare-comanda">

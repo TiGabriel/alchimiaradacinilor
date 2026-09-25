@@ -12,7 +12,7 @@
 | 6     | Recommendation engine, quiz, need discovery          | Done    |
 | 7     | Routines and journal                                 | Done    |
 | 8     | Homepage                                             | Done    |
-| 9     | Checkout, orders, coupons                            | Pending |
+| 9     | Checkout, orders, coupons                            | Done    |
 | 10    | Reviews, newsletter, cookie consent, analytics       | Pending |
 | 11    | Admin part 1 (dashboard, catalog, orders, customers) | Pending |
 | 12    | Admin part 2 (quiz, content, marketing, settings)    | Pending |
@@ -234,3 +234,42 @@
 - `Price` gained `tone="inverse"` for dark sections; `listArticles` limits in SQL when not searching.
 - Tests: essentials resolution, popular categories, personal row, reviewer name (unit); approved-only
   reviews, essentials threshold, quiz-based personal row skipping sold-out products (integration).
+
+## Phase 9 — Checkout, orders and coupons
+
+- Schema (`checkout_orders` migration): order status history (`OrderStatusEvent`), per-year order
+  counter (human-friendly numbers `AR-2026-000123`), order snapshots (delivery method, coupon code,
+  terms/privacy versions and acceptance time, product slug/image per item), coupon restrictions by
+  product and category (categories include their subcategories).
+- Settings: `shipping` now holds delivery methods (code, name, description, price, free-shipping
+  eligibility, active) + the free-shipping threshold (old `{ flatFee }` values are upgraded on read);
+  `payment` (cash on delivery; bank transfer offered only once IBAN and holder are filled in);
+  `tax.vatRatePercent` (21, to confirm).
+- One pricing path (`services/checkout/quote.ts` → pure `priceOrder`) for the cart, the checkout
+  summary and order placement. Coupons: percentage (optional cap), fixed amount, free shipping;
+  codes are case/space-insensitive; validity dates, total and per-customer limits (by account or
+  email), minimum order value, product/category restrictions; clear Romanian reasons when a code
+  does not apply. Applied in the cart and at checkout; a guest's code follows them on sign-in;
+  attempts are rate-limited.
+- `/finalizare-comanda`: signed-in customers with a verified email only (otherwise a resend-link
+  state). Four steps — delivery details (saved or new address, save to account, same/other billing
+  address incl. company data), delivery method, payment, review (note, required Terms & Privacy
+  acceptance) — with a live summary, coupon field and "Plasează comanda cu obligație de plată".
+  Validation uses the same Zod schemas on both sides; server field errors are shown on the fields.
+- `placeOrder`: one transaction that locks the cart (double submits create one order) and the
+  coupon (limits hold under concurrency), re-prices from the database, rejects stock issues,
+  unavailable delivery/payment, invalid coupons and any difference from the total the customer saw,
+  decrements stock with a conditional atomic update, snapshots items/addresses/prices, records the
+  coupon use and the first status event, then empties the cart. Everything rolls back on failure.
+- Payment provider interface with offline providers; no card payment is simulated. Stripe/Netopia
+  integration steps in `docs/PAYMENTS.md`.
+- Confirmation page "Comanda ta a fost înregistrată." with payment instructions; `/cont/comenzi`
+  list and `/cont/comenzi/[numar]` detail (progress, items, totals, addresses, history). Order
+  confirmation and status-update emails are sent only when an email provider is configured.
+- `changeOrderStatus` (validated transitions, restock on cancellation before shipment, history,
+  optional email) and `markOrderPaid` are ready for the admin (Phase 11).
+- Tests: coupon rules, pricing/shipping/VAT, status transitions and numbering, payment methods,
+  checkout schema (unit); order placement, verification requirement, tampered/stale totals, stock
+  rollback, last-item race between two customers, double submit, foreign address, unavailable
+  delivery/payment, coupon usage and per-customer/total limits, restricted coupons, guest coupon
+  carry-over, order ownership, cancellation restock (integration).

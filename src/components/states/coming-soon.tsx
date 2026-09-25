@@ -32,12 +32,6 @@ export const comingSoonPages = {
     title: "Întrebări frecvente",
     description: "Adunăm cele mai frecvente întrebări. Până atunci, ne poți scrie oricând.",
   },
-  checkout: {
-    eyebrow: "Finalizare comandă",
-    title: "Finalizarea comenzii este în pregătire",
-    description:
-      "Coșul tău este salvat. Plata și livrarea vor fi disponibile în curând — până atunci ne poți scrie pentru comenzi.",
-  },
 } satisfies Record<string, { eyebrow: string; title: string; description: string }>;
 
 export type ComingSoonKey = keyof typeof comingSoonPages;

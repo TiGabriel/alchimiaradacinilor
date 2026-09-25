@@ -9,12 +9,14 @@ import { getSimilarityProfiles } from "@/services/catalog/product-detail";
 import { rankSimilar } from "@/services/catalog/similarity";
 import { getSetting } from "@/services/settings";
 
+import { buildQuote } from "../checkout/quote";
+import { evaluateCouponFor, findCouponByCode } from "../coupons/coupons";
+
 import {
-  calculateCart,
+  calculateLine,
   clampLineQuantity,
   type CalculatedLine,
   type CartLineInput,
-  type DiscountRule,
 } from "./calculate";
 import { mergeCartItems } from "./merge";
 
@@ -24,6 +26,7 @@ export type CartOwner = { userId: string | null; token: string | null };
 export const GUEST_CART_TTL_DAYS = 60;
 
 export type CartLineData = CartLineInput & {
+  categoryId: string;
   slug: string;
   name: string;
   brandName: string | null;
@@ -45,7 +48,14 @@ export type CartView = {
   freeShipping: boolean;
   freeShippingRemaining: number | null;
   freeShippingThreshold: number | null;
+  /** Delivery method the totals use (the first active one unless checkout chose another). */
+  shippingMethodCode: string;
+  shippingMethodName: string;
   total: number;
+  /** VAT included in the total. */
+  tax: number;
+  /** The code attached to the cart; `message` explains why it does not apply (yet). */
+  coupon: { code: string; label: string; applied: boolean; message: string | null } | null;
   hasIssues: boolean;
 };
 
@@ -78,6 +88,7 @@ const lineInclude = {
           compareAtPrice: true,
           stock: true,
           active: true,
+          categoryId: true,
           productType: true,
           brand: { select: { name: true } },
           images: {
@@ -104,17 +115,12 @@ async function findCart(owner: CartOwner) {
   return cart;
 }
 
-/** Discount rules for a cart. Coupons plug in here in the checkout/coupons phase. */
-async function discountRulesFor(_cartId: string | null): Promise<DiscountRule[]> {
-  return [];
-}
-
 type LoadedCart = NonNullable<Awaited<ReturnType<typeof findCart>>>;
 
-async function toView(cart: LoadedCart | null): Promise<CartView> {
-  const shipping = await getSetting("shipping");
-  const inputs: CartLineData[] = (cart?.items ?? []).map(({ product: p, quantity }) => ({
+export function toCartLines(cart: Pick<LoadedCart, "items"> | null): CartLineData[] {
+  return (cart?.items ?? []).map(({ product: p, quantity }) => ({
     productId: p.id,
+    categoryId: p.categoryId,
     quantity,
     unitPrice: p.price,
     compareAtPrice: p.compareAtPrice,
@@ -129,12 +135,50 @@ async function toView(cart: LoadedCart | null): Promise<CartView> {
       : null,
     tone: p.aromaProfiles[0]?.aromaProfile.colorHex ?? null,
   }));
-  const totals = calculateCart(inputs, shipping, await discountRulesFor(cart?.id ?? null));
-  return { ...totals, freeShippingThreshold: shipping.freeShippingThreshold };
 }
 
-export async function loadCartView(owner: CartOwner): Promise<CartView> {
-  return toView(await findCart(owner));
+async function customerOf(userId: string | null) {
+  if (!userId) return null;
+  const user = await db.user.findUnique({ where: { id: userId }, select: { email: true } });
+  return user ? { userId, email: user.email } : null;
+}
+
+async function toView(cart: LoadedCart | null, methodCode?: string | null): Promise<CartView> {
+  const quote = await buildQuote(toCartLines(cart), {
+    couponId: cart?.couponId ?? null,
+    customer: await customerOf(cart?.userId ?? null),
+    methodCode,
+  });
+  const shipping = await getSetting("shipping");
+  const { tax, couponApplied, ...totals } = quote.pricing;
+  const method = quote.pricedMethod;
+  return {
+    ...totals,
+    tax,
+    freeShippingThreshold: method.freeShippingEligible ? shipping.freeShippingThreshold : null,
+    shippingMethodCode: method.code,
+    shippingMethodName: method.name,
+    coupon: quote.coupon
+      ? {
+          code: quote.coupon.code,
+          label: quote.coupon.label,
+          applied: couponApplied,
+          message: quote.coupon.check.ok
+            ? couponApplied
+              ? null
+              : "Codul nu aduce o reducere pentru metoda de livrare aleasă."
+            : quote.coupon.check.message,
+        }
+      : null,
+  };
+}
+
+/** The cart priced for a delivery method (default: the first active one). */
+export async function loadCartView(
+  owner: CartOwner,
+  options: { methodCode?: string | null } = {},
+): Promise<CartView> {
+  return toView(await findCart(owner), options.methodCode);
 }
 
 /** Returns the owner's cart id, creating the cart (and a guest token) when needed. */
@@ -259,6 +303,9 @@ export async function mergeGuestCartIntoUser(guestToken: string, userId: string)
         update: { quantity: item.quantity },
       });
     }
+    // A code applied as a guest carries over unless the account cart already has one.
+    if (guest.couponId && !account.couponId)
+      await tx.cart.update({ where: { id: account.id }, data: { couponId: guest.couponId } });
     await tx.cart.delete({ where: { id: guest.id } });
   });
 }
@@ -272,4 +319,42 @@ export async function getCartSuggestions(
   const profiles = await getSimilarityProfiles();
   const sources = profiles.filter((p) => productIds.includes(p.id));
   return getProductCards(rankSimilar(sources, profiles, { limit, exclude: productIds }));
+}
+
+/**
+ * Attaches a coupon to the cart after checking it against the current lines.
+ * An invalid code is never attached; the error says why.
+ */
+export async function applyCartCoupon(
+  owner: CartOwner,
+  rawCode: string,
+): Promise<CartMutationResult> {
+  const cart = await findCart(owner);
+  if (!cart || cart.items.length === 0)
+    throw new CartError("Adaugă produse în coș înainte de a aplica un cod.");
+  const coupon = await findCouponByCode(rawCode);
+  if (!coupon) throw new CartError("Codul nu există sau nu mai este activ.");
+  const lines = toCartLines(cart).map(calculateLine);
+  const evaluated = await evaluateCouponFor(
+    coupon,
+    lines.map((l) => ({
+      productId: l.productId,
+      categoryId: l.categoryId,
+      lineTotal: l.lineTotal,
+    })),
+    await customerOf(owner.userId),
+  );
+  if (!evaluated.check.ok) throw new CartError(evaluated.check.message);
+  await db.cart.update({ where: { id: cart.id }, data: { couponId: coupon.id } });
+  return {
+    view: await toView(await findCart(owner)),
+    notice: `Codul ${coupon.code} a fost aplicat.`,
+    token: null,
+  };
+}
+
+export async function removeCartCoupon(owner: CartOwner): Promise<CartMutationResult> {
+  const cart = await findCart(owner);
+  if (cart?.couponId) await db.cart.update({ where: { id: cart.id }, data: { couponId: null } });
+  return { view: await toView(await findCart(owner)), notice: null, token: null };
 }

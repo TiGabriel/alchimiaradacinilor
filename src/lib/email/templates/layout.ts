@@ -10,6 +10,8 @@ export type EmailBlock =
   | { type: "note"; text: string }
   | { type: "code"; text: string }
   | { type: "list"; items: string[] }
+  /** Label/value table (order lines, totals, addresses). */
+  | { type: "rows"; rows: Array<{ label: string; value: string; strong?: boolean }> }
   | { type: "divider" };
 
 export type EmailContent = {
@@ -65,6 +67,13 @@ function renderBlock(block: EmailBlock): string {
         .join("")}</ul>`;
     case "divider":
       return `<hr style="border:0;border-top:1px solid ${colors.line};margin:24px 0;" />`;
+    case "rows":
+      return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 16px;">${block.rows
+        .map(
+          (r) =>
+            `<tr><td style="padding:6px 12px 6px 0;font:${r.strong ? "700 " : ""}15px/1.5 ${fontSans};color:${colors.ink};vertical-align:top;">${escapeHtml(r.label)}</td><td align="right" style="padding:6px 0;font:${r.strong ? "700 " : ""}15px/1.5 ${fontSans};color:${colors.ink};white-space:nowrap;vertical-align:top;">${escapeHtml(r.value)}</td></tr>`,
+        )
+        .join("")}</table>`;
     case "button":
       return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 24px;"><tr><td style="border-radius:999px;background:${colors.forest};">
 <a href="${safeHref(block.href)}" style="display:inline-block;padding:14px 28px;font:600 15px/1 ${fontSans};color:${colors.inverse};text-decoration:none;border-radius:999px;">${escapeHtml(block.label)}</a>
@@ -82,6 +91,8 @@ function renderBlockText(block: EmailBlock): string {
       return block.items.map((i) => `• ${i}`).join("\n");
     case "divider":
       return "—";
+    case "rows":
+      return block.rows.map((r) => `${r.label}: ${r.value}`).join("\n");
     case "button":
       return `${block.label}: ${block.href}`;
   }

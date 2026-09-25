@@ -65,6 +65,8 @@ components/layout/  header, footer, navigation shells.
   category/subcategory (from the tree). Exceptions are documented caches
   (`Product.rating`, `Product.reviewCount`).
 - Orders snapshot names, prices and addresses (legal record).
+- Cart, checkout and order totals all go through `services/checkout/quote.ts` (one pricing
+  path). Payment methods implement `PaymentProvider`; never simulate a payment (docs/PAYMENTS.md).
 - New site settings: add a key to `src/validation/settings.ts` (no migration).
 - Demo data is flagged `isDemo`. Never invent official specs (volumes, compositions,
   certifications) for real products.

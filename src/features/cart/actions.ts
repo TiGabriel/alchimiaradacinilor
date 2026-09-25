@@ -3,6 +3,8 @@
 import {
   CartError,
   addCartItem,
+  applyCartCoupon,
+  removeCartCoupon,
   getCartSuggestions,
   loadCartView,
   removeCartItem,
@@ -11,12 +13,16 @@ import {
   type CartView,
 } from "@/services/cart/cart";
 import type { ProductCardData } from "@/services/catalog/product-types";
+import { limiters, retryAfterText } from "@/services/auth/rate-limit";
+import { couponCodeSchema } from "@/validation/checkout";
 import {
   addToCartSchema,
   productIdSchema,
   productIdsSchema,
   setQuantitySchema,
 } from "@/validation/cart";
+
+import { getRequestMeta } from "../auth/session";
 
 import { getCartOwner, setGuestCartCookie } from "./owner";
 
@@ -72,4 +78,24 @@ export async function getCartSuggestionsAction(productIds: string[]): Promise<Pr
   const parsed = productIdsSchema.safeParse(productIds);
   if (!parsed.success) return [];
   return getCartSuggestions(parsed.data, 3);
+}
+
+export async function applyCouponAction(code: string): Promise<CartActionResult> {
+  const parsed = couponCodeSchema.safeParse(code);
+  if (!parsed.success)
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Cod invalid." };
+  const owner = await getCartOwner();
+  const key = owner.userId ?? (await getRequestMeta()).ipHash;
+  const limit = limiters.couponAttempts.check(`coupon:${key}`);
+  if (!limit.allowed)
+    return {
+      ok: false,
+      error: `Prea multe încercări. Mai încearcă peste ${retryAfterText(limit.retryAfterMs)}.`,
+    };
+  return run(() => applyCartCoupon(owner, parsed.data));
+}
+
+export async function removeCouponAction(): Promise<CartActionResult> {
+  const owner = await getCartOwner();
+  return run(() => removeCartCoupon(owner));
 }

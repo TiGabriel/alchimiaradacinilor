@@ -334,3 +334,42 @@ derived from the catalogue and content (featured flags, product counts, publish 
 The homepage shows only approved reviews from customers, with first name + last initial; there
 are no written testimonials and no embedded social feed. Sections without data are hidden rather
 than filled with placeholders.
+
+## Phase 9 — Checkout, orders and coupons
+
+### D-052 · One pricing path, and the customer's total is a precondition
+
+The cart, the checkout summary and `placeOrder` all price through `buildQuote` → `priceOrder`. The
+client never sends prices; it sends the total it displayed, and the order is refused (with fresh
+totals) when the server's total differs. No silent price changes.
+
+### D-053 · Stock is decremented with a conditional update inside the order transaction
+
+`UPDATE … SET stock = stock - q WHERE stock >= q AND active` per line; any line that fails aborts
+the whole transaction. Concurrent buyers of the last item get exactly one order. The cart row is
+locked first so a double submit produces one order; the coupon row is locked so usage limits hold.
+
+### D-054 · Order numbers from a per-year counter table
+
+`AR-<year>-<6 digits>` from `order_counters`, incremented inside the order transaction (no gaps
+from rolled-back orders; the year follows Europe/Bucharest). A counter table is used instead of a
+Postgres sequence because Prisma migrations manage it like any other table.
+
+### D-055 · Delivery methods and payment options are settings, not tables
+
+They are few, edited rarely and snapshotted on every order (`shippingMethodCode/Name`,
+`paymentMethod`), so a SiteSetting is enough. Bank transfer is offered only when the account
+details exist; card payments require a real provider (docs/PAYMENTS.md).
+
+### D-056 · Coupons: restrictions narrow the discount base, minimum applies to the whole cart
+
+Percentage and fixed discounts apply to eligible lines only (restricted by product or category,
+categories including descendants), while "comandă minimă" is checked against the whole cart
+subtotal. The per-customer limit counts past uses by account or order email. A free-shipping code
+only applies to delivery methods marked eligible.
+
+### D-057 · Checkout requires a verified account
+
+Guests can build a cart and apply codes, but placing an order needs a signed-in customer with a
+verified email (order history, confirmations, GDPR requests all hang off the account). The guest
+cart and its code are merged on sign-in.

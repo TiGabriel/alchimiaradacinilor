@@ -22,11 +22,22 @@ export default async function ShippingPage() {
           title: "Costul livrării",
           body: (
             <ul>
-              <li>Taxă de livrare: {formatMoney(shipping.flatFee)}.</li>
+              {shipping.methods
+                .filter((m) => m.active)
+                .map((m) => (
+                  <li key={m.code}>
+                    {m.name}: {m.price > 0 ? formatMoney(m.price) : "gratuit"}
+                    {m.description ? ` — ${m.description}` : ""}
+                  </li>
+                ))}
               {shipping.freeShippingThreshold != null ? (
                 <li>
                   Livrare gratuită pentru comenzile de peste{" "}
-                  {formatMoney(shipping.freeShippingThreshold)} (după aplicarea reducerilor).
+                  {formatMoney(shipping.freeShippingThreshold)} (după aplicarea reducerilor)
+                  {shipping.methods.some((m) => m.active && !m.freeShippingEligible)
+                    ? ", pentru metodele de livrare eligibile"
+                    : ""}
+                  .
                 </li>
               ) : null}
             </ul>

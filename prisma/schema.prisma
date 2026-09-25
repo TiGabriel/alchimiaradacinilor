@@ -156,6 +156,7 @@ model User {
   subscriber     NewsletterSubscriber?
   mediaUploads   MediaAsset[]
   settingUpdates SiteSetting[]
+  orderEvents    OrderStatusEvent[]    @relation("OrderEventActor")
 
   @@map("users")
 }
@@ -339,11 +340,12 @@ model Category {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  parent   Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
-  children Category[]  @relation("CategoryTree")
-  image    MediaAsset? @relation(fields: [imageId], references: [id], onDelete: SetNull)
-  seo      SeoMeta?    @relation(fields: [seoId], references: [id], onDelete: SetNull)
-  products Product[]
+  parent      Category?        @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children    Category[]       @relation("CategoryTree")
+  image       MediaAsset?      @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  seo         SeoMeta?         @relation(fields: [seoId], references: [id], onDelete: SetNull)
+  products    Product[]
+  couponLinks CouponCategory[]
 
   @@index([parentId, position])
   @@map("categories")
@@ -425,6 +427,7 @@ model Product {
   orderItems      OrderItem[]
   reviews         Review[]
   quizResults     QuizResultProduct[]
+  couponLinks     CouponProduct[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -1063,37 +1066,47 @@ model WishlistItem {
 }
 
 model Order {
-  id            String        @id @default(uuid(7))
+  id                   String        @id @default(uuid(7))
   /// Human-readable, e.g. AR-2026-000123.
-  number        String        @unique
-  userId        String?
-  email         String
-  phone         String?
-  status        OrderStatus   @default(PENDING)
-  paymentStatus PaymentStatus @default(UNPAID)
-  paymentMethod PaymentMethod
-  currency      String        @default("RON")
+  number               String        @unique
+  userId               String?
+  email                String
+  phone                String?
+  status               OrderStatus   @default(PENDING)
+  paymentStatus        PaymentStatus @default(UNPAID)
+  paymentMethod        PaymentMethod
+  currency             String        @default("RON")
   /// All totals are minor units (bani), snapshotted at checkout.
-  subtotal      Int
-  discountTotal Int           @default(0)
-  shippingTotal Int           @default(0)
+  subtotal             Int
+  discountTotal        Int           @default(0)
+  shippingTotal        Int           @default(0)
   /// VAT included in the prices above.
-  taxTotal      Int           @default(0)
-  total         Int
-  couponId      String?
-  customerNote  String?
-  placedAt      DateTime      @default(now())
-  paidAt        DateTime?
-  shippedAt     DateTime?
-  cancelledAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  taxTotal             Int           @default(0)
+  total                Int
+  couponId             String?
+  /// Snapshot of the applied code (the coupon itself may later change or be deleted).
+  couponCode           String?
+  /// Snapshot of the chosen delivery method (from SiteSettings at checkout).
+  shippingMethodCode   String
+  shippingMethodName   String
+  customerNote         String?
+  /// Terms & privacy acceptance at checkout (versions from the legal setting).
+  termsAcceptedAt      DateTime
+  termsVersion         String
+  privacyPolicyVersion String
+  placedAt             DateTime      @default(now())
+  paidAt               DateTime?
+  shippedAt            DateTime?
+  cancelledAt          DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
 
-  user        User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
-  coupon      Coupon?        @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  user        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  coupon      Coupon?            @relation(fields: [couponId], references: [id], onDelete: SetNull)
   items       OrderItem[]
   addresses   OrderAddress[]
   couponUsage CouponUsage?
+  events      OrderStatusEvent[]
 
   @@index([userId])
   @@index([status])
@@ -1102,6 +1115,35 @@ model Order {
 }
 
 /// Snapshot of the address at purchase time (invoice record).
+/// Append-only status history (customer-visible timeline + audit trail).
+model OrderStatusEvent {
+  id            String         @id @default(uuid(7))
+  orderId       String
+  status        OrderStatus
+  paymentStatus PaymentStatus?
+  /// Shown to the customer when present.
+  note          String?
+  /// Who made the change (admin); null for the customer/system.
+  actorId       String?
+  /// Set when the customer was emailed about this change.
+  notifiedAt    DateTime?
+  createdAt     DateTime       @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor User? @relation("OrderEventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_events")
+}
+
+/// Per-year counter behind human-friendly order numbers (AR-2026-000123).
+model OrderCounter {
+  year  Int @id
+  value Int @default(0)
+
+  @@map("order_counters")
+}
+
 model OrderAddress {
   id              String      @id @default(uuid(7))
   orderId         String
@@ -1131,6 +1173,9 @@ model OrderItem {
   orderId     String
   productId   String?
   productName String
+  /// Snapshots for display after the product changes or is deleted.
+  productSlug String?
+  imageUrl    String?
   sku         String
   /// Minor units (bani).
   unitPrice   Int
@@ -1163,11 +1208,39 @@ model Coupon {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
 
-  usages CouponUsage[]
-  orders Order[]
-  carts  Cart[]
+  usages     CouponUsage[]
+  orders     Order[]
+  carts      Cart[]
+  /// Optional restrictions: when any are set, the coupon applies only to matching lines.
+  products   CouponProduct[]
+  categories CouponCategory[]
 
   @@map("coupons")
+}
+
+model CouponProduct {
+  couponId  String
+  productId String
+
+  coupon  Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, productId])
+  @@index([productId])
+  @@map("coupon_products")
+}
+
+/// A category restriction also covers its subcategories.
+model CouponCategory {
+  couponId   String
+  categoryId String
+
+  coupon   Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, categoryId])
+  @@index([categoryId])
+  @@map("coupon_categories")
 }
 
 model CouponUsage {

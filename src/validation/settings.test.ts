@@ -19,6 +19,36 @@ describe("site settings registry", () => {
     expect(parseSetting("shipping", { flatFee: -1 })).toEqual(settingDefaults.shipping);
   });
 
+  it("upgrades the legacy flat-fee shipping value to a delivery method", () => {
+    expect(parseSetting("shipping", { flatFee: 1500, freeShippingThreshold: null })).toEqual({
+      freeShippingThreshold: null,
+      methods: [
+        {
+          code: "curier",
+          name: "Curier",
+          description: "Livrare la adresa ta.",
+          price: 1500,
+          freeShippingEligible: true,
+          active: true,
+        },
+      ],
+    });
+  });
+
+  it("requires an active delivery method with a unique code", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const method = settingDefaults.shipping.methods[0]!;
+    expect(
+      parseSetting("shipping", {
+        freeShippingThreshold: null,
+        methods: [{ ...method, active: false }],
+      }),
+    ).toEqual(settingDefaults.shipping);
+    expect(
+      parseSetting("shipping", { freeShippingThreshold: null, methods: [method, method] }),
+    ).toEqual(settingDefaults.shipping);
+  });
+
   it("accepts an image logo", () => {
     const value = {
       ...settingDefaults.brand,

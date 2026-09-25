@@ -51,6 +51,9 @@ export const limiters = {
   resetByEmail: new SlidingWindowLimiter(3, 60 * MINUTE),
   verificationResend: new SlidingWindowLimiter(3, 60 * MINUTE),
   contactByIp: new SlidingWindowLimiter(5, 60 * MINUTE),
+  /** Discount codes: slows down guessing. Keyed by user id or IP. */
+  couponAttempts: new SlidingWindowLimiter(10, 15 * MINUTE),
+  checkoutByUser: new SlidingWindowLimiter(10, 10 * MINUTE),
 };
 
 export function retryAfterText(ms: number): string {
