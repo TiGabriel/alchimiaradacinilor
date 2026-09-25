@@ -1,27 +1,76 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
+
+import { toast } from "@/components/ui/toast";
+
+import {
+  getWishlistServerSnapshot,
+  getWishlistSnapshot,
+  subscribeWishlist,
+  toggleId,
+  writeWishlist,
+} from "./wishlist-store";
 
 type WishlistContextValue = {
+  ids: readonly string[];
   count: number;
   has: (productId: string) => boolean;
   toggle: (product: { id: string; name: string }) => void;
+  remove: (productId: string) => void;
 };
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
-/** Phase 3: UI-only (in-memory). Persistence and the /favorite page arrive in Phase 4. */
+/**
+ * Guests: stored in this browser (localStorage). Signed-in customers get a
+ * DB-backed wishlist in the auth phase, merged via mergeLocalWishlistIntoUser().
+ */
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [ids, setIds] = useState<string[]>([]);
+  const router = useRouter();
+  const ids = useSyncExternalStore(
+    subscribeWishlist,
+    getWishlistSnapshot,
+    getWishlistServerSnapshot,
+  );
+
   const has = useCallback((id: string) => ids.includes(id), [ids]);
-  const toggle = useCallback((product: { id: string }) => {
-    setIds((current) =>
-      current.includes(product.id)
-        ? current.filter((i) => i !== product.id)
-        : [...current, product.id],
-    );
-  }, []);
-  const value = useMemo(() => ({ count: ids.length, has, toggle }), [ids.length, has, toggle]);
+
+  const remove = useCallback(
+    (id: string) => writeWishlist(getWishlistSnapshot().filter((i) => i !== id)),
+    [],
+  );
+
+  const toggle = useCallback(
+    (product: { id: string; name: string }) => {
+      const current = getWishlistSnapshot();
+      const adding = !current.includes(product.id);
+      writeWishlist(toggleId(current, product.id));
+      toast(
+        adding
+          ? {
+              title: "Adăugat la favorite",
+              description: product.name,
+              action: { label: "Vezi favoritele", onClick: () => router.push("/favorite") },
+            }
+          : {
+              title: "Eliminat din favorite",
+              description: product.name,
+              action: {
+                label: "Anulează",
+                onClick: () => writeWishlist(toggleId(getWishlistSnapshot(), product.id)),
+              },
+            },
+      );
+    },
+    [router],
+  );
+
+  const value = useMemo(
+    () => ({ ids, count: ids.length, has, toggle, remove }),
+    [ids, has, toggle, remove],
+  );
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 }
 

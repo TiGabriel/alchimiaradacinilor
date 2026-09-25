@@ -7,7 +7,7 @@
 | 1     | Inspection, architecture, foundation               | Done    |
 | 2     | Design system and global layout                    | Done    |
 | 3     | Catalog, product page, search                      | Done    |
-| 4     | Cart and wishlist                                  | Pending |
+| 4     | Cart and wishlist                                  | Done    |
 | 5     | Authentication and roles (+ cart/wishlist merge)   | Pending |
 | 6+    | Checkout, quiz, routines, journal, account, admin… | Pending |
 
@@ -81,3 +81,29 @@
 - `sitemap.xml` (static pages, categories, products) referenced from robots.txt.
 - Tests: listing (parse/serialise, filters, sorting, facets, pagination), similarity,
   search engine, stock labels, pagination window, Romanian plurals, recent searches.
+
+## Phase 4 — Cart and wishlist
+
+- Pure cart calculation (`services/cart/calculate.ts`): quantities clamped to stock and to 99 per
+  line, unavailable/out-of-stock lines kept visible but excluded from totals, subtotal, discount
+  hook (rules applied in order, clamped, rounded to the ban), shipping from SiteSettings (flat fee
+  - free-shipping threshold on the subtotal after discounts), total, "mai adaugă X" amount.
+- Server actions (Zod-validated) re-read prices and stock from the DB on every call; the client
+  only sends product ids and quantities. Guest carts live in the DB behind an httpOnly `ar_cart`
+  cookie (60 days); `mergeGuestCartIntoUser()` is ready for login.
+- Cart drawer (opens after add-to-cart), animated header counter, free-shipping progress,
+  line editing/removal with undo, gentle "Se potrivește bine cu produsul tău" suggestions
+  (shared taxonomy scoring), `/cos` page with summary, coupon placeholder and suggestions.
+- `/finalizare-comanda` placeholder (checkout phase) so no button dead-ends.
+- Wishlist: localStorage store via `useSyncExternalStore` (hydration-safe, synced across tabs),
+  heart on cards and product page, toasts with undo, `/favorite` page with "Mută în coș",
+  designed empty state; `mergeLocalWishlistIntoUser()` ready for login.
+- Verified end-to-end in Chromium: stock clamp + notice, drawer, counters, move to cart,
+  persistence across reload, removal to empty state; no console errors.
+
+**Open items for Phase 5 (auth)**
+
+- Resolve the signed-in user in `features/cart/owner.ts` and call `mergeGuestCartIntoUser()`
+  on login; call `mergeLocalWishlistIntoUser()` with the browser's ids and switch the wishlist
+  provider to the DB for signed-in users.
+- Cleanup job for expired guest carts (`carts.expiresAt`).

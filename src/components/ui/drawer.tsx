@@ -22,7 +22,7 @@ const sides = {
   full: "inset-0 h-dvh w-full data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in",
 } as const;
 
-type DrawerContentProps = React.ComponentProps<typeof DialogPrimitive.Content> & {
+type DrawerContentProps = Omit<React.ComponentProps<typeof DialogPrimitive.Content>, "title"> & {
   side?: keyof typeof sides;
   title: React.ReactNode;
   /** Visually hide the title (it stays available to screen readers). */

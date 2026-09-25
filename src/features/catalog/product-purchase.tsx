@@ -46,7 +46,7 @@ export function ProductPurchase({ product }: ProductPurchaseProps) {
           onClick={async () => {
             setBuying(true);
             try {
-              if (await addItem(product, quantity)) router.push("/cos");
+              if (await addItem(product, quantity, { openDrawer: false })) router.push("/cos");
             } finally {
               setBuying(false);
             }

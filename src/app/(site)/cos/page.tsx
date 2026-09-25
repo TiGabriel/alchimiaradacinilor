@@ -1,7 +1,18 @@
-import { ComingSoon, comingSoonMetadata } from "@/components/states/coming-soon";
+import type { Metadata } from "next";
 
-export const metadata = comingSoonMetadata("cos");
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { CartPage } from "@/features/cart/cart-page";
 
-export default function Page() {
-  return <ComingSoon page="cos" />;
+export const metadata: Metadata = { title: "Coșul tău", robots: { index: false, follow: false } };
+
+export default function CosPage() {
+  return (
+    <div className="container-page pb-(--spacing-section)">
+      <div className="pt-6 md:pt-8">
+        <Breadcrumbs items={[{ label: "Coș" }]} />
+      </div>
+      <h1 className="py-8 text-display-lg md:py-10">Coșul tău</h1>
+      <CartPage />
+    </div>
+  );
 }

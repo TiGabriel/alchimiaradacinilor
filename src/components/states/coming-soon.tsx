@@ -66,15 +66,11 @@ export const comingSoonPages = {
     title: "Întrebări frecvente",
     description: "Adunăm cele mai frecvente întrebări. Până atunci, ne poți scrie oricând.",
   },
-  favorite: {
-    eyebrow: "Favorite",
-    title: "Favoritele tale",
-    description: "Lista de favorite va fi disponibilă în curând.",
-  },
-  cos: {
-    eyebrow: "Coș",
-    title: "Coșul tău",
-    description: "Coșul de cumpărături va fi disponibil în curând.",
+  checkout: {
+    eyebrow: "Finalizare comandă",
+    title: "Finalizarea comenzii este în pregătire",
+    description:
+      "Coșul tău este salvat. Plata și livrarea vor fi disponibile în curând — până atunci ne poți scrie pentru comenzi.",
   },
 } satisfies Record<string, { eyebrow: string; title: string; description: string }>;
 
