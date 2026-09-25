@@ -26,8 +26,10 @@ export function Reveal({ children, className, y = 18, delay = 0, as = "div" }: R
     <Component
       className={className}
       initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={revealViewport}
+      // Reduced motion: show the content at once instead of waiting for the viewport.
+      {...(reduce
+        ? { animate: { opacity: 1, y: 0 } }
+        : { whileInView: { opacity: 1, y: 0 }, viewport: revealViewport })}
       transition={
         reduce ? { duration: 0 } : { duration: durations.slow, ease: easeBotanical, delay }
       }

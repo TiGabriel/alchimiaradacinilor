@@ -5,12 +5,15 @@ import { db } from "@/lib/db";
 import { getProductCards } from "@/services/catalog/products";
 import type { ProductCardData } from "@/services/catalog/product-types";
 import { hasPersonalizationConsent } from "@/services/consent/consent";
+import { getArticleCards, loadArticleProfiles } from "@/services/journal/journal";
+import { getRoutineCards, loadRoutineProfiles } from "@/services/routines/routines";
 import { getSetting } from "@/services/settings";
 
 import {
   criteriaFromNeeds,
   criteriaFromProfiles,
   rankProducts,
+  rankProfiles,
   type Criteria,
   type EngineWeights,
   type ProductCandidate,
@@ -157,4 +160,24 @@ export async function recommendFromFavourites(
     { ...criteria, excludeIds: favourites.map((f) => f.id) },
     { limit, userId },
   );
+}
+
+/** Same engine, other surfaces: routines and articles for a set of criteria. */
+export async function recommendRoutines(criteria: Criteria, limit: number) {
+  const weights = await getEngineWeights();
+  const ranked = rankProfiles(criteria, await loadRoutineProfiles(), weights, { limit });
+  const cards = await getRoutineCards(ranked.map((r) => r.item.id));
+  const reasons = new Map(ranked.map((r) => [r.item.id, r.explanation]));
+  return cards.map((routine) => ({ routine, explanation: reasons.get(routine.id) ?? "" }));
+}
+
+export async function recommendArticles(criteria: Criteria, limit: number) {
+  const weights = await getEngineWeights();
+  const ranked = rankProfiles(criteria, await loadArticleProfiles(), weights, { limit });
+  return getArticleCards(ranked.map((r) => r.item.id));
+}
+
+export async function criteriaForNeed(need: { slug: string; name: string }) {
+  const weights = await getEngineWeights();
+  return criteriaFromNeeds([{ key: need.slug, label: need.name }], weights.needSelection);
 }

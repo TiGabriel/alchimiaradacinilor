@@ -17,6 +17,7 @@ import { ProductBadges } from "@/features/catalog/product-badges";
 import { ProductCard } from "@/features/catalog/product-card";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import { ProductPurchase } from "@/features/catalog/product-purchase";
+import { RoutineCard } from "@/features/routines/routine-card";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatMoney } from "@/lib/money";
 import { siteUrl } from "@/lib/seo";
@@ -28,6 +29,8 @@ import {
   type ProductDetail,
 } from "@/services/catalog/product-detail";
 import { productHref, stockLabel, stockStatus } from "@/services/catalog/product-types";
+import { getArticlesForProduct } from "@/services/journal/journal";
+import { getRoutinesForProduct } from "@/services/routines/routines";
 import { getSetting } from "@/services/settings";
 import { productTypeLabels } from "@/validation/product";
 
@@ -162,9 +165,11 @@ export default async function ProductPage(props: Props) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [related, shipping] = await Promise.all([
+  const [related, shipping, routines, articles] = await Promise.all([
     getRelatedProducts(product.id, 4),
     getSetting("shipping"),
+    getRoutinesForProduct(product.id),
+    getArticlesForProduct(product.id),
   ]);
   const status = stockStatus(product.stock);
   const tone = product.aromas[0]?.colorHex ?? null;
@@ -349,17 +354,11 @@ export default async function ProductPage(props: Props) {
         ) : null}
 
         <Section id="rutine" title="Rutine care includ acest produs" eyebrow="Rutine">
-          {product.routines.length > 0 ? (
-            <ul className="grid gap-3 sm:grid-cols-2">
-              {product.routines.map((routine) => (
-                <li key={routine.slug}>
-                  <Link
-                    href={`/rutine/${routine.slug}`}
-                    className="flex h-full flex-col gap-1 rounded-lg border border-line bg-surface p-4 hover:border-forest"
-                  >
-                    <span className="font-display text-lg">{routine.title}</span>
-                    <span className="text-sm text-ink-muted">{routine.summary}</span>
-                  </Link>
+          {routines.length > 0 ? (
+            <ul className="grid gap-5 sm:grid-cols-2">
+              {routines.map((routine) => (
+                <li key={routine.id}>
+                  <RoutineCard routine={routine} />
                 </li>
               ))}
             </ul>
@@ -368,15 +367,32 @@ export default async function ProductPage(props: Props) {
               size="sm"
               headingLevel="h3"
               className="mx-0 items-start text-left"
-              title="Rutinele sunt în pregătire"
-              description="În curând vei găsi aici ritualuri pas cu pas care includ acest produs."
+              title="Încă nu există o rutină cu acest produs"
+              description="Descoperă ritualurile noastre pas cu pas — poți folosi produsul și în rutinele tale."
               actions={
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/rutine">Despre rutine</Link>
+                  <Link href="/rutine">Vezi rutinele</Link>
                 </Button>
               }
             />
           )}
+          {articles.length > 0 ? (
+            <div className="mt-8 flex flex-col gap-3">
+              <h3 className="font-display text-xl">Din jurnal</h3>
+              <ul className="flex flex-col gap-2">
+                {articles.map((a) => (
+                  <li key={a.id}>
+                    <Link
+                      href={`/jurnal/${a.slug}`}
+                      className="font-semibold text-forest hover:underline"
+                    >
+                      {a.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </Section>
 
         <Section id="recenzii" title="Recenzii" eyebrow="Păreri">

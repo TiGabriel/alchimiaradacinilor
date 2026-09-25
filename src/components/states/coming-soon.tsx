@@ -17,16 +17,6 @@ export const comingSoonPages = {
     description:
       "În curând vei putea răspunde la câteva întrebări simple și vei primi recomandări potrivite ție.",
   },
-  rutine: {
-    eyebrow: "Rutine",
-    title: "Ritualuri pentru fiecare moment al zilei",
-    description: "Pregătim rutine simple, pas cu pas, pentru dimineți luminoase și seri liniștite.",
-  },
-  jurnal: {
-    eyebrow: "Jurnal",
-    title: "Jurnalul nostru botanic",
-    description: "Povești despre plante, arome și ritualuri — primele articole sunt în lucru.",
-  },
   despre: {
     eyebrow: "Despre noi",
     title: "Povestea Alchimiei Rădăcinilor",

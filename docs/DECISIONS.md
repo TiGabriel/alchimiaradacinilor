@@ -287,3 +287,29 @@ after sign-in) can open them. Results store a snapshot of rank, score and reason
 
 Wishlist, saved-routine and purchase signals are loaded only when the latest PERSONALIZATION
 consent is granted. Purchased products are excluded ("already owned").
+
+## Phase 7 — Routines and journal
+
+### D-045 · Article content is Markdown with line embeds
+
+Articles are stored as Markdown and rendered with react-markdown without raw HTML (no XSS surface).
+A paragraph consisting only of `{{produs:slug}}` or `{{rutina:slug}}` becomes a live product or
+routine card; unknown or unpublished slugs are silently dropped. The admin editor (Phase 12) will
+write the same format.
+
+### D-046 · One dynamic segment under /jurnal
+
+`/jurnal/[slug]` resolves a journal category first, then an article, so both `/jurnal/uleiuri` and
+`/jurnal/<article>` stay short. Category and article slugs must not collide: the seed respects this and
+the admin forms (Phase 12) must reject a clash.
+
+### D-047 · Routine → cart adds one of each available product
+
+The button adds quantity 1 of every active, in-stock product not already in the cart and never
+changes quantities the customer already chose. Skipped products are named with the reason. Stock
+and prices are re-read on the server.
+
+### D-048 · Routines and articles share the recommendation engine
+
+Need pages rank routines and articles with `rankProfiles` using the same weights as products, so
+one tuning surface (the `recommendation` setting) affects all content.

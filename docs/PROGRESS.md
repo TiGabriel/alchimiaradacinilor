@@ -9,8 +9,8 @@
 | 3     | Catalog, product page, search                        | Done    |
 | 4     | Cart and wishlist                                    | Done    |
 | 5     | Accounts, authentication, consent, legal pages       | Done    |
-| 6     | Recommendation engine, quiz, need discovery          | Pending |
-| 7     | Routines and journal                                 | Pending |
+| 6     | Recommendation engine, quiz, need discovery          | Done    |
+| 7     | Routines and journal                                 | Done    |
 | 8     | Homepage                                             | Pending |
 | 9     | Checkout, orders, coupons                            | Pending |
 | 10    | Reviews, newsletter, cookie consent, analytics       | Pending |
@@ -182,3 +182,30 @@
 - Tests: engine (scoring, weights, ranking, tie-breaks, exclusions, budget, context, explanations,
   criteria builders), submission rules; integration (saving results with reasons, budget penalty,
   invalid answers, owner-only guest results + claim, consent-gated personal context).
+
+## Phase 7 — Routines, journal and content connections
+
+- Schema (`content_relations` migration): `Routine.frequency`, `Article.authorName`, routine tags,
+  article ↔ routine and article tags. Routines carry cover, description, duration, difficulty,
+  time of day, ordered steps (optionally linked to a product), products, needs, tags, related
+  articles and SEO fields; articles carry cover, author, date, category, Markdown content, tags,
+  related products/routines, SEO and published status.
+- `/rutine` and `/rutine/[slug]`: steps timeline, product cards, related articles, HowTo JSON-LD.
+  "Adaugă produsele rutinei în coș" adds each in-stock, active product once and reports what was
+  skipped (out of stock / unavailable / already in cart) — pure `planRoutineCart`, server-side
+  `addRoutineToCart`. Signed-in users save routines (`/cont/rutine`); guests are invited to sign in.
+- `/jurnal`, `/jurnal/[categorie]`, `/jurnal/[slug]`: featured article, latest articles, category
+  filter with counts, diacritic-insensitive journal search, reading time, related articles
+  (category/routine/product/tag overlap), Article JSON-LD. Content is Markdown rendered without raw
+  HTML; a line `{{produs:slug}}` or `{{rutina:slug}}` embeds a product or routine card.
+- Connections: the product page shows real "Rutine care includ acest produs" and "Din jurnal";
+  `/descopera/[nevoie]` ranks routines and articles with the shared engine (`rankProfiles`);
+  search indexes routines and articles (keywords include their products, so "Lav" finds Lavender,
+  the evening ritual and the lavender articles). Sitemap includes routines, categories, articles.
+- Seed: 4 demo routines (Ritual de seară, Rutina de dimineață, Moment de concentrare, Atmosferă
+  pentru casă), 7 journal categories, 5 demo articles — no medical claims, all flagged demo.
+- Motion: `Reveal`/`Stagger` now show content immediately with reduced motion instead of waiting
+  for the viewport.
+- Tests: routine cart planning, article parsing/reading time/related ranking; integration
+  (relationship queries, published-only listing and search, related articles, need ranking, saved
+  routines, add-routine-to-cart skip reasons incl. guest cart, cross-type search).

@@ -31,8 +31,10 @@ export function Stagger({ children, className, stagger = 0.08, as = "div" }: Sta
         className={className}
         variants={variants}
         initial="hidden"
-        whileInView="visible"
-        viewport={revealViewport}
+        // Reduced motion: show everything at once instead of waiting for the viewport.
+        {...(reduce
+          ? { animate: "visible" }
+          : { whileInView: "visible", viewport: revealViewport })}
       >
         {children}
       </Component>

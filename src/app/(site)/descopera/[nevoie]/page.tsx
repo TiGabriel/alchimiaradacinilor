@@ -10,8 +10,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/features/auth/session";
 import { ProductCard } from "@/features/catalog/product-card";
 import { NeedPicker } from "@/features/discover/need-picker";
+import { ArticleCard } from "@/features/journal/article-card";
+import { RoutineCard } from "@/features/routines/routine-card";
 import { getNeedBySlug, getNeedsWithCounts } from "@/services/catalog/taxonomy";
-import { recommendForNeed } from "@/services/recommendation";
+import {
+  criteriaForNeed,
+  recommendArticles,
+  recommendForNeed,
+  recommendRoutines,
+} from "@/services/recommendation";
 
 type Props = PageProps<"/descopera/[nevoie]">;
 
@@ -32,7 +39,12 @@ export default async function NeedPage(props: Props) {
   if (!need) notFound();
 
   const [needs, user] = await Promise.all([getNeedsWithCounts(), getCurrentUser()]);
-  const recommendations = await recommendForNeed(need, { limit: 8, userId: user?.id });
+  const criteria = await criteriaForNeed(need);
+  const [recommendations, routines, articles] = await Promise.all([
+    recommendForNeed(need, { limit: 8, userId: user?.id }),
+    recommendRoutines(criteria, 3),
+    recommendArticles(criteria, 3),
+  ]);
 
   return (
     <div className="container-page flex flex-col gap-14 pb-(--spacing-section)">
@@ -74,36 +86,65 @@ export default async function NeedPage(props: Props) {
         )}
       </section>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <section
-          aria-labelledby="rutine"
-          className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6"
-        >
-          <h2 id="rutine" className="flex items-center gap-2 text-2xl">
-            <Moon aria-hidden className="size-5 text-forest" /> Rutine
+      <section aria-labelledby="rutine" className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 id="rutine" className="flex items-center gap-2 text-display-md">
+            <Moon aria-hidden className="size-6 text-forest" /> Rutine
           </h2>
-          <p className="text-ink-muted">
-            Ritualurile pas cu pas pentru {need.name.toLowerCase()} sunt în pregătire.
-          </p>
-          <Button asChild variant="outline" size="sm" className="self-start">
-            <Link href="/rutine">Despre rutine</Link>
+          <Button asChild variant="link">
+            <Link href="/rutine">
+              Toate rutinele <ArrowRight aria-hidden />
+            </Link>
           </Button>
-        </section>
-        <section
-          aria-labelledby="articole"
-          className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6"
-        >
-          <h2 id="articole" className="flex items-center gap-2 text-2xl">
-            <BookOpen aria-hidden className="size-5 text-forest" /> Din jurnal
+        </div>
+        {routines.length ? (
+          <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {routines.map(({ routine, explanation }) => (
+              <li key={routine.id}>
+                <RoutineCard routine={routine} reason={explanation} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-xl border border-line bg-surface p-5 text-ink-muted">
+            Încă nu avem o rutină pentru {need.name.toLowerCase()}. Descoperă{" "}
+            <Link href="/rutine" className="font-semibold text-forest underline">
+              celelalte rutine
+            </Link>
+            .
+          </p>
+        )}
+      </section>
+
+      <section aria-labelledby="articole" className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h2 id="articole" className="flex items-center gap-2 text-display-md">
+            <BookOpen aria-hidden className="size-6 text-forest" /> Din jurnal
           </h2>
-          <p className="text-ink-muted">
-            Articolele despre {need.name.toLowerCase()} sunt în pregătire.
-          </p>
-          <Button asChild variant="outline" size="sm" className="self-start">
-            <Link href="/jurnal">Către jurnal</Link>
+          <Button asChild variant="link">
+            <Link href="/jurnal">
+              Toate articolele <ArrowRight aria-hidden />
+            </Link>
           </Button>
-        </section>
-      </div>
+        </div>
+        {articles.length ? (
+          <ul className="grid gap-x-8 gap-y-12 md:grid-cols-3">
+            {articles.map((a) => (
+              <li key={a.id}>
+                <ArticleCard article={a} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="rounded-xl border border-line bg-surface p-5 text-ink-muted">
+            Articolele despre {need.name.toLowerCase()} sunt în lucru. Până atunci,{" "}
+            <Link href="/jurnal" className="font-semibold text-forest underline">
+              citește jurnalul
+            </Link>
+            .
+          </p>
+        )}
+      </section>
 
       <section className="flex flex-col items-start gap-4 rounded-2xl bg-forest p-8 text-ink-inverse md:flex-row md:items-center md:justify-between">
         <div>

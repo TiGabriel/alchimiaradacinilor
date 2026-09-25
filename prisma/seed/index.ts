@@ -11,6 +11,7 @@ import { PrismaClient, type Prisma } from "../../src/generated/prisma/client";
 import { settingDefaults, type SettingKey } from "../../src/validation/settings";
 
 import { demoProducts, demoSafety, demoUsage } from "./data/products";
+import { articleCategories, articles, routines } from "./data/content";
 import { quiz, quizQuestions } from "./data/quiz";
 import { aromaProfiles, categories, demoBrands, needs, roles, tags } from "./data/taxonomy";
 
@@ -156,6 +157,132 @@ async function seedQuiz(ids: {
   }
 }
 
+/** Demo routines: upserted by slug; steps, products, needs and tags rebuilt on every run. */
+async function seedRoutines(ids: {
+  products: Map<string, string>;
+  needs: Map<string, string>;
+  tags: Map<string, string>;
+}) {
+  const routineIds = new Map<string, string>();
+  for (const r of routines) {
+    const data = {
+      title: r.title,
+      summary: r.summary,
+      description: r.description,
+      timeOfDay: r.timeOfDay,
+      difficulty: r.difficulty,
+      durationMinutes: r.durationMinutes,
+      frequency: r.frequency,
+      featured: r.featured ?? false,
+      active: true,
+      isDemo: true,
+    };
+    const row = await db.routine.upsert({
+      where: { slug: r.slug },
+      create: { slug: r.slug, ...data },
+      update: data,
+    });
+    routineIds.set(r.slug, row.id);
+    await db.$transaction([
+      db.routineStep.deleteMany({ where: { routineId: row.id } }),
+      db.routineProduct.deleteMany({ where: { routineId: row.id } }),
+      db.routineNeed.deleteMany({ where: { routineId: row.id } }),
+      db.routineTag.deleteMany({ where: { routineId: row.id } }),
+      db.routineProduct.createMany({
+        data: r.products.map((p, position) => ({
+          routineId: row.id,
+          productId: requireId(ids.products, p.slug, "product"),
+          position,
+          isOptional: p.optional ?? false,
+          note: p.note ?? null,
+        })),
+      }),
+      db.routineStep.createMany({
+        data: r.steps.map((step, position) => ({
+          routineId: row.id,
+          position,
+          title: step.title,
+          instructions: step.instructions,
+          durationMinutes: step.minutes ?? null,
+          productId: step.product ? requireId(ids.products, step.product, "product") : null,
+        })),
+      }),
+      db.routineNeed.createMany({
+        data: r.needs.map((slug) => ({
+          routineId: row.id,
+          needId: requireId(ids.needs, slug, "need"),
+        })),
+      }),
+      db.routineTag.createMany({
+        data: r.tags.map((slug) => ({
+          routineId: row.id,
+          tagId: requireId(ids.tags, slug, "tag"),
+        })),
+      }),
+    ]);
+  }
+  return routineIds;
+}
+
+async function seedJournal(ids: {
+  products: Map<string, string>;
+  routines: Map<string, string>;
+  tags: Map<string, string>;
+}) {
+  const categoryIds = await upsertBySlug(articleCategories, (c, position) =>
+    db.articleCategory.upsert({
+      where: { slug: c.slug },
+      create: { ...c, position },
+      update: { ...c, position },
+    }),
+  );
+  const now = Date.now();
+  for (const a of articles) {
+    const data = {
+      title: a.title,
+      excerpt: a.excerpt,
+      content: a.content,
+      authorName: "Echipa Alchimia Rădăcinilor",
+      categoryId: requireId(categoryIds, a.category, "article category"),
+      status: "PUBLISHED" as const,
+      publishedAt: new Date(now - a.daysAgo * 24 * 60 * 60 * 1000),
+      featured: a.featured ?? false,
+      isDemo: true,
+    };
+    const row = await db.article.upsert({
+      where: { slug: a.slug },
+      create: { slug: a.slug, ...data },
+      update: data,
+    });
+    await db.$transaction([
+      db.articleProduct.deleteMany({ where: { articleId: row.id } }),
+      db.articleRoutine.deleteMany({ where: { articleId: row.id } }),
+      db.articleTag.deleteMany({ where: { articleId: row.id } }),
+      db.articleProduct.createMany({
+        data: a.products.map((slug, position) => ({
+          articleId: row.id,
+          productId: requireId(ids.products, slug, "product"),
+          position,
+        })),
+      }),
+      db.articleRoutine.createMany({
+        data: a.routines.map((slug, position) => ({
+          articleId: row.id,
+          routineId: requireId(ids.routines, slug, "routine"),
+          position,
+        })),
+      }),
+      db.articleTag.createMany({
+        data: a.tags.map((slug) => ({
+          articleId: row.id,
+          tagId: requireId(ids.tags, slug, "tag"),
+        })),
+      }),
+    ]);
+  }
+  return { categories: categoryIds.size, articles: articles.length };
+}
+
 async function main() {
   await seedRoles();
   const categoryIds = await seedCategories();
@@ -261,11 +388,14 @@ async function main() {
   }
 
   await seedQuiz({ needs: needIds, aromas: aromaIds, tags: tagIds });
+  const routineIds = await seedRoutines({ products: productIds, needs: needIds, tags: tagIds });
+  const journal = await seedJournal({ products: productIds, routines: routineIds, tags: tagIds });
   await seedSettings();
 
   console.log(
     `Seeded: ${categoryIds.size} categories, ${needIds.size} needs, ${aromaIds.size} aroma profiles, ` +
-      `${tagIds.size} tags, ${brandIds.size} demo brands, ${productIds.size} demo products.`,
+      `${tagIds.size} tags, ${brandIds.size} demo brands, ${productIds.size} demo products, ` +
+      `${routineIds.size} demo routines, ${journal.categories} journal categories, ${journal.articles} demo articles.`,
   );
 }
 

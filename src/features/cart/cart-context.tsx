@@ -33,6 +33,8 @@ type CartContextValue = {
   ) => Promise<boolean>;
   setQuantity: (productId: string, quantity: number) => Promise<void>;
   removeItem: (product: { id: string; name: string }) => Promise<void>;
+  /** Replace the cart with a fresh server view (e.g. after adding a whole routine). */
+  applyCart: (view: CartView, options?: AddOptions) => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -136,6 +138,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       addItem,
       setQuantity,
       removeItem,
+      applyCart: (view, options) => {
+        setCart(view);
+        if (options?.openDrawer !== false) setDrawerOpen(true);
+      },
     }),
     [cart, drawerOpen, pendingIds, addItem, setQuantity, removeItem],
   );

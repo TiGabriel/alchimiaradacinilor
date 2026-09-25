@@ -1,13 +1,21 @@
 import "server-only";
 
 import { buildIndex, groupHits, search, type SearchGroup, type SearchIndex } from "./engine";
+import { articleSource } from "./sources/articles";
 import { categorySource } from "./sources/categories";
 import { productSource } from "./sources/products";
+import { routineSource } from "./sources/routines";
 import { tagSource } from "./sources/tags";
 import type { SearchSource } from "./sources/types";
 
 /** Registered sources, in display order. Add new sources here. */
-export const searchSources: SearchSource[] = [categorySource, productSource, tagSource];
+export const searchSources: SearchSource[] = [
+  categorySource,
+  productSource,
+  routineSource,
+  articleSource,
+  tagSource,
+];
 
 const TTL_MS = 60_000;
 let cached: { index: SearchIndex; at: number } | null = null;

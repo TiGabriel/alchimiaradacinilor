@@ -550,6 +550,8 @@ model Tag {
   updatedAt DateTime @updatedAt
 
   products    ProductTag[]
+  routines    RoutineTag[]
+  articles    ArticleTag[]
   quizAnswers QuizAnswerTag[]
 
   @@map("tags")
@@ -808,6 +810,8 @@ model Routine {
   timeOfDay       RoutineTimeOfDay  @default(ANYTIME)
   difficulty      RoutineDifficulty @default(BEGINNER)
   durationMinutes Int?
+  /// Recommended frequency, e.g. "Zilnic, seara" (free text).
+  frequency       String?
   imageId         String?
   featured        Boolean           @default(false)
   active          Boolean           @default(true)
@@ -819,6 +823,8 @@ model Routine {
   image       MediaAsset?      @relation(fields: [imageId], references: [id], onDelete: SetNull)
   seo         SeoMeta?         @relation(fields: [seoId], references: [id], onDelete: SetNull)
   needs       RoutineNeed[]
+  tags        RoutineTag[]
+  articles    ArticleRoutine[]
   products    RoutineProduct[]
   steps       RoutineStep[]
   savedBy     SavedRoutine[]
@@ -837,6 +843,18 @@ model RoutineNeed {
   @@id([routineId, needId])
   @@index([needId])
   @@map("routine_needs")
+}
+
+model RoutineTag {
+  routineId String
+  tagId     String
+
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([routineId, tagId])
+  @@index([tagId])
+  @@map("routine_tags")
 }
 
 model RoutineProduct {
@@ -919,6 +937,8 @@ model Article {
   content      String
   coverImageId String?
   authorId     String?
+  /// Byline when the author is not a user account (e.g. "Echipa Alchimia Rădăcinilor").
+  authorName   String?
   categoryId   String?
   status       ContentStatus @default(DRAFT)
   publishedAt  DateTime?
@@ -933,6 +953,8 @@ model Article {
   category   ArticleCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   seo        SeoMeta?         @relation(fields: [seoId], references: [id], onDelete: SetNull)
   products   ArticleProduct[]
+  routines   ArticleRoutine[]
+  tags       ArticleTag[]
 
   @@index([status, publishedAt])
   @@index([categoryId])
@@ -950,6 +972,31 @@ model ArticleProduct {
   @@id([articleId, productId])
   @@index([productId])
   @@map("article_products")
+}
+
+model ArticleRoutine {
+  articleId String
+  routineId String
+  position  Int    @default(0)
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  routine Routine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, routineId])
+  @@index([routineId])
+  @@map("article_routines")
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId])
+  @@map("article_tags")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

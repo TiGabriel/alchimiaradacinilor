@@ -1,4 +1,4 @@
-import { FolderTree, Search, Tag } from "lucide-react";
+import { BookOpen, FolderTree, Moon, Search, Tag } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -85,7 +85,14 @@ export default async function SearchPage(props: Props) {
               </h2>
               <ul className="flex flex-wrap gap-2">
                 {group.hits.map(({ doc }) => {
-                  const Icon = doc.type === "category" ? FolderTree : Tag;
+                  const Icon =
+                    doc.type === "category"
+                      ? FolderTree
+                      : doc.type === "routine"
+                        ? Moon
+                        : doc.type === "article"
+                          ? BookOpen
+                          : Tag;
                   return (
                     <li key={doc.id}>
                       <Link

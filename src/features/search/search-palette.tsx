@@ -1,6 +1,16 @@
 "use client";
 
-import { ArrowRight, CornerDownLeft, FolderTree, History, Search, Tag, X } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CornerDownLeft,
+  FolderTree,
+  History,
+  Moon,
+  Search,
+  Tag,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -82,7 +92,14 @@ function HitVisual({ hit }: { hit: SearchApiHit }) {
       </span>
     );
   }
-  const Icon = hit.type === "category" ? FolderTree : Tag;
+  const Icon =
+    hit.type === "category"
+      ? FolderTree
+      : hit.type === "routine"
+        ? Moon
+        : hit.type === "article"
+          ? BookOpen
+          : Tag;
   return (
     <span className="grid size-10 shrink-0 place-items-center rounded-full bg-forest-soft text-forest">
       <Icon aria-hidden className="size-4" />
