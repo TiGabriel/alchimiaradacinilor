@@ -2,14 +2,22 @@
 
 ## Phase overview
 
-| Phase | Scope                                              | Status  |
-| ----- | -------------------------------------------------- | ------- |
-| 1     | Inspection, architecture, foundation               | Done    |
-| 2     | Design system and global layout                    | Done    |
-| 3     | Catalog, product page, search                      | Done    |
-| 4     | Cart and wishlist                                  | Done    |
-| 5     | Authentication and roles (+ cart/wishlist merge)   | Pending |
-| 6+    | Checkout, quiz, routines, journal, account, admin… | Pending |
+| Phase | Scope                                                | Status  |
+| ----- | ---------------------------------------------------- | ------- |
+| 1     | Inspection, architecture, foundation                 | Done    |
+| 2     | Design system and global layout                      | Done    |
+| 3     | Catalog, product page, search                        | Done    |
+| 4     | Cart and wishlist                                    | Done    |
+| 5     | Accounts, authentication, consent, legal pages       | Done    |
+| 6     | Recommendation engine, quiz, need discovery          | Pending |
+| 7     | Routines and journal                                 | Pending |
+| 8     | Homepage                                             | Pending |
+| 9     | Checkout, orders, coupons                            | Pending |
+| 10    | Reviews, newsletter, cookie consent, analytics       | Pending |
+| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Pending |
+| 12    | Admin part 2 (quiz, content, marketing, settings)    | Pending |
+| 13    | SEO, performance, security, accessibility audit      | Pending |
+| 14    | Final UX review, tests, documentation                | Pending |
 
 ## Phase 1 — Foundation
 
@@ -107,3 +115,45 @@
   on login; call `mergeLocalWishlistIntoUser()` with the browser's ids and switch the wishlist
   provider to the DB for signed-in users.
 - Cleanup job for expired guest carts (`carts.expiresAt`).
+
+## Phase 5 — Accounts, authentication and consent
+
+- Custom auth on the existing schema: argon2id password hashes, random session tokens stored
+  hashed (`ar_session`, httpOnly, Secure in production, SameSite=Lax, 30-day sliding), single-use
+  hashed tokens for email verification (24 h) and password reset (60 min, revokes all sessions).
+- CSRF: all mutations are Server Actions (POST-only + Origin/Host check by Next) with SameSite
+  cookies. Rate limiting (sliding window) on login (IP + email), registration, reset, verification
+  resend and the contact form.
+- Registration: first/last name, email, password + confirmation; required privacy consent and an
+  optional, never pre-checked marketing consent. ConsentRecords store purpose, granted, timestamp,
+  policy version, source and a salted IP hash; marketing consent creates a pending subscriber that
+  activates on email verification.
+- Roles/permissions (customer/editor/admin), `requireUser` / `requirePermission` guards in layouts,
+  pages and actions, `/admin` returns 404 to non-staff; `proxy.ts` gives optimistic redirects that
+  keep the requested path. First admin: `pnpm admin:create` (env vars).
+- On sign-in: guest cart merged server-side; browser wishlist merged into the account and the
+  wishlist switches to the DB for signed-in users.
+- Email: provider abstraction (console in dev, Resend, SMTP); disabled — never faked — in
+  production when unconfigured. Responsive HTML + text templates (verification, welcome, reset,
+  contact) on a shared layout for later order/newsletter emails.
+- `/cont`: sidebar (scrollable menu on mobile) with overview ("Salut, …", recent order, saved
+  products, latest recommendation, saved routine, newsletter status — each with an empty state),
+  Comenzi, Favorite, Rutinele mele, Rezultate quiz, Recomandări, Adrese (CRUD, Romanian counties,
+  company invoicing), Date personale, Preferințe newsletter (withdraw/grant, personalisation toggle,
+  consent history), Securitate (change password, devices, sign out others).
+- Legal pages with real site facts and marked placeholders for lawyer review: confidențialitate,
+  termeni, cookies (actual cookies/storage listed), retur, livrare; contact form (validated,
+  rate-limited, honeypot, honest when email is unavailable).
+- Tests: unit (hashing, tokens, rate limiter, permissions, consent reducer, auth/address schemas,
+  email templates and provider resolution) and integration against PostgreSQL
+  (`pnpm test:integration`: registration, login, sessions, verification, reset/change password,
+  consent withdrawal, role guards, cart/wishlist merge).
+- Verified in Chromium: register (validation, consent defaults), cart merge, verification link,
+  addresses, consent withdrawal, customer 404 on /admin, logout → login with `next`, contact form,
+  admin created by script can open /admin; no horizontal overflow at 390 px.
+
+**Open items**
+
+- Replace the in-memory rate limiter with a shared store (Redis/Upstash) if running more than one
+  instance. Email change flow (with re-verification). Account deletion / data export requests
+  (currently by email, per the privacy policy).

@@ -1,10 +1,25 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useMemo, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import { toast } from "@/components/ui/toast";
 
+import { useSession } from "../auth/session-context";
+
+import {
+  getAccountWishlistAction,
+  mergeWishlistAction,
+  toggleAccountWishlistAction,
+} from "./actions";
 import {
   getWishlistServerSnapshot,
   getWishlistSnapshot,
@@ -16,6 +31,8 @@ import {
 type WishlistContextValue = {
   ids: readonly string[];
   count: number;
+  /** Where the list is kept: this browser (guest) or the account. */
+  storage: "browser" | "account";
   has: (productId: string) => boolean;
   toggle: (product: { id: string; name: string }) => void;
   remove: (productId: string) => void;
@@ -24,52 +41,98 @@ type WishlistContextValue = {
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
 /**
- * Guests: stored in this browser (localStorage). Signed-in customers get a
- * DB-backed wishlist in the auth phase, merged via mergeLocalWishlistIntoUser().
+ * Guests: localStorage. Signed in: the account's wishlist in the DB. On the
+ * first load after sign-in, the browser's items are merged into the account
+ * and the local copy is cleared.
  */
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const ids = useSyncExternalStore(
+  const { user } = useSession();
+  const localIds = useSyncExternalStore(
     subscribeWishlist,
     getWishlistSnapshot,
     getWishlistServerSnapshot,
   );
+  const [accountIds, setAccountIds] = useState<readonly string[] | null>(null);
+  const signedIn = Boolean(user);
 
+  useEffect(() => {
+    if (!signedIn) return;
+    let cancelled = false;
+    const local = getWishlistSnapshot();
+    (local.length ? mergeWishlistAction([...local]) : getAccountWishlistAction())
+      .then((ids) => {
+        if (cancelled || !ids) return;
+        setAccountIds(ids);
+        if (local.length) writeWishlist([]);
+      })
+      .catch((error: unknown) => console.error("[wishlist] load failed", error));
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
+
+  const ids = useMemo<readonly string[]>(
+    () => (signedIn ? (accountIds ?? []) : localIds),
+    [signedIn, accountIds, localIds],
+  );
   const has = useCallback((id: string) => ids.includes(id), [ids]);
 
-  const remove = useCallback(
-    (id: string) => writeWishlist(getWishlistSnapshot().filter((i) => i !== id)),
-    [],
+  const apply = useCallback(
+    async (productId: string) => {
+      if (signedIn) {
+        // Optimistic update, then reconcile with the server's list.
+        setAccountIds((current) => toggleId(current ?? [], productId));
+        const next = await toggleAccountWishlistAction(productId);
+        if (next) setAccountIds(next);
+      } else {
+        writeWishlist(toggleId(getWishlistSnapshot(), productId));
+      }
+    },
+    [signedIn],
   );
 
   const toggle = useCallback(
     (product: { id: string; name: string }) => {
-      const current = getWishlistSnapshot();
-      const adding = !current.includes(product.id);
-      writeWishlist(toggleId(current, product.id));
+      const adding = !ids.includes(product.id);
+      void apply(product.id);
       toast(
         adding
           ? {
               title: "Adăugat la favorite",
               description: product.name,
-              action: { label: "Vezi favoritele", onClick: () => router.push("/favorite") },
+              action: {
+                label: "Vezi favoritele",
+                onClick: () => router.push(signedIn ? "/cont/favorite" : "/favorite"),
+              },
             }
           : {
               title: "Eliminat din favorite",
               description: product.name,
-              action: {
-                label: "Anulează",
-                onClick: () => writeWishlist(toggleId(getWishlistSnapshot(), product.id)),
-              },
+              action: { label: "Anulează", onClick: () => void apply(product.id) },
             },
       );
     },
-    [router],
+    [apply, ids, router, signedIn],
   );
 
-  const value = useMemo(
-    () => ({ ids, count: ids.length, has, toggle, remove }),
-    [ids, has, toggle, remove],
+  const remove = useCallback(
+    (productId: string) => {
+      if (ids.includes(productId)) void apply(productId);
+    },
+    [apply, ids],
+  );
+
+  const value = useMemo<WishlistContextValue>(
+    () => ({
+      ids,
+      count: ids.length,
+      storage: signedIn ? "account" : "browser",
+      has,
+      toggle,
+      remove,
+    }),
+    [ids, signedIn, has, toggle, remove],
   );
   return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
 }

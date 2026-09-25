@@ -42,3 +42,23 @@ export async function mergeLocalWishlistIntoUser(
   }
   return merged;
 }
+
+/** Adds or removes one product; returns the updated ids. */
+export async function toggleUserWishlist(userId: string, productId: string): Promise<string[]> {
+  const product = await db.product.findUnique({
+    where: { id: productId },
+    select: { active: true },
+  });
+  const wishlist = await db.wishlist.upsert({ where: { userId }, create: { userId }, update: {} });
+  const existing = await db.wishlistItem.findUnique({
+    where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },
+  });
+  if (existing) {
+    await db.wishlistItem.delete({
+      where: { wishlistId_productId: { wishlistId: wishlist.id, productId } },
+    });
+  } else if (product?.active) {
+    await db.wishlistItem.create({ data: { wishlistId: wishlist.id, productId } });
+  }
+  return getUserWishlistIds(userId);
+}

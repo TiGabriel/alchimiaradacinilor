@@ -50,7 +50,8 @@ function subscribe(listener: () => void) {
 }
 
 const getSnapshot = () => items;
-const getServerSnapshot = (): ToastItem[] => [];
+const EMPTY: ToastItem[] = [];
+const getServerSnapshot = (): ToastItem[] => EMPTY;
 
 const icons = {
   default: <Info aria-hidden className="size-5 text-forest" />,

@@ -24,7 +24,9 @@ using an API you are unsure about (async `params`/`searchParams`/`cookies()`,
 ```bash
 pnpm dev            # dev server
 pnpm check          # typecheck + lint + format check + tests
-pnpm test           # vitest
+pnpm test           # unit tests (vitest)
+pnpm test:integration  # integration tests against DATABASE_URL_TEST
+pnpm admin:create   # create/promote an admin (ADMIN_EMAIL, ADMIN_PASSWORD)
 pnpm build          # production build
 pnpm db:migrate     # create/apply a migration (dev)
 pnpm db:seed        # idempotent seed (taxonomy + demo products)
@@ -52,6 +54,9 @@ components/layout/  header, footer, navigation shells.
 - Keep pure logic in modules that do not import `@/lib/db` (tests and client components
   import them); data access lives next to it in a `server-only` module.
 - No `loading.tsx` above routes that call `notFound()` (see DECISIONS D-017).
+- Every mutation is a Server Action that calls `requireUser()`/`requirePermission()` itself
+  (layouts are not enough) and validates input with Zod.
+- Never report success for an email that was not sent (`isDelivered()`).
 
 ## Data rules
 
@@ -108,7 +113,7 @@ AA contrast, `aria-live` for cart/toast updates.
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm lint` passes
 - [ ] `pnpm format:check` passes
-- [ ] `pnpm test` passes; new logic has unit tests
+- [ ] `pnpm test` and `pnpm test:integration` pass; new logic has tests
 - [ ] `pnpm build` passes
 - [ ] Migrations committed; `pnpm db:seed` runs cleanly (idempotent)
 - [ ] Copy is Romanian, diacritics correct, no medical/therapeutic claims

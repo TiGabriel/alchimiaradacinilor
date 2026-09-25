@@ -3,10 +3,14 @@ import { cookies } from "next/headers";
 
 import { GUEST_CART_TTL_DAYS, type CartOwner } from "@/services/cart/cart";
 
+import { getCurrentUser } from "../auth/session";
+
 export const CART_COOKIE = "ar_cart";
 
-/** Resolves the current cart owner. The signed-in user is added in the auth phase. */
+/** Signed-in customers own their cart by user id; guests by an opaque cookie token. */
 export async function getCartOwner(): Promise<CartOwner> {
+  const user = await getCurrentUser();
+  if (user) return { userId: user.id, token: null };
   const jar = await cookies();
   const token = jar.get(CART_COOKIE)?.value ?? null;
   return { userId: null, token: token && /^[A-Za-z0-9_-]{16,64}$/.test(token) ? token : null };

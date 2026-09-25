@@ -9,7 +9,8 @@ const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
   APP_URL: z.url().default("http://localhost:3000"),
-  BETTER_AUTH_SECRET: z.string().min(32).optional(),
+  /** Signs nothing directly (sessions are random DB tokens) but salts IP pseudonyms; ≥ 32 chars. */
+  AUTH_SECRET: z.string().min(32).optional(),
   EMAIL_PROVIDER: z.enum(["console", "resend", "smtp"]).default("console"),
   EMAIL_FROM: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
@@ -28,8 +29,14 @@ const serverEnvSchema = z.object({
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
+const productionRules = serverEnvSchema.superRefine((value, ctx) => {
+  if (value.NODE_ENV === "production" && !value.AUTH_SECRET) {
+    ctx.addIssue({ code: "custom", path: ["AUTH_SECRET"], message: "is required in production" });
+  }
+});
+
 export function parseServerEnv(source: Record<string, string | undefined>): ServerEnv {
-  const result = serverEnvSchema.safeParse(source);
+  const result = productionRules.safeParse(source);
   if (!result.success) {
     const issues = result.error.issues
       .map((i) => `  - ${i.path.join(".")}: ${i.message}`)

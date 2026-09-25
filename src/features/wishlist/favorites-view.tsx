@@ -24,7 +24,7 @@ function EmptyHeart() {
 }
 
 export function FavoritesView() {
-  const { ids, remove } = useWishlist();
+  const { ids, remove, storage } = useWishlist();
   const { addItem, pendingIds } = useCart();
   const [loaded, setLoaded] = useState<{ key: string; products: ProductCardData[] } | null>(null);
   const key = ids.join(",");
@@ -68,7 +68,8 @@ export function FavoritesView() {
   return (
     <div className="flex flex-col gap-6">
       <p className="text-ink-muted" aria-live="polite">
-        {pluralRo(products.length, "produs salvat", "produse salvate")} · păstrate în acest browser
+        {pluralRo(products.length, "produs salvat", "produse salvate")} ·{" "}
+        {storage === "account" ? "salvate în contul tău" : "păstrate în acest browser"}
       </p>
       <ul className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
         {products.map((product) => {

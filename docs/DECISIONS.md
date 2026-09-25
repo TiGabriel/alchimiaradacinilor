@@ -204,3 +204,56 @@ free. A free-shipping coupon is modelled as a discount rule with `freeShipping: 
 
 Wishlists are low-stakes and need no server round-trip for guests, so they live in the browser
 (ids only). Signed-in users get the `wishlists` table; the merge function is pure and tested.
+
+## Phase 5 — Accounts and consent
+
+### D-032 · Custom authentication instead of Better Auth (supersedes D-004)
+
+Requirements (split names, two consents with records, verification before ordering, cart and
+wishlist merge, Romanian copy, precise rate limits) touch every step of the flow. A small custom
+layer on the existing tables (`sessions`, `accounts`, `verifications`) is fully testable and has no
+framework coupling. `User.name` became `firstName`/`lastName`; `emailVerified` became
+`emailVerifiedAt`.
+
+### D-033 · Session and token storage
+
+Session cookies carry a random 256-bit token; only its SHA-256 hash is stored, so a database leak
+does not yield usable sessions. One-time tokens are hashed too and are single-use; issuing a new
+one invalidates the previous link. Email verification requires a click (POST) so link scanners
+cannot consume the token.
+
+### D-034 · CSRF protection
+
+Every state change is a Server Action: Next.js only accepts POST for actions and rejects requests
+whose Origin does not match the Host. Auth cookies are SameSite=Lax and httpOnly. The only route
+handler (`/api/search`) is a read-only GET.
+
+### D-035 · Rate limiting in memory
+
+Sliding-window limiters per process (`services/auth/rate-limit.ts`). Adequate for a single
+instance; swap the store for Redis/Upstash behind the same interface when scaling out. Limits count
+only requests that pass validation for registration, so fixing typos never locks a user out.
+
+### D-036 · Email is never faked
+
+`sendEmail` returns `sent | logged | disabled | failed`. The console provider is refused in
+production; half-configured providers are reported as disabled. Actions surface delivery problems
+honestly (e.g. registration says the confirmation email could not be sent).
+
+### D-037 · Consent purposes
+
+`PRIVACY_POLICY` (required at sign-up), `NEWSLETTER` (the optional email-marketing checkbox) and
+`PERSONALIZATION` (using account activity for recommendations, off by default). Records are
+append-only; the current state is the latest record per purpose. The newsletter subscriber row
+mirrors the NEWSLETTER consent and becomes active when the email is verified.
+
+### D-038 · Guards at three levels
+
+`proxy.ts` does an optimistic cookie-presence redirect (keeps the requested path); layouts and
+pages call `requireUser`/`requirePermission`; every action calls them again. Non-staff get a 404
+for `/admin` so the area is not advertised.
+
+### D-039 · Integration tests on a real database
+
+`pnpm test:integration` migrates `DATABASE_URL_TEST`, truncates tables between tests and exercises
+services against PostgreSQL (constraints, transactions and unique indexes are part of the logic).

@@ -48,7 +48,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       .then((view) => {
         if (!cancelled) setCart(view);
       })
-      .catch((error: unknown) => console.error("[cart] load failed", error));
+      // Usually an aborted request during a full-page navigation; the next page load retries.
+      .catch((error: unknown) => console.warn("[cart] load failed", error));
     return () => {
       cancelled = true;
     };

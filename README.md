@@ -23,6 +23,22 @@ pnpm db:seed                 # taxonomy + demo products (idempotent)
 pnpm dev                     # http://localhost:3000
 ```
 
+## First administrator
+
+```bash
+ADMIN_EMAIL=you@example.ro ADMIN_PASSWORD='a-long-password-2026' pnpm admin:create
+```
+
+Creates the account (email marked verified) or promotes an existing one. Re-run with only
+`ADMIN_EMAIL` to grant the role to an existing account. The admin area is at `/admin`.
+
+## Email
+
+Set `EMAIL_PROVIDER` to `resend` (with `RESEND_API_KEY`) or `smtp` (with `SMTP_*`) and
+`EMAIL_FROM`. In development the `console` provider prints emails (and their links) to the
+terminal. In production an unconfigured provider disables sending — the site says so instead of
+pretending an email was sent.
+
 ## Scripts
 
 | Script            | What it does                                 |

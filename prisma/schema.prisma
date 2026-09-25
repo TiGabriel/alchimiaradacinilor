@@ -119,6 +119,8 @@ enum ConsentPurpose {
   NEWSLETTER
   TERMS
   PRIVACY_POLICY
+  /// Using wishlist/purchases/saved routines to personalise recommendations.
+  PERSONALIZATION
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,14 +128,17 @@ enum ConsentPurpose {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model User {
-  id            String   @id @default(uuid(7))
-  email         String   @unique
-  emailVerified Boolean  @default(false)
-  name          String
-  image         String?
-  phone         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String    @id @default(uuid(7))
+  email           String    @unique
+  /// Set when the email address was verified (required before ordering).
+  emailVerifiedAt DateTime?
+  firstName       String
+  lastName        String
+  image           String?
+  phone           String?
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   roles          UserRole[]
   sessions       Session[]
@@ -181,6 +186,7 @@ model UserRole {
   @@map("user_roles")
 }
 
+/// Server-side session. `token` holds the SHA-256 hash of the cookie value, never the raw token.
 model Session {
   id        String   @id @default(uuid(7))
   token     String   @unique
@@ -218,8 +224,10 @@ model Account {
   @@map("accounts")
 }
 
+/// One-time tokens (email verification, password reset). `value` is the SHA-256 hash of the token.
 model Verification {
   id         String   @id @default(uuid(7))
+  /// "<purpose>:<userId>", e.g. "email-verification:…", "password-reset:…".
   identifier String
   value      String
   expiresAt  DateTime
@@ -227,6 +235,7 @@ model Verification {
   updatedAt  DateTime @updatedAt
 
   @@index([identifier])
+  @@index([value])
   @@map("verifications")
 }
 

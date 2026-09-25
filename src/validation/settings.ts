@@ -41,6 +41,17 @@ export const settingSchemas = {
     /** Minor units (bani); orders at or above this subtotal ship free. null disables free shipping. */
     freeShippingThreshold: z.number().int().nonnegative().nullable(),
   }),
+  legal: z.object({
+    /** Bump whenever the privacy policy text changes; stored with every consent record. */
+    privacyPolicyVersion: z.string().min(1),
+    termsVersion: z.string().min(1),
+    cookiePolicyVersion: z.string().min(1),
+    /** Legal entity details shown on legal pages; null until provided. */
+    companyName: z.string().nullable(),
+    companyRegistration: z.string().nullable(),
+    companyVatNumber: z.string().nullable(),
+    companyAddress: z.string().nullable(),
+  }),
 } as const;
 
 export type SettingKey = keyof typeof settingSchemas;
@@ -65,6 +76,15 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
   shipping: {
     flatFee: 1999,
     freeShippingThreshold: 25000,
+  },
+  legal: {
+    privacyPolicyVersion: "2026-09-draft",
+    termsVersion: "2026-09-draft",
+    cookiePolicyVersion: "2026-09-draft",
+    companyName: null,
+    companyRegistration: null,
+    companyVatNumber: null,
+    companyAddress: null,
   },
 };
 

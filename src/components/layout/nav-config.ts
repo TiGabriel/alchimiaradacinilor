@@ -46,7 +46,7 @@ export const legalLinks: NavLink[] = [
   { label: "Termeni și condiții", href: "/termeni-si-conditii" },
   { label: "Politica de confidențialitate", href: "/politica-de-confidentialitate" },
   { label: "Politica de cookies", href: "/politica-cookies" },
-  { label: "Livrare și retur", href: "/livrare-si-retur" },
+  { label: "Politica de retur", href: "/politica-de-retur" },
 ];
 
 export const helpLinks: NavLink[] = [

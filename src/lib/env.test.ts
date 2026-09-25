@@ -10,6 +10,15 @@ describe("parseServerEnv", () => {
     expect(env.APP_URL).toBe("http://localhost:3000");
   });
 
+  it("requires AUTH_SECRET in production", () => {
+    expect(() =>
+      parseServerEnv({
+        DATABASE_URL: "postgresql://u:p@localhost:5432/db",
+        NODE_ENV: "production",
+      }),
+    ).toThrow(/AUTH_SECRET/);
+  });
+
   it("reports every invalid variable", () => {
     expect(() => parseServerEnv({ DATABASE_URL: "nope", EMAIL_PROVIDER: "pigeon" })).toThrow(
       /DATABASE_URL[\s\S]*EMAIL_PROVIDER/,

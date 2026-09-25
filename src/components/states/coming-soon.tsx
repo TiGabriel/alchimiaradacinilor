@@ -37,30 +37,6 @@ export const comingSoonPages = {
     title: "Contul tău este în pregătire",
     description: "Autentificarea, comenzile și adresele salvate vor fi disponibile în curând.",
   },
-  termeni: {
-    eyebrow: "Informații legale",
-    title: "Termeni și condiții",
-    description:
-      "Documentul este în curs de redactare și va fi publicat înainte de lansarea magazinului.",
-  },
-  confidentialitate: {
-    eyebrow: "Informații legale",
-    title: "Politica de confidențialitate",
-    description:
-      "Documentul este în curs de redactare și va fi publicat înainte de lansarea magazinului.",
-  },
-  cookies: {
-    eyebrow: "Informații legale",
-    title: "Politica de cookies",
-    description:
-      "Documentul este în curs de redactare și va fi publicat înainte de lansarea magazinului.",
-  },
-  livrare: {
-    eyebrow: "Ajutor",
-    title: "Livrare și retur",
-    description:
-      "Detaliile despre livrare, costuri și retururi vor fi publicate înainte de lansare.",
-  },
   faq: {
     eyebrow: "Ajutor",
     title: "Întrebări frecvente",

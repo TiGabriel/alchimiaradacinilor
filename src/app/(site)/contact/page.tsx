@@ -5,6 +5,8 @@ import { Leaf } from "@/components/botanical";
 import { FacebookIcon } from "@/components/icons/facebook";
 import { Reveal } from "@/components/motion";
 import { Card } from "@/components/ui/card";
+import { ContactForm } from "@/features/contact/contact-form";
+import { getCurrentUser } from "@/features/auth/session";
 import { getSettings } from "@/services/settings";
 
 export const metadata: Metadata = {
@@ -13,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const { contact, social, brand } = await getSettings();
+  const [{ contact, social, brand }, user] = await Promise.all([getSettings(), getCurrentUser()]);
 
   const rows = [
     { icon: Mail, label: "Email", value: contact.email, href: `mailto:${contact.email}` },
@@ -74,10 +76,16 @@ export default async function ContactPage() {
               </a>
             </div>
           ) : null}
-          <p className="p-6 text-sm text-ink-muted">
-            Formularul de contact va fi disponibil în curând. Până atunci, emailul este cea mai
-            rapidă cale.
-          </p>
+        </Card>
+      </Reveal>
+      <Reveal delay={0.15} className="lg:col-span-2">
+        <Card className="p-6 md:p-8">
+          <h2 className="mb-6 text-2xl">Trimite-ne un mesaj</h2>
+          <ContactForm
+            defaults={
+              user ? { name: `${user.firstName} ${user.lastName}`, email: user.email } : undefined
+            }
+          />
         </Card>
       </Reveal>
     </section>
