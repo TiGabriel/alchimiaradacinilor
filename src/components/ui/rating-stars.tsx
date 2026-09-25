@@ -1,3 +1,4 @@
+import { pluralRo } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 type RatingStarsProps = {
@@ -19,11 +20,7 @@ function formatRating(value: number) {
 }
 
 export function reviewCountLabel(count: number) {
-  if (count === 1) return "1 recenzie";
-  // Romanian: numbers ≥ 20 (and those ending in 00–19 above 100 excepted) take "de".
-  const lastTwo = count % 100;
-  const needsDe = count >= 20 && !(lastTwo >= 1 && lastTwo <= 19);
-  return `${count}${needsDe ? " de" : ""} recenzii`;
+  return pluralRo(count, "recenzie", "recenzii");
 }
 
 /** Read-only star rating with partial stars and an accessible label. */

@@ -2,7 +2,6 @@ import { ArrowRight, Compass, Moon, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { Blossom, Leaf, ROOT_PATHS, SectionDivider, SPRIG_PATHS } from "@/components/botanical";
-import { ImagePlaceholder, type PlaceholderKind } from "@/components/media/image-placeholder";
 import {
   BotanicalFloat,
   DrawLine,
@@ -12,16 +11,10 @@ import {
   StaggerItem,
 } from "@/components/motion";
 import { Button } from "@/components/ui/button";
+import { ProductCard } from "@/features/catalog/product-card";
+import { CategoryTiles } from "@/features/discover/category-cards";
 import { getCategoryTree } from "@/services/catalog/categories";
-import { categoryHref } from "@/services/catalog/category-tree";
-
-const categoryArt: Record<string, PlaceholderKind> = {
-  "uleiuri-individuale": "bottle",
-  amestecuri: "bottle",
-  kituri: "kit",
-  difuzoare: "diffuser",
-  accesorii: "accessory",
-};
+import { getFeaturedProducts } from "@/services/catalog/products";
 
 const entryPoints = [
   {
@@ -45,7 +38,7 @@ const entryPoints = [
 ];
 
 export default async function HomePage() {
-  const categories = await getCategoryTree();
+  const [categories, featured] = await Promise.all([getCategoryTree(), getFeaturedProducts(8)]);
 
   return (
     <>
@@ -150,14 +143,16 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Categories */}
-      {categories.length > 0 ? (
-        <section className="py-(--spacing-section)">
+      {/* Featured products */}
+      {featured.length > 0 ? (
+        <section aria-labelledby="recomandate" className="py-(--spacing-section)">
           <div className="container-page">
             <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
               <Reveal className="flex max-w-2xl flex-col gap-3">
-                <p className="text-eyebrow text-clay">Categorii</p>
-                <h2 className="text-display-lg">Explorează colecția</h2>
+                <p className="text-eyebrow text-clay">Recomandate</p>
+                <h2 id="recomandate" className="text-display-lg">
+                  Alese cu grijă
+                </h2>
               </Reveal>
               <Button asChild variant="link">
                 <Link href="/produse">
@@ -165,36 +160,31 @@ export default async function HomePage() {
                 </Link>
               </Button>
             </div>
-            <Stagger className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
-              {categories.map((category) => (
-                <StaggerItem key={category.id}>
-                  <Link
-                    href={categoryHref(category)}
-                    className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-xl sm:aspect-[5/4]"
-                  >
-                    <div className="absolute inset-0 transition-transform duration-700 ease-(--ease-botanical) group-hover:scale-[1.04] motion-reduce:transition-none">
-                      <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-forest-deep/80 via-forest-deep/15 to-transparent" />
-                    <div className="relative flex items-end justify-between gap-2 p-4 md:p-6">
-                      <div className="flex flex-col">
-                        <h3 className="font-display text-xl text-ink-inverse md:text-2xl">
-                          {category.name}
-                        </h3>
-                        <span className="text-sm text-ink-inverse/80">
-                          {category.productCount === 1
-                            ? "1 produs"
-                            : `${category.productCount} produse`}
-                        </span>
-                      </div>
-                      <span className="hidden size-10 shrink-0 place-items-center rounded-full bg-paper/90 text-forest transition-transform group-hover:translate-x-0.5 sm:grid">
-                        <ArrowRight aria-hidden className="size-4" />
-                      </span>
-                    </div>
-                  </Link>
+            <Stagger
+              as="ul"
+              className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-4"
+            >
+              {featured.map((product) => (
+                <StaggerItem as="li" key={product.id}>
+                  <ProductCard product={product} />
                 </StaggerItem>
               ))}
             </Stagger>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Categories */}
+      {categories.length > 0 ? (
+        <section aria-labelledby="categorii" className="bg-paper-deep py-(--spacing-section)">
+          <div className="container-page">
+            <Reveal className="mb-10 flex max-w-2xl flex-col gap-3 md:mb-14">
+              <p className="text-eyebrow text-clay">Categorii</p>
+              <h2 id="categorii" className="text-display-lg">
+                Explorează colecția
+              </h2>
+            </Reveal>
+            <CategoryTiles categories={categories} />
           </div>
         </section>
       ) : null}

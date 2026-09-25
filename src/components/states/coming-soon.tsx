@@ -66,21 +66,6 @@ export const comingSoonPages = {
     title: "Întrebări frecvente",
     description: "Adunăm cele mai frecvente întrebări. Până atunci, ne poți scrie oricând.",
   },
-  produse: {
-    eyebrow: "Produse",
-    title: "Catalogul se așază pe rafturi",
-    description: "Lista completă de produse, cu filtre și sortare, este aproape gata.",
-  },
-  descopera: {
-    eyebrow: "Descoperă",
-    title: "Descoperă după nevoie sau categorie",
-    description: "Ghidurile de descoperire sunt în pregătire.",
-  },
-  cautare: {
-    eyebrow: "Căutare",
-    title: "Căutarea este în pregătire",
-    description: "În curând vei putea căuta rapid produse, categorii și arome.",
-  },
   favorite: {
     eyebrow: "Favorite",
     title: "Favoritele tale",

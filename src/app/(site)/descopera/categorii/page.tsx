@@ -1,7 +1,31 @@
-import { ComingSoon, comingSoonMetadata } from "@/components/states/coming-soon";
+import type { Metadata } from "next";
 
-export const metadata = comingSoonMetadata("descopera");
+import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { Reveal } from "@/components/motion";
+import { CategoryDirectory } from "@/features/discover/category-cards";
+import { getCategoryTree } from "@/services/catalog/categories";
 
-export default function Page() {
-  return <ComingSoon page="descopera" />;
+export const metadata: Metadata = {
+  title: "Descoperă după categorie",
+  description: "Uleiuri individuale, amestecuri, kit-uri, difuzoare, accesorii și îngrijire.",
+  alternates: { canonical: "/descopera/categorii" },
+};
+
+export default async function CategoriesPage() {
+  const tree = await getCategoryTree();
+  return (
+    <div className="container-page pb-(--spacing-section)">
+      <div className="pt-6 md:pt-8">
+        <Breadcrumbs
+          items={[{ label: "Descoperă", href: "/descopera" }, { label: "După categorie" }]}
+        />
+      </div>
+      <Reveal className="flex max-w-2xl flex-col gap-3 py-10 md:py-14">
+        <p className="text-eyebrow text-clay">Descoperă</p>
+        <h1 className="text-display-lg">Toate categoriile</h1>
+        <p className="text-lg text-ink-muted">Răsfoiește colecția după tipul de produs.</p>
+      </Reveal>
+      <CategoryDirectory categories={tree} />
+    </div>
+  );
 }

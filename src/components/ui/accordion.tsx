@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
@@ -29,9 +29,9 @@ export function AccordionTrigger({
         {...props}
       >
         {children}
-        <Plus
+        <ChevronDown
           aria-hidden
-          className="size-5 shrink-0 text-ink-muted transition-transform duration-300 ease-(--ease-botanical) group-data-[state=open]:rotate-45"
+          className="size-5 shrink-0 text-ink-muted transition-transform duration-300 ease-(--ease-botanical) group-data-[state=open]:rotate-180"
         />
       </AccordionPrimitive.Trigger>
     </AccordionPrimitive.Header>

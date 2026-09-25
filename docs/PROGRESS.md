@@ -6,7 +6,7 @@
 | ----- | -------------------------------------------------- | ------- |
 | 1     | Inspection, architecture, foundation               | Done    |
 | 2     | Design system and global layout                    | Done    |
-| 3     | Catalog, product page, search                      | Pending |
+| 3     | Catalog, product page, search                      | Done    |
 | 4     | Cart and wishlist                                  | Pending |
 | 5     | Authentication and roles (+ cart/wishlist merge)   | Pending |
 | 6+    | Checkout, quiz, routines, journal, account, admin… | Pending |
@@ -58,3 +58,26 @@
 - Legal review of required consumer links (ANPC SAL/SOL badges) before launch.
 - Real logo: upload an image and set `brand.logo` to `{ kind: "image", … }`.
 - Facebook URL: set `social.facebookUrl` in SiteSettings (hidden until set).
+
+## Phase 3 — Catalogue, product page and search
+
+- `/produse` and `/produse/[categorie]/[subcategorie]`, fully DB-driven (invalid paths 404).
+- Filters generated from data (category, brand, price range, rating, availability, tags, needs,
+  aroma profiles) with disjunctive counts; sorting (recomandate, cele mai noi, preț ↑/↓, rating);
+  state in the URL (`?aroma=citric,floral&pret_min=40&sortare=noi&pagina=2`); active-filter chips;
+  bottom drawer on mobile; crawlable pagination; filtered variants are noindex with canonical base.
+- Product card (desktop hover → second image + quick actions; mobile compact + quick add),
+  wishlist heart (UI only until Phase 4), quick-view modal.
+- Product page `/produs/[slug]`: gallery (hover zoom, mobile swipe + dots, thumbnails), brand,
+  rating, price/discount, stock, quantity, Adaugă în coș / Cumpără acum / favorite; sections
+  Descriere (+ kit contents, ingredients), Profil aromatic, Cum poate fi integrat în rutină,
+  Recomandări de utilizare, Siguranță, Rutine (empty state), Recenzii placeholder,
+  Îți poate plăcea și (curated relations, then similarity). Product + BreadcrumbList JSON-LD.
+- Search: pure engine (diacritic folding, synonyms incl. multi-word, prefix, typo tolerance,
+  multi-field ranking), pluggable sources (products, categories, tags), 60 s in-memory index,
+  `/api/search`, command palette (Ctrl/⌘+K or "/", grouped results, keyboard navigation,
+  recent searches in localStorage, full-screen on mobile) and `/cautare` results page.
+- Descoperă hub, `/descopera/nevoi`, `/descopera/categorii`; featured products on the home page.
+- `sitemap.xml` (static pages, categories, products) referenced from robots.txt.
+- Tests: listing (parse/serialise, filters, sorting, facets, pagination), similarity,
+  search engine, stock labels, pagination window, Romanian plurals, recent searches.

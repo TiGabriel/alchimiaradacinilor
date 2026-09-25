@@ -98,9 +98,13 @@ export async function SiteFooter() {
             <li>
               <a
                 href={`mailto:${contact.email}`}
-                className={`${footerLink} inline-flex items-start gap-2 [overflow-wrap:anywhere]`}
+                className={`${footerLink} inline-flex items-start gap-2`}
               >
-                <Mail aria-hidden className="mt-1 size-4 shrink-0" /> {contact.email}
+                <Mail aria-hidden className="mt-1 size-4 shrink-0" />
+                <span>
+                  {contact.email.split("@")[0]}@<wbr />
+                  {contact.email.split("@")[1]}
+                </span>
               </a>
             </li>
             {contact.phone ? (

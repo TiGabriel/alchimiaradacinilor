@@ -1,17 +1,43 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+
+import { SearchPalette } from "./search-palette";
 
 type SearchContextValue = { openSearch: () => void };
 
 const SearchContext = createContext<SearchContextValue | null>(null);
 
-/** Phase 2 stub: opens the search page. Phase 3 replaces it with the command palette. */
+function isTypingTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
+}
+
+/** Owns the search palette; opens with the header/bottom-nav buttons, Ctrl/⌘+K or "/". */
 export function SearchProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const value = useMemo(() => ({ openSearch: () => router.push("/cautare") }), [router]);
-  return <SearchContext.Provider value={value}>{children}</SearchContext.Provider>;
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((o) => !o);
+      } else if (e.key === "/" && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  const value = useMemo(() => ({ openSearch: () => setOpen(true) }), []);
+  return (
+    <SearchContext.Provider value={value}>
+      {children}
+      <SearchPalette open={open} onOpenChange={setOpen} />
+    </SearchContext.Provider>
+  );
 }
 
 export function useSearch() {

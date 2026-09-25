@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCart } from "@/features/cart/cart-context";
 import { useSearch } from "@/features/search/search-context";
 import { useWishlist } from "@/features/wishlist/wishlist-context";
+import { pluralRo } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
 import { accountLinks } from "../nav-config";
@@ -14,10 +15,6 @@ import { CountBadge } from "./count-badge";
 
 const iconButton =
   "relative grid size-11 place-items-center rounded-full text-ink transition-colors hover:bg-paper-deep hover:text-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest [&_svg]:size-[1.35rem]";
-
-function plural(count: number, one: string, many: string) {
-  return count === 1 ? `1 ${one}` : `${count} ${many}`;
-}
 
 export function SearchButton({ className }: { className?: string }) {
   const { openSearch } = useSearch();
@@ -40,7 +37,9 @@ export function CartButton({ className }: { className?: string }) {
       type="button"
       className={cn(iconButton, className)}
       onClick={openCart}
-      aria-label={count > 0 ? `Coșul tău, ${plural(count, "produs", "produse")}` : "Coșul tău, gol"}
+      aria-label={
+        count > 0 ? `Coșul tău, ${pluralRo(count, "produs", "produse")}` : "Coșul tău, gol"
+      }
     >
       <ShoppingBag aria-hidden strokeWidth={1.75} />
       <CountBadge count={count} />
@@ -64,7 +63,9 @@ export function HeaderActions() {
         href={accountLinks.wishlist.href}
         className={cn(iconButton, "hidden md:grid")}
         aria-label={
-          wishlistCount > 0 ? `Favorite, ${plural(wishlistCount, "produs", "produse")}` : "Favorite"
+          wishlistCount > 0
+            ? `Favorite, ${pluralRo(wishlistCount, "produs", "produse")}`
+            : "Favorite"
         }
       >
         <Heart aria-hidden strokeWidth={1.75} />
