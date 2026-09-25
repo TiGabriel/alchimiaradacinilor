@@ -14,7 +14,7 @@
 | 8     | Homepage                                             | Done    |
 | 9     | Checkout, orders, coupons                            | Done    |
 | 10    | Reviews, newsletter, cookie consent, analytics       | Done    |
-| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Pending |
+| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done    |
 | 12    | Admin part 2 (quiz, content, marketing, settings)    | Pending |
 | 13    | SEO, performance, security, accessibility audit      | Pending |
 | 14    | Final UX review, tests, documentation                | Pending |
@@ -313,3 +313,34 @@
   moderation sync, photo upload, double opt-in, expired/single-use tokens, signed unsubscribe,
   account sync, campaign segmentation, server-side analytics gate, cookie consent records,
   consented product views (integration).
+
+## Phase 11 — Admin, part 1
+
+- Shell: `/admin` with a permission-filtered sidebar (mobile menu), skip link, sticky save bars.
+  Three layers of authorisation: the layout (`admin:access`, non-staff get a 404), every page and
+  action (`requirePermission` with the specific permission) and every service (`assertCan(actor, …)`).
+  Editors see the catalogue; orders, customers (and later settings) need the admin role.
+- Dashboard: 30-day sales per day (Bucharest days), KPIs with change vs the previous 30 days, average
+  order, new accounts, subscribers, reviews to moderate, orders by status, best sellers, a consented
+  analytics funnel, low stock, recent orders. Dependency-free SVG/CSS charts, each with a
+  screen-reader table. Editors see the non-sales parts only.
+- Products: list with search, status (active/inactive/low/out of stock) and type filters,
+  pagination; create/edit every field (basics, Markdown texts, lei → bani prices, stock,
+  type-specific specs, needs with relevance, aromas with intensity, tags, collections, visibility,
+  SEO with counters); medical/therapeutic wording is refused by validation; unique slug/SKU errors on
+  the field; delete only when never ordered and not in a kit (otherwise deactivate). Images:
+  multi-upload through the storage layer (re-encoded WebP), reorder, choose the thumbnail, alt
+  text, remove (files deleted when unused).
+- Taxonomy CRUD in one config-driven editor: categories (tree, parent with cycle protection),
+  brands, collections, tags, needs, aroma profiles (colour). Deletes are refused with an explanation
+  when products, subcategories or quiz answers depend on the entry.
+- Orders: list (search by number/email/name, status filter), detail with items, totals, addresses,
+  note, history with the acting admin; status changes along allowed transitions (with note and an
+  optional customer email when a provider is configured; cancellation returns stock) and "mark as
+  paid".
+- Customers: list with verification, newsletter status, order count and total spent; detail with
+  account, current consents, orders, addresses, reviews, favourites and saved routines (read-only).
+- Tests: admin nav/authorisation and `assertCan`, product and taxonomy validation, medical-claims
+  guard, dashboard helpers (unit); service authorisation per role, product create/update with
+  relations, slug clashes, image reorder/thumbnail/removal, delete rules, category cycles, order
+  status/payment (integration).

@@ -31,3 +31,16 @@ export function can(roles: readonly string[], permission: Permission): boolean {
 export function hasRole(roles: readonly string[], role: RoleKey): boolean {
   return roles.includes(role);
 }
+
+/** Who performs an admin operation; services re-check permissions with it (defence in depth). */
+export type Actor = { id: string; roles: readonly string[] };
+
+export class ForbiddenError extends Error {
+  constructor(readonly permission: Permission) {
+    super("Nu ai permisiunea pentru această acțiune.");
+  }
+}
+
+export function assertCan(actor: Actor, permission: Permission): void {
+  if (!can(actor.roles, permission)) throw new ForbiddenError(permission);
+}

@@ -408,3 +408,27 @@ registering it in `lib/analytics/client.ts` and loading its script only after co
 The choice cookie carries the cookie-policy version; a new version (or 12 months) shows the banner
 again. Every choice is recorded as ANALYTICS/MARKETING consent records (with the account when signed
 in) for accountability.
+
+## Phase 11 — Admin
+
+### D-063 · Services take an actor and re-check permissions
+
+Admin services receive `{ id, roles }` and call `assertCan` themselves, even though pages and
+actions already call `requirePermission`. A future route (API, script, another action) cannot skip
+the check by forgetting it, and the rules are covered by integration tests without HTTP.
+
+### D-064 · Copy is checked for medical claims at write time
+
+Product, taxonomy and (next phase) content validation refuse common Romanian therapeutic wording
+(`lib/claims.ts`). It is a guard rail for the CLAUDE.md rule, not a substitute for editorial review.
+
+### D-065 · Deactivate instead of delete for anything with history
+
+Products that appear in orders or kits, categories with products or children, brands with products
+and needs/aromas used by the quiz cannot be deleted; the error says what to do instead. Orders keep
+their snapshots regardless.
+
+### D-066 · Charts without a chart library
+
+The dashboard needs a handful of bar/column charts. Small SVG/CSS components (with data tables for
+screen readers) avoid a large client bundle and render on the server.
