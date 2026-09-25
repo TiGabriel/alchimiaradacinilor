@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { Roots } from "@/components/botanical";
 import { FacebookIcon } from "@/components/icons/facebook";
+import { CookieSettingsButton } from "@/features/consent/consent-context";
 import { getCategoryTree } from "@/services/catalog/categories";
 import { categoryHref } from "@/services/catalog/category-tree";
 import { getSettings } from "@/services/settings";
@@ -160,6 +161,9 @@ export async function SiteFooter() {
                 </Link>
               </li>
             ))}
+            <li>
+              <CookieSettingsButton className="cursor-pointer underline-offset-4 hover:text-ink-inverse hover:underline" />
+            </li>
             {consumerLinks.map((l) => (
               <li key={l.href}>
                 <a

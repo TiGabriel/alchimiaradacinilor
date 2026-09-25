@@ -40,3 +40,48 @@ export async function makeProduct(
     },
   });
 }
+
+export async function makeVerifiedUser(overrides: Partial<Record<string, string>> = {}) {
+  const user = await makeUser(overrides);
+  await db.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
+  return user;
+}
+
+export const testAddress = {
+  label: null,
+  firstName: "Ana",
+  lastName: "Pop",
+  phone: "0722123456",
+  street: "Str. Florilor 1",
+  streetExtra: null,
+  city: "Cluj-Napoca",
+  county: "Cluj" as const,
+  postalCode: "400001",
+  companyName: null,
+  vatNumber: null,
+  tradeRegisterNo: null,
+  isDefaultShipping: false,
+  isDefaultBilling: false,
+};
+
+/** Places a real order for `quantity` of each product (cart → placeOrder). */
+export async function placeTestOrder(userId: string, productIds: string[], quantity = 1) {
+  const { loadCartView } = await import("@/services/cart/cart");
+  const { placeOrder } = await import("@/services/orders/place");
+  await db.cart.upsert({
+    where: { userId },
+    create: { userId, items: { create: productIds.map((productId) => ({ productId, quantity })) } },
+    update: {
+      items: { deleteMany: {}, create: productIds.map((productId) => ({ productId, quantity })) },
+    },
+  });
+  const view = await loadCartView({ userId, token: null });
+  return placeOrder(userId, {
+    shipping: { kind: "new", address: testAddress, save: false },
+    billing: { kind: "same" },
+    shippingMethod: "curier",
+    paymentMethod: "CASH_ON_DELIVERY",
+    acceptTerms: true,
+    expectedTotal: view.total,
+  });
+}

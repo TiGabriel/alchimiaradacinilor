@@ -9,7 +9,7 @@ const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.url(),
   APP_URL: z.url().default("http://localhost:3000"),
-  /** Signs nothing directly (sessions are random DB tokens) but salts IP pseudonyms; ≥ 32 chars. */
+  /** Signs newsletter unsubscribe links and salts IP pseudonyms (sessions are random DB tokens); ≥ 32 chars. */
   AUTH_SECRET: z.string().min(32).optional(),
   EMAIL_PROVIDER: z.enum(["console", "resend", "smtp"]).default("console"),
   EMAIL_FROM: z.string().optional(),

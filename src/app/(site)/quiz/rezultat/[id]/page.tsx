@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { TrackEvent } from "@/features/analytics/track-event";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getCurrentUser } from "@/features/auth/session";
@@ -29,6 +30,7 @@ export default async function QuizResultPage(props: PageProps<"/quiz/rezultat/[i
 
   return (
     <div className="container-page flex flex-col gap-12 pb-(--spacing-section)">
+      <TrackEvent name="quiz_completed" props={{ recommendations: result.items.length }} />
       <header className="flex max-w-3xl flex-col gap-4 pt-10 md:pt-16">
         <p className="text-eyebrow text-clay">Rezultatul tău</p>
         <h1 className="text-display-lg">Descoperă ce ți se potrivește</h1>

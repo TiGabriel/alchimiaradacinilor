@@ -2,6 +2,7 @@ import { BookOpen, FolderTree, Moon, Search, Tag } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { TrackEvent } from "@/features/analytics/track-event";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductCard } from "@/features/catalog/product-card";
@@ -33,6 +34,7 @@ export default async function SearchPage(props: Props) {
 
   return (
     <div className="container-page pb-(--spacing-section)">
+      {q ? <TrackEvent name="search" props={{ q: q.slice(0, 80), results: total }} /> : null}
       <header className="flex flex-col gap-5 py-10 md:py-14">
         <p className="text-eyebrow text-clay">Căutare</p>
         <h1 className="text-display-lg">{q ? <>Rezultate pentru „{q}”</> : "Ce cauți astăzi?"}</h1>

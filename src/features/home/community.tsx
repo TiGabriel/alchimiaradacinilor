@@ -31,7 +31,7 @@ export function CommunitySection({ facebookUrl }: { facebookUrl?: string }) {
               ce merită citit, cu o ceașcă de ceai alături.
             </p>
             <div className="pt-2">
-              <NewsletterForm tone="ink" />
+              <NewsletterForm tone="ink" source="homepage" />
             </div>
           </div>
         </Reveal>

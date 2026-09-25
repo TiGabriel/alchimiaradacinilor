@@ -140,23 +140,26 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  roles          UserRole[]
-  sessions       Session[]
-  accounts       Account[]
-  addresses      Address[]
-  cart           Cart?
-  wishlist       Wishlist?
-  orders         Order[]
-  reviews        Review[]
-  savedRoutines  SavedRoutine[]
-  quizResults    QuizResult[]
-  articles       Article[]
-  couponUsages   CouponUsage[]
-  consents       ConsentRecord[]
-  subscriber     NewsletterSubscriber?
-  mediaUploads   MediaAsset[]
-  settingUpdates SiteSetting[]
-  orderEvents    OrderStatusEvent[]    @relation("OrderEventActor")
+  roles            UserRole[]
+  sessions         Session[]
+  accounts         Account[]
+  addresses        Address[]
+  cart             Cart?
+  wishlist         Wishlist?
+  orders           Order[]
+  reviews          Review[]
+  savedRoutines    SavedRoutine[]
+  quizResults      QuizResult[]
+  articles         Article[]
+  couponUsages     CouponUsage[]
+  consents         ConsentRecord[]
+  subscriber       NewsletterSubscriber?
+  mediaUploads     MediaAsset[]
+  settingUpdates   SiteSetting[]
+  orderEvents      OrderStatusEvent[]    @relation("OrderEventActor")
+  moderatedReviews Review[]              @relation("ReviewModerator")
+  campaigns        NewsletterCampaign[]
+  productViews     ProductView[]
 
   @@map("users")
 }
@@ -294,6 +297,7 @@ model MediaAsset {
   articleCovers  Article[]
   seoOgImages    SeoMeta[]
   needIcons      Need[]
+  reviewImages   Review[]
 
   @@map("media_assets")
 }
@@ -428,6 +432,7 @@ model Product {
   reviews         Review[]
   quizResults     QuizResultProduct[]
   couponLinks     CouponProduct[]
+  views           ProductView[]
 
   @@index([categoryId])
   @@index([brandId])
@@ -1262,25 +1267,34 @@ model CouponUsage {
 }
 
 model Review {
-  id          String       @id @default(uuid(7))
-  productId   String
-  userId      String
+  id              String       @id @default(uuid(7))
+  productId       String
+  userId          String
   /// Present when the review is tied to a purchase (verified buyer).
-  orderItemId String?
+  orderItemId     String?
   /// 1–5
-  rating      Int
-  title       String?
-  body        String
-  status      ReviewStatus @default(PENDING)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  rating          Int
+  title           String?
+  body            String
+  status          ReviewStatus @default(PENDING)
+  /// Optional customer photo (stored via the storage abstraction, re-encoded without metadata).
+  imageId         String?
+  moderatedAt     DateTime?
+  moderatedById   String?
+  /// Reason shown to the author when a review is not published.
+  rejectionReason String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
-  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderItem OrderItem? @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItem   OrderItem?  @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  image       MediaAsset? @relation(fields: [imageId], references: [id], onDelete: SetNull)
+  moderatedBy User?       @relation("ReviewModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
 
   @@unique([productId, userId])
   @@index([productId, status])
+  @@index([status, createdAt])
   @@map("reviews")
 }
 
@@ -1289,21 +1303,88 @@ model Review {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model NewsletterSubscriber {
-  id               String           @id @default(uuid(7))
-  email            String           @unique
-  userId           String?          @unique
-  status           SubscriberStatus @default(PENDING)
-  confirmTokenHash String?
-  source           String?
-  confirmedAt      DateTime?
-  unsubscribedAt   DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                    String           @id @default(uuid(7))
+  email                 String           @unique
+  userId                String?          @unique
+  status                SubscriberStatus @default(PENDING)
+  confirmTokenHash      String?
+  confirmTokenExpiresAt DateTime?
+  /// Where the subscription started (footer, homepage, account…).
+  source                String?
+  firstName             String?
+  /// Segmentation: interests picked by the subscriber (need/aroma slugs).
+  interests             String[]         @default([])
+  lastEmailedAt         DateTime?
+  confirmedAt           DateTime?
+  unsubscribedAt        DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
   user     User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
   consents ConsentRecord[]
 
+  @@index([status])
   @@map("newsletter_subscribers")
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+}
+
+/// Newsletter campaign (sent only with a configured provider, to ACTIVE subscribers with consent).
+model NewsletterCampaign {
+  id             String         @id @default(uuid(7))
+  subject        String
+  preheader      String?
+  heading        String
+  /// Plain paragraphs separated by blank lines (rendered with the shared email layout).
+  body           String
+  /// Segment filter, validated by `campaignSegmentSchema`.
+  segment        Json           @default("{}")
+  status         CampaignStatus @default(DRAFT)
+  recipientCount Int            @default(0)
+  deliveredCount Int            @default(0)
+  failedCount    Int            @default(0)
+  createdById    String?
+  sentAt         DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@map("newsletter_campaigns")
+}
+
+/// First-party analytics events, recorded only with ANALYTICS consent. No IPs, no fingerprints.
+model AnalyticsEvent {
+  id          String   @id @default(uuid(7))
+  name        String
+  /// Random id from the consented analytics cookie (not linked to the account).
+  anonymousId String
+  path        String?
+  props       Json     @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+/// Recently viewed products of signed-in customers — kept only with PERSONALIZATION consent.
+model ProductView {
+  userId    String
+  productId String
+  viewedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([userId, viewedAt])
+  @@map("product_views")
 }
 
 /// Append-only. The current consent is the latest record per subject + purpose.

@@ -16,8 +16,11 @@ export async function recordConsent(
   input: {
     userId?: string | null;
     subscriberId?: string | null;
+    anonymousId?: string | null;
     purpose: ConsentPurpose;
     granted: boolean;
+    /** Defaults to the privacy policy version (cookie choices pass the cookie policy version). */
+    policyVersion?: string;
   },
   meta: ConsentMeta,
   tx: Tx = db,
@@ -27,9 +30,10 @@ export async function recordConsent(
     data: {
       userId: input.userId ?? null,
       subscriberId: input.subscriberId ?? null,
+      anonymousId: input.anonymousId ?? null,
       purpose: input.purpose,
       granted: input.granted,
-      policyVersion: privacyPolicyVersion,
+      policyVersion: input.policyVersion ?? privacyPolicyVersion,
       source: meta.source,
       ipHash: meta.ipHash ?? null,
       userAgent: meta.userAgent?.slice(0, 300) ?? null,
@@ -112,6 +116,27 @@ export async function setPersonalizationConsent(
   meta: ConsentMeta,
 ) {
   await recordConsent({ userId, purpose: "PERSONALIZATION", granted }, meta);
+  // Without consent, personal signals are not kept (data minimisation).
+  if (!granted) await db.productView.deleteMany({ where: { userId } });
+}
+
+/** Proof of a cookie choice: one record per optional category, linked to the choice id. */
+export async function recordCookieChoice(
+  choice: { id: string; analytics: boolean; marketing: boolean; policyVersion: string },
+  userId: string | null,
+  meta: ConsentMeta,
+) {
+  await db.$transaction(async (tx) => {
+    for (const [purpose, granted] of [
+      ["ANALYTICS", choice.analytics],
+      ["MARKETING", choice.marketing],
+    ] as const)
+      await recordConsent(
+        { userId, anonymousId: choice.id, purpose, granted, policyVersion: choice.policyVersion },
+        meta,
+        tx,
+      );
+  });
 }
 
 export async function hasPersonalizationConsent(userId: string): Promise<boolean> {

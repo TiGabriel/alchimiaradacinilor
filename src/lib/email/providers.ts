@@ -35,6 +35,7 @@ export function resendProvider(apiKey: string): EmailProvider {
             html: message.html,
             text: message.text,
             ...(message.replyTo ? { reply_to: message.replyTo } : {}),
+            ...(message.headers ? { headers: message.headers } : {}),
           }),
         });
         if (!res.ok)
@@ -75,6 +76,7 @@ export function smtpProvider(config: {
           html: message.html,
           text: message.text,
           replyTo: message.replyTo,
+          headers: message.headers,
         });
         return { status: "sent", id: info.messageId };
       } catch (error) {

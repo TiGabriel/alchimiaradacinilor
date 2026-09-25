@@ -2,6 +2,7 @@ import { MailCheck, ShoppingBag } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { TrackEvent } from "@/features/analytics/track-event";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -81,6 +82,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="container-page pb-(--spacing-section)">
+      <TrackEvent name="checkout_started" props={{ items: cart.itemCount, value: cart.total }} />
       {header}
       <CheckoutFlow
         initialCart={cart}

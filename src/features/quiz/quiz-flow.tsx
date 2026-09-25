@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
+import { track } from "@/lib/analytics/client";
 import { Sprig } from "@/components/botanical";
 import { BotanicalFloat, usePrefersReducedMotion } from "@/components/motion";
 import { Button } from "@/components/ui/button";
@@ -139,7 +140,13 @@ export function QuizFlow({ quiz }: { quiz: QuizView }) {
               ca să salvezi rezultatul
             </li>
           </ul>
-          <Button size="lg" onClick={() => go(0)}>
+          <Button
+            size="lg"
+            onClick={() => {
+              track("quiz_started");
+              go(0);
+            }}
+          >
             Începe quiz-ul <ArrowRight aria-hidden />
           </Button>
         </div>

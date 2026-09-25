@@ -13,7 +13,7 @@
 | 7     | Routines and journal                                 | Done    |
 | 8     | Homepage                                             | Done    |
 | 9     | Checkout, orders, coupons                            | Done    |
-| 10    | Reviews, newsletter, cookie consent, analytics       | Pending |
+| 10    | Reviews, newsletter, cookie consent, analytics       | Done    |
 | 11    | Admin part 1 (dashboard, catalog, orders, customers) | Pending |
 | 12    | Admin part 2 (quiz, content, marketing, settings)    | Pending |
 | 13    | SEO, performance, security, accessibility audit      | Pending |
@@ -273,3 +273,43 @@
   rollback, last-item race between two customers, double submit, foreign address, unavailable
   delivery/payment, coupon usage and per-customer/total limits, restricted coupons, guest coupon
   carry-over, order ownership, cancellation restock (integration).
+
+## Phase 10 — Reviews, newsletter, cookie consent, analytics
+
+- Storage abstraction (`src/lib/storage`): local disk (`./storage/uploads`, served by the
+  `/uploads/[...key]` route with strict key validation) or S3-compatible (R2/S3/MinIO). Uploaded
+  images are validated by their bytes (JPEG/PNG/WebP/AVIF; SVG/GIF refused), size-limited and
+  re-encoded to WebP with sharp — EXIF orientation applied, all metadata (e.g. location) stripped,
+  dimensions capped, decompression bombs refused. `next.config` whitelists the S3 public host.
+- Reviews: only customers whose order with the product has shipped (or been delivered); one per
+  product (a rejected one can be rewritten); rating 1–5, optional title, 20–2000 characters, optional
+  photo. New reviews are PENDING; `moderateReview` approves/rejects (reason kept) and recomputes the
+  cached `Product.rating/reviewCount` in the same transaction. Product page: average, count,
+  distribution bars, approved reviews ("Prenume I.", verified-purchase mark, photo), eligibility
+  messages and the form. No demo reviews are seeded (nothing invented).
+- Newsletter: double opt-in (hashed, 48 h, single-use token; consent recorded only on
+  confirmation), responses never reveal whether an address is subscribed, rate-limited. Without an
+  email provider nothing is stored and the visitor is told honestly. Confirm and unsubscribe pages
+  act on a button click (link scanners cannot confirm/cancel); signed (HMAC) unsubscribe links plus
+  an RFC 8058 one-click endpoint (`List-Unsubscribe` headers on campaigns). Account preferences,
+  unsubscribe links and guest confirmations stay in sync (same subscriber row + consent records).
+  Segment-ready model (interests, source, customers, confirmation date), `NewsletterCampaign`,
+  confirmation and campaign templates; `sendCampaign` refuses without a provider and only targets
+  ACTIVE subscribers. Footer and homepage forms are live.
+- Cookie consent: banner with "Accept toate" / "Doar necesare" as equally prominent buttons plus
+  "Setări"; settings modal (necesare always on, analiză, marketing); choice stored in `ar_consent`
+  (versioned with the cookie policy, re-asked after 12 months or a policy change) and recorded as
+  ANALYTICS/MARKETING consent evidence; "Setări cookie" in the footer reopens it. Cookie policy page
+  updated with every cookie and the analytics description.
+- Analytics: provider-agnostic `track()` layer; nothing leaves the browser before consent (events
+  are queued, then sent or dropped); first-party endpoint re-checks consent server-side, stores no IP,
+  user agent or account id and strips personal-looking properties. Events: product_view, search,
+  quiz_started, quiz_completed, add_to_cart, wishlist_add, checkout_started, order_completed.
+- Personalisation: recently viewed products of signed-in customers are recorded only with
+  PERSONALIZATION consent (deleted when withdrawn) and feed the engine's `viewedAffinity`.
+- Tests: image sniffing/validation/keys, review eligibility and rating aggregation, unsubscribe
+  signatures, segments, cookie-choice parsing/versioning, analytics event validation and client
+  consent gating (unit); image re-encoding without metadata, verified-purchase reviews and
+  moderation sync, photo upload, double opt-in, expired/single-use tokens, signed unsubscribe,
+  account sync, campaign segmentation, server-side analytics gate, cookie consent records,
+  consented product views (integration).

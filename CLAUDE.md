@@ -68,6 +68,10 @@ components/layout/  header, footer, navigation shells.
 - Cart, checkout and order totals all go through `services/checkout/quote.ts` (one pricing
   path). Payment methods implement `PaymentProvider`; never simulate a payment (docs/PAYMENTS.md).
 - New site settings: add a key to `src/validation/settings.ts` (no migration).
+- Uploads go through `storeImage` (`src/lib/storage`): sniffed, re-encoded to WebP, metadata
+  stripped. Never serve user files from their original bytes.
+- Analytics only via `track()` (`src/lib/analytics/client.ts`); nothing is sent or loaded before
+  the visitor accepts analytics cookies. No third-party scripts without consent.
 - Demo data is flagged `isDemo`. Never invent official specs (volumes, compositions,
   certifications) for real products.
 

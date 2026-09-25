@@ -54,6 +54,7 @@ export const limiters = {
   /** Discount codes: slows down guessing. Keyed by user id or IP. */
   couponAttempts: new SlidingWindowLimiter(10, 15 * MINUTE),
   checkoutByUser: new SlidingWindowLimiter(10, 10 * MINUTE),
+  newsletterByIp: new SlidingWindowLimiter(5, 60 * MINUTE),
 };
 
 export function retryAfterText(ms: number): string {

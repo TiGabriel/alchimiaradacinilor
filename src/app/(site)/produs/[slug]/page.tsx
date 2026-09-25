@@ -1,8 +1,10 @@
-import { ArrowRight, MessageSquareHeart, Moon, PackageCheck, Truck } from "lucide-react";
+import { ArrowRight, Moon, PackageCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 
+import { TrackEvent } from "@/features/analytics/track-event";
 import { SectionDivider, Sprig } from "@/components/botanical";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Reveal } from "@/components/motion";
@@ -17,6 +19,8 @@ import { ProductBadges } from "@/features/catalog/product-badges";
 import { ProductCard } from "@/features/catalog/product-card";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import { ProductPurchase } from "@/features/catalog/product-purchase";
+import { getCurrentUser } from "@/features/auth/session";
+import { ReviewsSection } from "@/features/reviews/reviews-section";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatMoney } from "@/lib/money";
@@ -30,6 +34,8 @@ import {
 } from "@/services/catalog/product-detail";
 import { productHref, stockLabel, stockStatus } from "@/services/catalog/product-types";
 import { getArticlesForProduct } from "@/services/journal/journal";
+import { recordProductView } from "@/services/recommendation/signals";
+import { getProductReviews, getReviewEligibility } from "@/services/reviews/reviews";
 import { getRoutinesForProduct } from "@/services/routines/routines";
 import { getSetting } from "@/services/settings";
 import { productTypeLabels } from "@/validation/product";
@@ -165,19 +171,27 @@ export default async function ProductPage(props: Props) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [related, shipping, routines, articles] = await Promise.all([
-    getRelatedProducts(product.id, 4),
-    getSetting("shipping"),
-    getRoutinesForProduct(product.id),
-    getArticlesForProduct(product.id),
-  ]);
+  const user = await getCurrentUser();
+  const [related, shipping, routines, articles, { summary, reviews }, eligibility] =
+    await Promise.all([
+      getRelatedProducts(product.id, 4),
+      getSetting("shipping"),
+      getRoutinesForProduct(product.id),
+      getArticlesForProduct(product.id),
+      getProductReviews(product.id),
+      getReviewEligibility(user?.id ?? null, product.id),
+    ]);
   const status = stockStatus(product.stock);
   const tone = product.aromas[0]?.colorHex ?? null;
   const categoryLink = categoryHref(product.category, product.parentCategory);
 
+  // Recently viewed products feed recommendations — only with personalisation consent.
+  if (user) after(() => recordProductView(user.id, product.id));
+
   return (
     <>
       <JsonLd data={productJsonLd(product)} />
+      <TrackEvent name="product_view" props={{ productId: product.id, slug: product.slug }} />
       <div className="container-page pt-6 md:pt-8">
         <Breadcrumbs
           items={[
@@ -396,13 +410,12 @@ export default async function ProductPage(props: Props) {
         </Section>
 
         <Section id="recenzii" title="Recenzii" eyebrow="Păreri">
-          <div className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-line-strong bg-surface p-8">
-            <MessageSquareHeart aria-hidden className="size-8 text-sage" />
-            <p className="font-display text-2xl">Fii primul care lasă o recenzie.</p>
-            <p className="text-ink-muted">
-              Recenziile vor putea fi scrise în curând de clienții care au comandat produsul.
-            </p>
-          </div>
+          <ReviewsSection
+            product={{ id: product.id, slug: product.slug, name: product.name }}
+            summary={summary}
+            reviews={reviews}
+            eligibility={eligibility}
+          />
         </Section>
       </div>
 

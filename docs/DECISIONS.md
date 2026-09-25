@@ -373,3 +373,38 @@ only applies to delivery methods marked eligible.
 Guests can build a cart and apply codes, but placing an order needs a signed-in customer with a
 verified email (order history, confirmations, GDPR requests all hang off the account). The guest
 cart and its code are merged on sign-in.
+
+## Phase 10 — Reviews, newsletter, consent, analytics
+
+### D-058 · Uploaded images are always re-encoded
+
+Customer and admin uploads are sniffed by magic bytes, then re-encoded to WebP by sharp. This
+removes metadata (camera, GPS), neutralises polyglot files and normalises size. Keys are random and
+never derived from file names. Local files are served by a route handler (Next only serves `public/`
+files present at build time); serverless deployments must use S3.
+
+### D-059 · Reviews require a shipped purchase and moderation
+
+Only customers with a shipped/delivered order of the product can review; every review is moderated
+before publication. `Product.rating/reviewCount` are a cache recomputed from approved reviews in the
+moderation transaction. The homepage and product page never show invented testimonials.
+
+### D-060 · Double opt-in without leaking membership
+
+A subscription request always answers the same way; the confirmation email proves ownership and is
+the moment consent is recorded. A verified account email subscribing itself needs no second
+confirmation. Confirm/unsubscribe links require a click on the page (scanner-safe); mail clients use
+the signed one-click POST endpoint.
+
+### D-061 · First-party, consent-gated analytics
+
+No third-party analytics script is loaded. Events go to our own endpoint only after the visitor
+accepts analytics cookies, are checked again on the server against the consent cookie, and are
+stored with a random id that is not linked to the account. Adding a third-party provider means
+registering it in `lib/analytics/client.ts` and loading its script only after consent.
+
+### D-062 · Cookie choice versioned by the cookie policy
+
+The choice cookie carries the cookie-policy version; a new version (or 12 months) shows the banner
+again. Every choice is recorded as ANALYTICS/MARKETING consent records (with the account when signed
+in) for accountability.

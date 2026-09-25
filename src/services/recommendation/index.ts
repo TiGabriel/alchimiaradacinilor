@@ -19,6 +19,9 @@ import {
   type ProductCandidate,
 } from "./engine";
 
+/** Recently viewed products older than this no longer influence recommendations. */
+const VIEW_WINDOW_DAYS = 90;
+
 export type Recommendation = { product: ProductCardData; score: number; explanation: string };
 
 /** Every active product as an engine candidate (one query, cached per request). */
@@ -68,7 +71,7 @@ export async function loadPersonalContext(
   userId: string | null | undefined,
 ): Promise<Criteria["context"] | undefined> {
   if (!userId || !(await hasPersonalizationConsent(userId))) return undefined;
-  const [wishlist, orders, routines] = await Promise.all([
+  const [wishlist, orders, routines, views] = await Promise.all([
     db.wishlistItem.findMany({ where: { wishlist: { userId } }, select: { productId: true } }),
     db.orderItem.findMany({
       where: {
@@ -81,11 +84,18 @@ export async function loadPersonalContext(
       where: { routine: { savedBy: { some: { userId } } } },
       select: { productId: true },
     }),
+    db.productView.findMany({
+      where: { userId, viewedAt: { gte: new Date(Date.now() - VIEW_WINDOW_DAYS * 86_400_000) } },
+      orderBy: { viewedAt: "desc" },
+      take: 20,
+      select: { productId: true },
+    }),
   ]);
   return {
     wishlistIds: wishlist.map((w) => w.productId),
     purchasedIds: orders.map((o) => o.productId!),
     routineProductIds: routines.map((r) => r.productId),
+    viewedIds: views.map((v) => v.productId),
   };
 }
 

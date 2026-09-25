@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { toast } from "@/components/ui/toast";
+import { track } from "@/lib/analytics/client";
 import type { CartView } from "@/services/cart/cart";
 
 import {
@@ -93,6 +94,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const result = await withPending(product.id, () =>
         addToCartAction({ productId: product.id, quantity }),
       );
+      if (result.ok) track("add_to_cart", { productId: product.id, quantity });
       if (result.ok && options?.openDrawer !== false) setDrawerOpen(true);
       return result.ok;
     },

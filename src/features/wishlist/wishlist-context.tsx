@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { toast } from "@/components/ui/toast";
+import { track } from "@/lib/analytics/client";
 
 import { useSession } from "../auth/session-context";
 
@@ -96,6 +97,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     (product: { id: string; name: string }) => {
       const adding = !ids.includes(product.id);
       void apply(product.id);
+      if (adding) track("wishlist_add", { productId: product.id });
       toast(
         adding
           ? {

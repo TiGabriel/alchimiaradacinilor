@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { TrackEvent } from "@/features/analytics/track-event";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/features/auth/session";
 import { CartRefresh } from "@/features/cart/cart-refresh";
@@ -24,6 +25,14 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ n
   return (
     <div className="container-page flex max-w-4xl flex-col gap-10 pt-10 pb-(--spacing-section) md:pt-16">
       <CartRefresh />
+      <TrackEvent
+        name="order_completed"
+        props={{
+          value: order.total,
+          items: order.items.reduce((n, i) => n + i.quantity, 0),
+          payment: order.paymentMethod,
+        }}
+      />
       <header className="flex flex-col items-center gap-4 text-center">
         <span className="grid size-16 place-items-center rounded-full bg-forest-soft text-forest">
           <CheckCircle2 aria-hidden className="size-8" />

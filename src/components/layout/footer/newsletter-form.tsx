@@ -2,42 +2,64 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import { z } from "zod";
 
-import { toast } from "@/components/ui/toast";
+import { subscribeNewsletterAction } from "@/features/newsletter/actions";
 import { cn } from "@/lib/utils";
 
 const emailSchema = z.email();
 
-/**
- * Newsletter slot. Subscriptions (double opt-in + consent records) are built in
- * a later phase; until then the form validates and explains, without storing anything.
- */
-export function NewsletterForm({ tone = "inverse" }: { tone?: "inverse" | "ink" }) {
+/** Newsletter sign-up (double opt-in: the server emails a confirmation link). */
+export function NewsletterForm({
+  tone = "inverse",
+  source = "footer",
+}: {
+  tone?: "inverse" | "ink";
+  source?: "footer" | "homepage";
+}) {
   const id = useId();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  const [pending, start] = useTransition();
 
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!emailSchema.safeParse(email.trim()).success) {
+    const value = email.trim();
+    if (!emailSchema.safeParse(value).success) {
       setError("Introdu o adresă de email validă.");
       return;
     }
     setError(null);
-    setEmail("");
-    toast({
-      title: "Mulțumim pentru interes!",
-      description:
-        "Abonarea la newsletter va fi disponibilă în curând. Nu am salvat încă adresa ta.",
+    start(async () => {
+      const result = await subscribeNewsletterAction({ email: value, source });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setEmail("");
+      setDone(result.message);
     });
   };
 
   const inverse = tone === "inverse";
 
+  if (done)
+    return (
+      <p
+        role="status"
+        className={cn(
+          "rounded-2xl px-5 py-3 text-sm",
+          inverse ? "bg-ink-inverse/10 text-ink-inverse" : "bg-forest-soft/60 text-forest-deep",
+        )}
+      >
+        {done}
+      </p>
+    );
+
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2">
+    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-2" aria-busy={pending}>
       <label htmlFor={id} className="sr-only">
         Adresa ta de email
       </label>
@@ -67,6 +89,7 @@ export function NewsletterForm({ tone = "inverse" }: { tone?: "inverse" | "ink" 
         />
         <button
           type="submit"
+          disabled={pending}
           className={cn(
             "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition-colors",
             inverse
@@ -74,12 +97,13 @@ export function NewsletterForm({ tone = "inverse" }: { tone?: "inverse" | "ink" 
               : "bg-forest text-ink-inverse hover:bg-forest-deep",
           )}
         >
-          Abonează-te <ArrowRight aria-hidden className="size-4" />
+          {pending ? "Se trimite…" : "Abonează-te"} <ArrowRight aria-hidden className="size-4" />
         </button>
       </div>
       {error ? (
         <p
           id={`${id}-error`}
+          role="alert"
           className={cn("text-sm font-medium", inverse ? "text-[#f3c9bd]" : "text-danger")}
         >
           {error}
@@ -89,7 +113,8 @@ export function NewsletterForm({ tone = "inverse" }: { tone?: "inverse" | "ink" 
           id={`${id}-hint`}
           className={cn("text-xs", inverse ? "text-ink-inverse/65" : "text-ink-muted")}
         >
-          Poți renunța oricând. Detalii în{" "}
+          Primești o scrisoare pe lună; confirmi abonarea din email și poți renunța oricând. Detalii
+          în{" "}
           <Link href="/politica-de-confidentialitate" className="underline underline-offset-2">
             politica de confidențialitate
           </Link>

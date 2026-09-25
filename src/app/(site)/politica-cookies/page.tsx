@@ -25,6 +25,21 @@ const rows = [
     category: "Strict necesar",
   },
   {
+    name: "ar_quiz",
+    kind: "Cookie (httpOnly)",
+    purpose: "Îți permite să revezi rezultatul quiz-ului aromatic fără cont.",
+    duration: "6 luni",
+    category: "Strict necesar",
+  },
+  {
+    name: "ar_consent",
+    kind: "Cookie",
+    purpose:
+      "Reține alegerea ta despre cookie-uri. Dacă accepți analiza, conține și un identificator aleator folosit doar pentru statistici.",
+    duration: "12 luni",
+    category: "Strict necesar",
+  },
+  {
     name: "ar:wishlist",
     kind: "Stocare locală (browser)",
     purpose: "Păstrează lista de favorite pentru vizitatorii fără cont.",
@@ -89,13 +104,22 @@ export default async function CookiePolicyPage() {
         },
         {
           id: "analiza",
-          title: "Cookie-uri de analiză și marketing",
+          title: "Analiză și marketing",
           body: (
-            <p>
-              În prezent site-ul <strong>nu</strong> folosește cookie-uri de analiză sau de
-              marketing. Dacă vor fi introduse, vor fi activate doar cu acordul tău, printr-un
-              banner de consimțământ.
-            </p>
+            <>
+              <p>
+                <strong>Analiză (doar cu acordul tău).</strong> Dacă accepți, înregistrăm anonim
+                câteva evenimente — produse vizualizate, căutări, adăugări în coș, începerea și
+                finalizarea unei comenzi — împreună cu un identificator aleator. Datele rămân pe
+                serverele noastre, nu includ adresa IP, numele sau emailul tău și nu sunt legate de
+                contul tău. Nu folosim servicii de analiză ale unor terți.
+              </p>
+              <p>
+                <strong>Marketing.</strong> Momentan nu folosim cookie-uri de marketing sau reclame
+                pe alte site-uri. Dacă vom introduce astfel de servicii, vor funcționa doar cu
+                acordul tău.
+              </p>
+            </>
           ),
         },
         {
@@ -103,7 +127,8 @@ export default async function CookiePolicyPage() {
           title: "Cum le controlezi",
           body: (
             <p>
-              Poți șterge cookie-urile și stocarea locală din setările browserului. Fără
+              Îți poți schimba oricând alegerea din linkul „Setări cookie” din subsolul fiecărei
+              pagini. Poți șterge cookie-urile și stocarea locală și din setările browserului. Fără
               cookie-urile strict necesare, autentificarea și coșul nu vor funcționa.{" "}
               <ToComplete>verificare juridică a clasificării cookie-urilor</ToComplete>
             </p>
