@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { db } from "@/lib/db";
+import { settingDefaults } from "@/validation/settings";
 import { setPersonalizationConsent } from "@/services/consent/consent";
 import {
   claimAnonymousResults,
@@ -121,6 +122,13 @@ describe("quiz submission", () => {
 
   it("applies the budget stored on the answer (a penalty, not an exclusion)", async () => {
     const { products, answers } = await setupQuiz();
+    // Pin the multipliers so the arithmetic below does not depend on defaults.
+    await db.siteSetting.create({
+      data: {
+        key: "recommendation",
+        value: { ...settingDefaults.recommendation, need: 2, budgetPenalty: 6 },
+      },
+    });
     const anonymousId = "anon-123456789012345678";
     const noBudget = await submitQuiz({
       answerIds: [answers.aSeara.id, answers.aAny.id],
