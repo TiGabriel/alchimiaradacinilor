@@ -49,6 +49,9 @@ components/layout/  header, footer, navigation shells.
   pure functions with unit tests next to them (`*.test.ts`).
 - Server Components by default; `"use client"` only where interaction needs it.
 - Never trust client prices or totals — recompute on the server.
+- Keep pure logic in modules that do not import `@/lib/db` (tests and client components
+  import them); data access lives next to it in a `server-only` module.
+- No `loading.tsx` above routes that call `notFound()` (see DECISIONS D-017).
 
 ## Data rules
 

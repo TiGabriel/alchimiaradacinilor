@@ -93,3 +93,44 @@ schema cannot express these, so they are appended to the init migration.
 
 `SiteSetting(key, value Json)` with a Zod registry in `src/validation/settings.ts`.
 New settings need no migration; invalid stored JSON falls back to defaults.
+
+## Phase 2 — Design system and layout
+
+### D-014 · Semantic tokens, AA-checked
+
+Colour tokens are semantic (`paper`, `ink`, `forest`, `clay`…). Every text/background pair used
+for text was checked for WCAG AA; `sage` and `ochre` are decorative only (ochre ≥ 3:1 for stars).
+
+### D-015 · Radix primitives + CSS animations for overlays; Motion for scroll/ambient
+
+Dialogs, drawers, menus, tabs and accordions use Radix (focus management, ARIA) animated with
+CSS keyframes via `data-state`, which the global reduced-motion rule neutralises. Motion is used
+for scroll reveals, stagger, parallax and ambient botanical elements. Motion's own
+`useReducedMotion` reads `matchMedia` during the first client render (hydration mismatch), so a
+`useSyncExternalStore`-based `usePrefersReducedMotion` is used and elements are never swapped.
+
+### D-016 · Storefront renders dynamically for now
+
+`(site)/layout.tsx` sets `dynamic = "force-dynamic"`: stock and prices are always fresh and builds
+do not need a database. Caching (Cache Components / tags) is revisited in the performance phase.
+
+### D-017 · No section-wide `loading.tsx`
+
+A loading boundary makes the response stream, and a streamed `notFound()` can only answer
+200 + noindex. Routes that can 404 (categories, products) therefore have no `loading.tsx` above
+them; they use in-page `<Suspense>` after their `notFound()` checks, keeping real 404 statuses.
+
+### D-018 · Route group `(site)` for the storefront chrome
+
+Header/footer live in `(site)/layout.tsx`; the root `not-found.tsx` renders the same `SiteChrome`
+for unmatched URLs. A future admin area can get its own layout without the storefront chrome.
+
+### D-019 · Placeholder pages instead of dead links
+
+Every navigation target that a later phase builds exists now as a noindex "în pregătire" page with
+useful next steps. Category URLs are validated against the tree (invalid ones 404).
+
+### D-020 · Pure modules separate from data access
+
+Pure logic (e.g. `category-tree.ts`) lives in its own module with tests; data-access modules
+(`categories.ts`) import `server-only` and the DB client. Client components import only pure modules.

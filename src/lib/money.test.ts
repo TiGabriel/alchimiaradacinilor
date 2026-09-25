@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { formatMoney, percentOf, toMinor } from "./money";
+import { discountPercent, formatMoney, percentOf, toMinor } from "./money";
 
 const nbsp = (s: string) => s.replace(/\s/g, " ");
 
@@ -38,5 +38,21 @@ describe("percentOf", () => {
     expect(percentOf(4999, 10)).toBe(500);
     expect(percentOf(1999, 15)).toBe(300);
     expect(percentOf(0, 50)).toBe(0);
+  });
+});
+
+describe("discountPercent", () => {
+  it("returns the whole-percent saving, rounded down", () => {
+    expect(discountPercent(5400, 5900)).toBe(8);
+    expect(discountPercent(21900, 25500)).toBe(14);
+    expect(discountPercent(5000, 10000)).toBe(50);
+  });
+
+  it("returns null when there is no real discount", () => {
+    expect(discountPercent(4900, null)).toBeNull();
+    expect(discountPercent(4900, undefined)).toBeNull();
+    expect(discountPercent(4900, 4900)).toBeNull();
+    expect(discountPercent(4900, 4000)).toBeNull();
+    expect(discountPercent(9999, 10000)).toBeNull();
   });
 });
