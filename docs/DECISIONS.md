@@ -313,3 +313,24 @@ and prices are re-read on the server.
 
 Need pages rank routines and articles with `rankProfiles` using the same weights as products, so
 one tuning surface (the `recommendation` setting) affects all content.
+
+## Phase 8 — Homepage
+
+### D-049 · The hero heading is the LCP and is never hidden
+
+Scroll reveals start at opacity 0 and wait for hydration, which would delay Largest Contentful
+Paint. The hero heading is therefore static; supporting text uses a CSS-only entrance that starts
+at first paint (`animate-rise`, disabled with reduced motion). A hero photo, when configured, is
+the LCP instead and is requested with high priority.
+
+### D-050 · Editorial homepage content lives in a setting
+
+The hero photo and "Cele 5 esențiale" (product slugs + short aroma notes) are the `homepage`
+SiteSetting, editable later from admin settings (Phase 12). Everything else on the homepage is
+derived from the catalogue and content (featured flags, product counts, publish dates).
+
+### D-051 · Social proof is real or absent
+
+The homepage shows only approved reviews from customers, with first name + last initial; there
+are no written testimonials and no embedded social feed. Sections without data are hidden rather
+than filled with placeholders.

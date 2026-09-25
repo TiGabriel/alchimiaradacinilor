@@ -76,6 +76,16 @@ export async function getProductCards(ids: string[]): Promise<ProductCardData[]>
   return ids.flatMap((id) => byId.get(id) ?? []);
 }
 
+/** Active products by slug (order not guaranteed). */
+export async function getProductCardsBySlugs(slugs: string[]): Promise<ProductCardData[]> {
+  if (slugs.length === 0) return [];
+  const rows = await db.product.findMany({
+    where: { slug: { in: slugs }, active: true },
+    select: cardSelect,
+  });
+  return rows.map(toCard);
+}
+
 export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]> {
   const rows = await db.product.findMany({
     where: { active: true, featured: true },

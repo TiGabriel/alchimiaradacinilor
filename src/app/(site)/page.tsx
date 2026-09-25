@@ -1,165 +1,148 @@
-import { ArrowRight, Compass, Moon, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 
-import { Blossom, Leaf, ROOT_PATHS, SectionDivider, SPRIG_PATHS } from "@/components/botanical";
-import {
-  BotanicalFloat,
-  DrawLine,
-  Parallax,
-  Reveal,
-  Stagger,
-  StaggerItem,
-} from "@/components/motion";
+import { Leaf, SectionDivider } from "@/components/botanical";
+import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/features/auth/session";
 import { ProductCard } from "@/features/catalog/product-card";
 import { CategoryTiles } from "@/features/discover/category-cards";
+import { NeedPicker } from "@/features/discover/need-picker";
+import { CommunitySection } from "@/features/home/community";
+import { EssentialsSection } from "@/features/home/essentials";
+import { HomeHero } from "@/features/home/hero";
+import { PersonalRowSection } from "@/features/home/personal-row";
+import { ReviewsSection } from "@/features/home/reviews";
+import { ArticleCard } from "@/features/journal/article-card";
+import { RoutineCard } from "@/features/routines/routine-card";
 import { getCategoryTree } from "@/services/catalog/categories";
 import { getFeaturedProducts } from "@/services/catalog/products";
+import { getNeedsWithCounts } from "@/services/catalog/taxonomy";
+import { getHomeEssentials, getHomeReviews, getPersonalRow } from "@/services/home/home";
+import { popularCategories } from "@/services/home/select";
+import { listArticles } from "@/services/journal/journal";
+import { listRoutines } from "@/services/routines/routines";
+import { getSettings } from "@/services/settings";
 
-const entryPoints = [
-  {
-    href: "/quiz",
-    icon: Sparkles,
-    title: "Fă quiz-ul aromatic",
-    text: "Câteva întrebări despre preferințele tale și îți propunem aromele potrivite.",
-  },
-  {
-    href: "/descopera/nevoi",
-    icon: Compass,
-    title: "Alege după nevoie",
-    text: "Relaxare, concentrare, energie sau o casă proaspătă — pornește de la momentul tău.",
-  },
-  {
-    href: "/rutine",
-    icon: Moon,
-    title: "Urmează o rutină",
-    text: "Ritualuri simple, pas cu pas, pentru dimineți și seri.",
-  },
-];
+function SectionHeading({
+  id,
+  eyebrow,
+  title,
+  link,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  link?: { href: string; label: string };
+}) {
+  return (
+    <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
+      <Reveal className="flex max-w-2xl flex-col gap-3">
+        <p className="text-eyebrow text-clay">{eyebrow}</p>
+        <h2 id={id} className="text-display-lg">
+          {title}
+        </h2>
+      </Reveal>
+      {link ? (
+        <Button asChild variant="link">
+          <Link href={link.href}>
+            {link.label} <ArrowRight aria-hidden />
+          </Link>
+        </Button>
+      ) : null}
+    </div>
+  );
+}
 
 export default async function HomePage() {
-  const [categories, featured] = await Promise.all([getCategoryTree(), getFeaturedProducts(8)]);
+  const user = await getCurrentUser();
+  const [settings, needs, tree, featured, essentials, routines, articles, reviews, personal] =
+    await Promise.all([
+      getSettings(),
+      getNeedsWithCounts(),
+      getCategoryTree(),
+      getFeaturedProducts(4),
+      getHomeEssentials(),
+      listRoutines({ take: 3 }),
+      listArticles({ take: 3 }),
+      getHomeReviews(3),
+      user ? getPersonalRow(user.id) : Promise.resolve(null),
+    ]);
+  const categories = popularCategories(tree, 6);
+  const pickerNeeds = needs.filter((n) => n.productCount > 0);
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="container-page grid items-center gap-12 pt-10 pb-16 md:pt-16 lg:grid-cols-[1.05fr_1fr] lg:gap-8 lg:pb-24">
-          <Reveal className="relative z-10 flex flex-col gap-6">
-            <p className="text-eyebrow text-clay">Uleiuri esențiale · Ritualuri botanice</p>
-            <h1 className="text-display-xl">
-              Aromele care te <em className="font-normal text-forest italic">aduc acasă</em>
-            </h1>
-            <p className="max-w-lg text-lg text-ink-muted md:text-xl">
-              Uleiuri esențiale, amestecuri și ritualuri simple, alese cu grijă pentru momentele
-              tale de zi cu zi.
+      <HomeHero image={settings.homepage.heroImage} />
+
+      {user ? <PersonalRowSection firstName={user.firstName} row={personal} /> : null}
+
+      {/* Need picker → quiz */}
+      <section aria-labelledby="de-unde" className="bg-paper-deep py-(--spacing-section)">
+        <div className="container-page grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-16">
+          <Reveal className="flex flex-col gap-4">
+            <p className="text-eyebrow text-clay">Primul pas</p>
+            <h2 id="de-unde" className="text-display-lg">
+              Nu știi de unde să începi?
+            </h2>
+            <p className="max-w-md text-lg text-ink-muted">
+              Alege momentul pentru care cauți o aromă sau răspunde la câteva întrebări și îți
+              arătăm ce ți se potrivește — de fiecare dată îți spunem și de ce.
             </p>
-            <div className="mt-2 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link href="/produse">
-                  Descoperă produsele <ArrowRight aria-hidden />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link href="/quiz">Fă quiz-ul aromatic</Link>
-              </Button>
+          </Reveal>
+          <Reveal delay={0.1} className="flex min-w-0 flex-col gap-6">
+            {pickerNeeds.length ? (
+              <div className="flex flex-col gap-3">
+                <p className="font-display text-2xl">Ce cauți?</p>
+                <NeedPicker needs={pickerNeeds} />
+              </div>
+            ) : null}
+            <div className="flex flex-col items-start gap-4 rounded-xl bg-forest p-6 text-ink-inverse sm:flex-row sm:items-center sm:justify-between md:p-7">
+              <p className="flex items-start gap-3">
+                <Sparkles aria-hidden className="mt-1 size-5 shrink-0 text-ink-inverse/80" />
+                <span>
+                  <span className="block font-display text-xl text-ink-inverse">Quiz aromatic</span>
+                  <span className="text-sm text-ink-inverse/80">
+                    Câteva întrebări scurte, cam două minute.
+                  </span>
+                </span>
+              </p>
+              <Link
+                href="/quiz"
+                className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-paper px-5 font-semibold text-forest-deep transition-colors hover:bg-surface"
+              >
+                Începe quiz-ul <ArrowRight aria-hidden className="size-4" />
+              </Link>
             </div>
           </Reveal>
+        </div>
+      </section>
 
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-md lg:max-w-none">
-            <Parallax className="absolute inset-x-[8%] top-0 bottom-0" offset={50}>
-              <div className="relative size-full overflow-hidden rounded-t-full rounded-b-2xl bg-[radial-gradient(120%_80%_at_50%_10%,var(--color-sage-soft),var(--color-forest-soft)_55%,var(--color-paper-deep))] shadow-lifted">
-                <DrawLine
-                  d={SPRIG_PATHS}
-                  viewBox="0 0 120 160"
-                  className="absolute inset-x-[18%] top-[14%] h-[70%] text-forest/70"
-                  strokeWidth={0.9}
-                />
-                <DrawLine
-                  d={ROOT_PATHS}
-                  viewBox="0 0 200 140"
-                  className="absolute inset-x-0 -bottom-[4%] w-full text-forest/25"
-                  strokeWidth={0.8}
-                  duration={3}
-                />
-              </div>
-            </Parallax>
-            <BotanicalFloat
-              className="absolute top-[12%] -left-[2%] w-16 md:w-20"
-              drift={12}
-              sway={6}
-            >
-              <Leaf className="w-full text-sage" />
-            </BotanicalFloat>
-            <BotanicalFloat
-              className="absolute right-0 bottom-[22%] w-14 md:w-16"
-              drift={10}
-              delay={1.5}
-            >
-              <Blossom className="w-full text-clay/50" />
-            </BotanicalFloat>
-            <BotanicalFloat
-              className="absolute top-[6%] right-[6%] w-10"
-              drift={8}
-              delay={3}
-              sway={-5}
-            >
-              <Leaf className="w-full rotate-90 text-forest/40" />
-            </BotanicalFloat>
+      {/* Popular categories */}
+      {categories.length > 0 ? (
+        <section aria-labelledby="categorii" className="py-(--spacing-section)">
+          <div className="container-page">
+            <SectionHeading
+              id="categorii"
+              eyebrow="Categorii populare"
+              title="Explorează colecția"
+              link={{ href: "/descopera/categorii", label: "Toate categoriile" }}
+            />
+            <CategoryTiles categories={categories} />
           </div>
-        </div>
-      </section>
-
-      {/* Entry points */}
-      <section className="bg-paper-deep py-(--spacing-section)">
-        <div className="container-page">
-          <Reveal className="mb-10 flex max-w-2xl flex-col gap-3 md:mb-14">
-            <p className="text-eyebrow text-clay">De unde începi</p>
-            <h2 className="text-display-lg">Trei căi către aroma potrivită</h2>
-          </Reveal>
-          <Stagger className="grid gap-4 md:grid-cols-3 md:gap-6">
-            {entryPoints.map(({ href, icon: Icon, title, text }) => (
-              <StaggerItem key={href}>
-                <Link
-                  href={href}
-                  className="group flex h-full flex-col gap-4 rounded-xl border border-line bg-surface p-7 shadow-xs transition-[box-shadow,transform,border-color] duration-300 ease-(--ease-botanical) hover:-translate-y-1 hover:border-line-strong hover:shadow-lifted motion-reduce:hover:translate-y-0"
-                >
-                  <span className="grid size-12 place-items-center rounded-full bg-forest-soft text-forest">
-                    <Icon aria-hidden className="size-5" />
-                  </span>
-                  <h3 className="text-2xl">{title}</h3>
-                  <p className="text-ink-muted">{text}</p>
-                  <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-sm font-semibold text-forest">
-                    Începe
-                    <ArrowRight
-                      aria-hidden
-                      className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none"
-                    />
-                  </span>
-                </Link>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
       {/* Featured products */}
       {featured.length > 0 ? (
-        <section aria-labelledby="recomandate" className="py-(--spacing-section)">
+        <section aria-labelledby="recomandate" className="pb-(--spacing-section)">
           <div className="container-page">
-            <div className="mb-10 flex flex-wrap items-end justify-between gap-4 md:mb-14">
-              <Reveal className="flex max-w-2xl flex-col gap-3">
-                <p className="text-eyebrow text-clay">Recomandate</p>
-                <h2 id="recomandate" className="text-display-lg">
-                  Alese cu grijă
-                </h2>
-              </Reveal>
-              <Button asChild variant="link">
-                <Link href="/produse">
-                  Toate produsele <ArrowRight aria-hidden />
-                </Link>
-              </Button>
-            </div>
+            <SectionHeading
+              id="recomandate"
+              eyebrow="Recomandate"
+              title="Alese cu grijă"
+              link={{ href: "/produse", label: "Toate produsele" }}
+            />
             <Stagger
               as="ul"
               className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-4"
@@ -174,24 +157,60 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* Categories */}
-      {categories.length > 0 ? (
-        <section aria-labelledby="categorii" className="bg-paper-deep py-(--spacing-section)">
+      {essentials.length > 0 ? <EssentialsSection items={essentials} /> : null}
+
+      {/* Featured routines */}
+      {routines.length > 0 ? (
+        <section aria-labelledby="rutine" className="py-(--spacing-section)">
           <div className="container-page">
-            <Reveal className="mb-10 flex max-w-2xl flex-col gap-3 md:mb-14">
-              <p className="text-eyebrow text-clay">Categorii</p>
-              <h2 id="categorii" className="text-display-lg">
-                Explorează colecția
-              </h2>
-            </Reveal>
-            <CategoryTiles categories={categories} />
+            <SectionHeading
+              id="rutine"
+              eyebrow="Rutine"
+              title="Ritualuri mici, făcute cu intenție"
+              link={{ href: "/rutine", label: "Toate rutinele" }}
+            />
+            <Stagger as="ul" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {routines.map((routine) => (
+                <StaggerItem as="li" key={routine.id}>
+                  <RoutineCard routine={routine} />
+                </StaggerItem>
+              ))}
+            </Stagger>
           </div>
         </section>
       ) : null}
 
-      <div className="container-page">
-        <SectionDivider />
-      </div>
+      {reviews.length > 0 ? (
+        <>
+          <div className="container-page">
+            <SectionDivider />
+          </div>
+          <ReviewsSection reviews={reviews} />
+        </>
+      ) : null}
+
+      {/* Latest articles */}
+      {articles.length > 0 ? (
+        <section aria-labelledby="jurnal" className="bg-paper-deep py-(--spacing-section)">
+          <div className="container-page">
+            <SectionHeading
+              id="jurnal"
+              eyebrow="Din jurnal"
+              title="Povești despre plante și arome"
+              link={{ href: "/jurnal", label: "Toate articolele" }}
+            />
+            <Stagger as="ul" className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+              {articles.map((article) => (
+                <StaggerItem as="li" key={article.id}>
+                  <ArticleCard article={article} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </section>
+      ) : null}
+
+      <CommunitySection facebookUrl={settings.social.facebookUrl} />
 
       {/* Promise */}
       <section className="py-(--spacing-section)">

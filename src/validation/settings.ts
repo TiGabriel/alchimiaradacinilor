@@ -56,6 +56,13 @@ export const settingSchemas = {
     routineAffinity: z.number().min(0).max(10),
     viewedAffinity: z.number().min(0).max(10),
   }),
+  /** Editorial homepage content that is not derived from the catalogue. */
+  homepage: z.object({
+    /** Optional hero photo (LCP). Without it the illustrated botanical composition is shown. */
+    heroImage: z.object({ src: z.string().min(1), alt: z.string().min(1) }).nullable(),
+    /** "Cele 5 esențiale": product slugs in display order, each with a short aroma note. */
+    essentials: z.array(z.object({ slug: z.string().min(1), note: z.string().max(160) })).max(5),
+  }),
   legal: z.object({
     /** Bump whenever the privacy policy text changes; stored with every consent record. */
     privacyPolicyVersion: z.string().min(1),
@@ -102,6 +109,16 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
     wishlistAffinity: 1,
     routineAffinity: 1,
     viewedAffinity: 0.5,
+  },
+  homepage: {
+    heroImage: null,
+    essentials: [
+      { slug: "lavender", note: "Florală și rotundă — aroma serilor liniștite." },
+      { slug: "lemon", note: "Citrică și luminoasă, pentru dimineți proaspete." },
+      { slug: "peppermint", note: "Mentolată și clară, pentru pauzele din mijlocul zilei." },
+      { slug: "wild-orange", note: "Dulce și însorită — o aromă care încălzește casa." },
+      { slug: "tea-tree", note: "Verde și ierbacee, cu o notă proaspătă, camforată." },
+    ],
   },
   legal: {
     privacyPolicyVersion: "2026-09-draft",

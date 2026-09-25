@@ -11,6 +11,8 @@ type PriceProps = {
   currency?: string;
   size?: "sm" | "md" | "lg" | "xl";
   showDiscountBadge?: boolean;
+  /** "inverse" for dark sections (forest backgrounds). */
+  tone?: "default" | "inverse";
   className?: string;
 };
 
@@ -28,22 +30,34 @@ export function Price({
   currency,
   size = "md",
   showDiscountBadge = true,
+  tone = "default",
   className,
 }: PriceProps) {
   const discount = discountPercent(price, compareAtPrice);
   const s = sizes[size];
+  const inverse = tone === "inverse";
 
   return (
     <div className={cn("flex flex-wrap items-baseline gap-x-2 gap-y-1", className)}>
       <span
-        className={cn("font-semibold tabular-nums", discount ? "text-clay" : "text-ink", s.price)}
+        className={cn(
+          "font-semibold tabular-nums",
+          inverse ? "text-ink-inverse" : discount ? "text-clay" : "text-ink",
+          s.price,
+        )}
       >
         {discount ? <span className="sr-only">Preț redus: </span> : null}
         {formatMoney(price, currency)}
       </span>
       {discount && compareAtPrice ? (
         <>
-          <s className={cn("text-ink-muted tabular-nums decoration-1", s.old)}>
+          <s
+            className={cn(
+              "tabular-nums decoration-1",
+              inverse ? "text-ink-inverse/70" : "text-ink-muted",
+              s.old,
+            )}
+          >
             <span className="sr-only">Preț vechi: </span>
             {formatMoney(compareAtPrice, currency)}
           </s>

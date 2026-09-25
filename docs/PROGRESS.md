@@ -11,7 +11,7 @@
 | 5     | Accounts, authentication, consent, legal pages       | Done    |
 | 6     | Recommendation engine, quiz, need discovery          | Done    |
 | 7     | Routines and journal                                 | Done    |
-| 8     | Homepage                                             | Pending |
+| 8     | Homepage                                             | Done    |
 | 9     | Checkout, orders, coupons                            | Pending |
 | 10    | Reviews, newsletter, cookie consent, analytics       | Pending |
 | 11    | Admin part 1 (dashboard, catalog, orders, customers) | Pending |
@@ -209,3 +209,28 @@
 - Tests: routine cart planning, article parsing/reading time/related ranking; integration
   (relationship queries, published-only listing and search, related articles, need ranking, saved
   routines, add-routine-to-cart skip reasons incl. guest cart, cross-type search).
+
+## Phase 8 — Homepage
+
+- Editorial hero "Ritualuri simple. Arome care îți transformă rutina." with "Descoperă produsele"
+  and "Găsește ce ți se potrivește" (→ quiz). The heading is never animated (it is the LCP element,
+  ~0.9 s locally); the rest rises in with a CSS animation that runs from first paint. An optional
+  hero photo (`homepage.heroImage` setting) is rendered with `next/image` `priority` +
+  `fetchPriority="high"`; without it, the illustrated botanical arch with parallax is shown.
+- "Nu știi de unde să începi?": the shared need picker plus an "Începe quiz-ul" card.
+- "Recomandat pentru tine" (signed-in only, right under the hero): latest quiz picks topped up with
+  favourite-based suggestions (consent-gated), in stock only, each with its reason; otherwise an
+  invitation to take the quiz.
+- Popular categories (top-level, by product count), featured products (stagger), "Cele 5 esențiale"
+  (editorial numbered list on forest green; slugs + aroma notes in the `homepage` setting, hidden if
+  fewer than 3 resolve), featured routines, latest articles.
+- Reviews: only real, APPROVED reviews rated ≥ 4 with a substantive text, shown as "Prenume I." with a
+  verified-purchase mark; the section is hidden when there are none (nothing is invented).
+- Newsletter block (premium card) — still the graceful placeholder form until Phase 10 wires double
+  opt-in — and a Facebook community card only when `social.facebookUrl` is set (plain outbound
+  link, no embedded or fabricated posts).
+- Motion: reveal/stagger/parallax; all content visible with reduced motion. No horizontal overflow
+  at 390 / 820 / 1280 px.
+- `Price` gained `tone="inverse"` for dark sections; `listArticles` limits in SQL when not searching.
+- Tests: essentials resolution, popular categories, personal row, reviewer name (unit); approved-only
+  reviews, essentials threshold, quiz-based personal row skipping sold-out products (integration).

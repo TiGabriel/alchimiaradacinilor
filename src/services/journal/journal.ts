@@ -111,6 +111,8 @@ export async function listArticles(
       ...(filter.categorySlug ? { category: { slug: filter.categorySlug } } : {}),
     },
     orderBy: { publishedAt: "desc" },
+    // Text search filters in memory, so it needs every row; otherwise limit in the query.
+    take: filter.query ? undefined : filter.take,
     select: cardSelect,
   });
   let cards = rows.map(toCard);
