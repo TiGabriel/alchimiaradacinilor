@@ -98,7 +98,9 @@ export const profileSchema = z.object({
 /** Where to go after login: only same-site relative paths (no open redirects). */
 export function safeNextPath(value: unknown, fallback = "/cont"): string {
   if (typeof value !== "string") return fallback;
-  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback;
+  if (!value.startsWith("/") || value.startsWith("//")) return fallback;
+  // Browsers drop tabs/newlines and read "\" as "/": "/\t/evil.com" would become "//evil.com".
+  if (/[\u0000-\u001f\u007f\\]/.test(value)) return fallback;
   return value.slice(0, 300);
 }
 

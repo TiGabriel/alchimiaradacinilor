@@ -137,3 +137,21 @@ for Fraunces (no swap, fallback on a slow first visit), deferring the cart/searc
   category, product), Escape closes and restores focus (search, cart, mobile menu), the quiz can be
   completed with the keyboard only, cart updates use an `aria-live` region, reduced-motion content
   is visible without scrolling animations.
+
+## Pre-launch security review (2026-09-26)
+
+Second pass before self-hosting (auth, sessions, Server Actions, route handlers, uploads, checkout,
+admin permissions, rendering sinks, dependencies, deploy scripts).
+
+- **Open redirect after login fixed:** `safeNextPath` accepted `/\t/evil.example` — browsers drop
+  tabs/newlines, so `?next=/%09/evil.example` sent the visitor to another site after signing in.
+  Control characters and backslashes are now refused (tests added).
+- **Admin links limited to http(s):** the social profile URLs (settings) and brand website accepted
+  `javascript:`/`data:` URLs (`z.url()` allows any scheme). React 19 and the CSP already blocked them;
+  now they are refused at validation too.
+- **Server (`deploy/server-setup.sh`):** SSH keys only and no root login, fail2ban, automatic
+  security updates, a sandboxed systemd unit (read-only system, writes only under `/srv/alchimia`,
+  no capabilities), `server_tokens off`, backups written `umask 077`, daily purge of expired
+  sessions and one-time links. `deploy.sh https` takes `CERTBOT_EMAIL` for renewal warnings.
+- Reviewed, no change needed: every Server Action and admin page checks the session/permission
+  itself; orders, addresses and quiz results are scoped to their owner; `pnpm audit` clean.

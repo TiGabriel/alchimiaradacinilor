@@ -18,6 +18,10 @@ describe("taxonomy schemas", () => {
       taxonomySchemas.marci.parse({ name: "Atelier", slug: "atelier", website: "" }).website,
     ).toBeNull();
     expect(
+      taxonomySchemas.marci.safeParse({ name: "X", slug: "x", website: "javascript:alert(1)" })
+        .success,
+    ).toBe(false);
+    expect(
       taxonomySchemas.nevoi.safeParse({
         name: "Somn",
         slug: "somn",

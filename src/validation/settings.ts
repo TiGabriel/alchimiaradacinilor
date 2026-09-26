@@ -67,8 +67,8 @@ export const settingSchemas = {
     hours: z.string().optional(),
   }),
   social: z.object({
-    facebookUrl: z.url().optional(),
-    instagramUrl: z.url().optional(),
+    facebookUrl: z.url({ protocol: /^https?$/ }).optional(),
+    instagramUrl: z.url({ protocol: /^https?$/ }).optional(),
   }),
   shipping: z.preprocess(
     upgradeLegacyShipping,

@@ -9,6 +9,13 @@ describe("site settings registry", () => {
     }
   });
 
+  it("only accepts web links for social profiles", () => {
+    const social = settingSchemas.social;
+    expect(social.safeParse({ facebookUrl: "https://facebook.com/alchimia" }).success).toBe(true);
+    expect(social.safeParse({ facebookUrl: "javascript:alert(1)" }).success).toBe(false);
+    expect(social.safeParse({ instagramUrl: "data:text/html,x" }).success).toBe(false);
+  });
+
   it("recognises known keys only", () => {
     expect(isSettingKey("brand")).toBe(true);
     expect(isSettingKey("toString")).toBe(false);

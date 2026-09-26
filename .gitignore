@@ -38,3 +38,9 @@ yarn-error.log*
 
 # local storage driver
 /storage/
+
+# deploy target (ubuntu@<server ip>)
+/deploy/.target
+
+# npm lockfile from local installs (pnpm-lock.yaml is the source of truth)
+/package-lock.json

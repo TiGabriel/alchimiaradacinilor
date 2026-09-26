@@ -103,4 +103,10 @@ describe("safeNextPath", () => {
     expect(safeNextPath("/\\evil.example")).toBe("/cont");
     expect(safeNextPath(undefined, "/")).toBe("/");
   });
+
+  it("rejects paths that browsers turn into another host", () => {
+    for (const path of ["/\t/evil.example", "/\n/evil.example", "/\r/evil.example", "/a\\b"])
+      expect(safeNextPath(path)).toBe("/cont");
+    expect(safeNextPath("/produse?q=lavanda%20bio")).toBe("/produse?q=lavanda%20bio");
+  });
 });

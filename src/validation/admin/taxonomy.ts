@@ -31,7 +31,10 @@ export const taxonomySchemas = {
     slug: slugSchema,
     description,
     website: z
-      .union([z.url("Adresă web invalidă (https://…)."), z.literal("")])
+      .union([
+        z.url({ protocol: /^https?$/, error: "Adresă web invalidă (https://…)." }),
+        z.literal(""),
+      ])
       .optional()
       .transform((v) => v || null),
     active: z.boolean().default(true),
