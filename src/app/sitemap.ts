@@ -11,11 +11,8 @@ import { getSitemapContent } from "@/services/seo";
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [tree, { products, routines, articles }, journalCategories] = await Promise.all([
-    getCategoryTree(),
-    getSitemapContent(),
-    getArticleCategories(),
-  ]);
+  const [tree, { products, routines, articles, hiddenCategoryIds }, journalCategories] =
+    await Promise.all([getCategoryTree(), getSitemapContent(), getArticleCategories()]);
   const staticPaths = [
     "/",
     "/produse",
@@ -46,12 +43,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.2,
     })),
     ...tree.flatMap((category) => [
-      { url: siteUrl(categoryHref(category)), changeFrequency: "weekly" as const, priority: 0.8 },
-      ...category.children.map((child) => ({
-        url: siteUrl(categoryHref(child, category)),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      })),
+      ...(hiddenCategoryIds.has(category.id)
+        ? []
+        : [
+            {
+              url: siteUrl(categoryHref(category)),
+              changeFrequency: "weekly" as const,
+              priority: 0.8,
+            },
+          ]),
+      ...category.children
+        .filter((child) => !hiddenCategoryIds.has(child.id))
+        .map((child) => ({
+          url: siteUrl(categoryHref(child, category)),
+          changeFrequency: "weekly" as const,
+          priority: 0.7,
+        })),
     ]),
     ...routines.map((r) => ({
       url: siteUrl(`/rutine/${r.slug}`),

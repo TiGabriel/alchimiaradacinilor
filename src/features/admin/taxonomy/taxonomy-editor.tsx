@@ -15,6 +15,8 @@ import type { TaxonomyRow } from "@/services/admin/taxonomy";
 import type { TaxonomyKind } from "@/validation/admin/taxonomy";
 
 import { DeleteButton } from "../delete-button";
+import { EMPTY_SEO, seoDraftFrom, seoPayload, type SeoDraft } from "../seo-draft";
+import { SeoFields } from "../seo-fields";
 import { AdminTable, adminSelect, StatusDot, td, th } from "../ui";
 
 import { deleteTaxonomyAction, saveTaxonomyAction } from "./actions";
@@ -47,6 +49,9 @@ export function TaxonomyEditor({
   const router = useRouter();
   const [editing, setEditing] = useState<TaxonomyRow | "new" | null>(null);
   const [draft, setDraft] = useState<Draft>({});
+  const [seo, setSeo] = useState<SeoDraft>(EMPTY_SEO);
+  // Only categories have a public page of their own (and so SEO fields).
+  const withSeo = kind === "categorii";
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pending, start] = useTransition();
   const byId = new Map(rows.map((r) => [r.id, r]));
@@ -54,13 +59,14 @@ export function TaxonomyEditor({
 
   const open = (row: TaxonomyRow | null) => {
     setDraft(toDraft(row, fields));
+    setSeo(seoDraftFrom(row?.seo));
     setErrors({});
     setEditing(row ?? "new");
   };
 
   const save = (event: React.FormEvent) => {
     event.preventDefault();
-    const payload = Object.fromEntries(Object.entries(draft));
+    const payload = { ...draft, ...(withSeo ? seoPayload(seo) : {}) };
     start(async () => {
       const result = await saveTaxonomyAction(
         kind,
@@ -260,6 +266,22 @@ export function TaxonomyEditor({
                 </Field>
               );
             })}
+            {withSeo ? (
+              <fieldset className="flex flex-col gap-3 border-t border-line pt-4">
+                <legend className="pb-2 text-sm font-semibold">SEO și rețele sociale</legend>
+                <SeoFields
+                  value={seo}
+                  onChange={setSeo}
+                  errors={errors}
+                  prefix=""
+                  fallbacks={{
+                    title: "numele categoriei",
+                    description: "descrierea categoriei",
+                    image: "imaginea implicită a site-ului",
+                  }}
+                />
+              </fieldset>
+            ) : null}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setEditing(null)}>
                 Renunță

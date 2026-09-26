@@ -1,3 +1,5 @@
+import { EMPTY_SEO, seoDraftFrom } from "../seo-draft";
+
 import type { ProductFormState } from "./product-form";
 
 type LoadedProduct = {
@@ -17,7 +19,7 @@ type LoadedProduct = {
   featured: boolean;
   active: boolean;
   attributes: unknown;
-  seo: { seoTitle: string | null; metaDescription: string | null; noIndex: boolean } | null;
+  seo: Parameters<typeof seoDraftFrom>[0];
   needs: Array<{ needId: string; relevance: number }>;
   aromaProfiles: Array<{ aromaProfileId: string; intensity: number }>;
   tags: Array<{ tagId: string }>;
@@ -49,7 +51,7 @@ export function emptyProductForm(): ProductFormState {
     tagIds: [],
     collectionIds: [],
     attributes: {},
-    seo: { seoTitle: "", metaDescription: "", noIndex: false },
+    seo: EMPTY_SEO,
   };
 }
 
@@ -79,10 +81,6 @@ export function productToForm(p: LoadedProduct): ProductFormState {
     tagIds: p.tags.map((t) => t.tagId),
     collectionIds: p.collections.map((c) => c.collectionId),
     attributes: Object.fromEntries(Object.entries(attrs).map(([k, v]) => [k, String(v)])),
-    seo: {
-      seoTitle: p.seo?.seoTitle ?? "",
-      metaDescription: p.seo?.metaDescription ?? "",
-      noIndex: p.seo?.noIndex ?? false,
-    },
+    seo: seoDraftFrom(p.seo),
   };
 }

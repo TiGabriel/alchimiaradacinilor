@@ -40,6 +40,7 @@ export default async function RoutinesPage() {
           <p className="font-semibold">Caută după nevoie</p>
           <NeedPicker needs={needs} />
         </div>
+        <h2 className="sr-only">Toate rutinele</h2>
         {routines.length ? (
           <Stagger className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {routines.map((r) => (

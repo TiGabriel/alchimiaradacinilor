@@ -214,3 +214,51 @@ describe("settings and newsletter export", () => {
     expect(csv).not.toContain("altul@example.ro");
   });
 });
+
+describe("SEO fields", () => {
+  it("stores category SEO and keeps noindex categories out of the sitemap", async () => {
+    const { saveTaxonomy } = await import("@/services/admin/taxonomy");
+    const { getCategorySeo } = await import("@/services/catalog/categories");
+    const { getSitemapContent } = await import("@/services/seo");
+    const { admin } = await actors();
+    const category = await saveTaxonomy(admin, "categorii", {
+      name: "Uleiuri",
+      slug: "uleiuri",
+      seoTitle: "Uleiuri esențiale pure",
+      canonicalUrl: "/produse/uleiuri",
+    });
+    expect(await getCategorySeo(category.id)).toMatchObject({
+      seoTitle: "Uleiuri esențiale pure",
+      canonicalUrl: "/produse/uleiuri",
+      noIndex: false,
+    });
+    expect((await getSitemapContent()).hiddenCategoryIds.has(category.id)).toBe(true);
+
+    // Clearing every field keeps the (now empty) record and makes the page indexable again.
+    await saveTaxonomy(admin, "categorii", { name: "Uleiuri", slug: "uleiuri" }, category.id);
+    expect(await getCategorySeo(category.id)).toMatchObject({ seoTitle: null, canonicalUrl: null });
+    expect((await getSitemapContent()).hiddenCategoryIds.has(category.id)).toBe(false);
+  });
+
+  it("saves canonical and noindex on routines", async () => {
+    const { editor } = await actors();
+    const saved = await saveRoutine(editor, {
+      title: "Dimineață",
+      slug: "dimineata",
+      summary: "Un început de zi luminos, cu arome citrice.",
+      timeOfDay: "MORNING",
+      difficulty: "BEGINNER",
+      durationMinutes: 5,
+      steps: [{ title: "Deschide fereastra", instructions: "Aer proaspăt.", durationMinutes: 1 }],
+      seo: { canonicalUrl: "https://exemplu.ro/rutina", noIndex: true },
+    });
+    const row = await db.routine.findUniqueOrThrow({
+      where: { id: saved!.id },
+      include: { seo: true },
+    });
+    expect(row.seo).toMatchObject({ canonicalUrl: "https://exemplu.ro/rutina", noIndex: true });
+    expect((await import("@/services/seo").then((m) => m.getSitemapContent())).routines).toEqual(
+      [],
+    );
+  });
+});

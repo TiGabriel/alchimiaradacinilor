@@ -75,7 +75,7 @@ export const productFormSchema = z
     tagIds: z.array(z.uuid()).max(30).default([]),
     collectionIds: z.array(z.uuid()).max(20).default([]),
     attributes: attributesInput,
-    seo: seoSchema.default({ noIndex: false }),
+    seo: seoSchema.prefault({}),
   })
   .superRefine((value, ctx) => {
     if (value.compareAtPrice != null && value.compareAtPrice <= value.price)

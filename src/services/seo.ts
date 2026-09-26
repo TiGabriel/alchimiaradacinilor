@@ -58,7 +58,7 @@ const indexable = { OR: [{ seoId: null }, { seo: { noIndex: false, canonicalUrl:
 
 /** Indexable content for the sitemap (inactive, draft and `noIndex` pages are left out). */
 export async function getSitemapContent() {
-  const [products, routines, articles] = await Promise.all([
+  const [products, routines, articles, hiddenCategories] = await Promise.all([
     db.product.findMany({
       where: { active: true, ...indexable },
       select: { slug: true, productType: true, updatedAt: true },
@@ -71,6 +71,15 @@ export async function getSitemapContent() {
       where: { status: "PUBLISHED", publishedAt: { lte: new Date() }, ...indexable },
       select: { slug: true, updatedAt: true },
     }),
+    db.category.findMany({
+      where: { seo: { OR: [{ noIndex: true }, { canonicalUrl: { not: null } }] } },
+      select: { id: true },
+    }),
   ]);
-  return { products, routines, articles };
+  return {
+    products,
+    routines,
+    articles,
+    hiddenCategoryIds: new Set(hiddenCategories.map((c) => c.id)),
+  };
 }

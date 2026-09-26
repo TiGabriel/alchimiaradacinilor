@@ -37,6 +37,11 @@ for Fraunces (no swap, fallback on a slow first visit), deferring the cart/searc
 - **Fallbacks:** description → page text → SEO default setting (clamped to 160 characters at a
   word boundary); image → page image → social image setting → new `public/og-default.png`
   (1200×630, rendered with the site fonts).
+- **Complete SEO fields in the admin** (shared `SeoFields` + `upsertSeo`): products, categories,
+  routines and articles now have SEO title, meta description, canonical URL (site path or
+  http(s) URL, validated), social image upload (1200 px, re-encoded) and noindex. Categories had no
+  SEO editing at all; canonical and social image were missing everywhere. The category page reads
+  them (falling back to the category image, then the site default).
 - **Editor SEO fields are honoured:** `noIndex` on products, routines and articles now produces
   `noindex` (it was ignored) and removes the page from the sitemap; an editor canonical to another
   URL also keeps the page out of the sitemap.
@@ -88,8 +93,29 @@ for Fraunces (no swap, fallback on a slow first visit), deferring the cart/searc
   transitive dependencies (`deepmerge-ts`, `mysql2`). Fixed with pnpm overrides
   (`pnpm-workspace.yaml`); Prisma validate/generate/migrate verified. `pnpm audit`: no known
   vulnerabilities.
+- **API routes:** `/api/search` and `/api/analytics` are rate limited per IP (the analytics limit
+  per visitor id alone could be bypassed by rotating ids); analytics beacons from another origin are
+  refused (`isSameOrigin`), on top of the `SameSite=Lax` consent cookie. Shared `clientIp()` helper.
+- Reviewed, no change needed: Server Actions are origin-checked by Next.js and every admin action
+  re-checks the role in the service; login, registration, password reset, contact, newsletter,
+  coupons and checkout were already rate limited; Markdown is rendered without raw HTML
+  (`skipHtml`, safe URL transform); uploads are sniffed by magic bytes and re-encoded; the CSV export
+  checks the session itself; `lib/env` and `lib/db` are `server-only` and no secret names appear in
+  the built client bundles.
 - Reviewed, no change needed: session/cart/quiz cookies are `httpOnly`, `SameSite=Lax`, `Secure`
   in production; every admin action re-checks permissions in the service layer.
+
+### Database queries
+
+- No read-side N+1: lists use `include`/`select` with the fields they render; loops only contain
+  small, deliberate writes inside transactions (per-line stock decrement, image reordering).
+- Indexes cover the hot filters (products by category/brand/active+featured, reviews by
+  product+status, orders by user/status/date, articles by status+date, analytics by name+date).
+
+### Images
+
+- Every `next/image` has `sizes`; the first product cards and a configured hero photo use
+  `priority`; everything else is lazy by default; uploads are re-encoded to WebP with dimensions.
 
 ### Accessibility and keyboard
 
@@ -101,6 +127,12 @@ for Fraunces (no swap, fallback on a slow first visit), deferring the cart/searc
 - **Quantity field** shows a focus ring on the pill (the input's own outline was hidden).
 - **Logo link:** accessible name now contains the visible text ("label in name").
 - **Heading order:** the catalog adds a visually hidden "Produse" `h2` above the product cards.
+- **Heading order** on the routines and journal listings (visually hidden `h2`s) and **list
+  structure** of the cart/checkout totals (the VAT note moved out of the `<dl>`).
+- **axe-core** (WCAG 2.1 A/AA + best practices) on 27 pages — public pages, cart, checkout,
+  account and admin forms, logged in where needed: 0 violations after the fixes.
+- Mega menu: opens with Enter, Tab moves into the links, Escape closes it and returns focus to
+  "Produse".
 - Checked by script: skip link first in the tab order, visible focus ring on every stop (home,
   category, product), Escape closes and restores focus (search, cart, mobile menu), the quiz can be
   completed with the keyboard only, cart updates use an `aria-live` region, reduced-motion content

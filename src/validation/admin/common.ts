@@ -42,8 +42,35 @@ export const optionalMoneySchema = z
 export const claimFree = <T extends z.ZodType<string | null | undefined>>(schema: T) =>
   schema.refine((v) => findMedicalClaims(v ?? "").length === 0, MEDICAL_CLAIMS_MESSAGE);
 
-export const seoSchema = z.object({
+/** A site path ("/produs/lavanda") or an absolute http(s) URL; empty → null (use the page's own URL). */
+export const canonicalSchema = z
+  .union([
+    z.literal(""),
+    z
+      .string()
+      .trim()
+      .regex(
+        /^\/[a-z0-9\-/]*$/,
+        "O cale de pe site (de ex. /produs/lavanda) sau o adresă https://…",
+      ),
+    z.url({
+      protocol: /^https?$/,
+      error: "O cale de pe site (de ex. /produs/lavanda) sau o adresă https://…",
+    }),
+  ])
+  .optional()
+  .nullable()
+  .transform((v) => v || null);
+
+/** SEO fields shared by products, categories, routines and articles (stored in SeoMeta). */
+export const seoFields = {
   seoTitle: optionalText(70),
   metaDescription: optionalText(160),
+  canonicalUrl: canonicalSchema,
+  /** Social preview image (MediaAsset id); empty → the page's own image, then the site default. */
+  ogImageId: optionalId,
   noIndex: z.boolean().default(false),
-});
+};
+
+export const seoSchema = z.object(seoFields);
+export type SeoInput = z.output<typeof seoSchema>;

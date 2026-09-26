@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 
 import { env } from "@/lib/env";
+import { clientIp } from "@/lib/request";
 import { can, type Permission } from "@/services/auth/permissions";
 import { getSession, SESSION_TTL_DAYS, type ActiveSession } from "@/services/auth/sessions";
 import { hashIp } from "@/services/auth/tokens";
@@ -56,7 +57,7 @@ export async function requirePermission(permission: Permission): Promise<ActiveS
 /** Client IP (first X-Forwarded-For hop), user agent and the salted IP hash used in consent records. */
 export async function getRequestMeta() {
   const h = await headers();
-  const ip = h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || null;
+  const ip = clientIp(h);
   const userAgent = h.get("user-agent");
   return { ip, userAgent, ipHash: hashIp(ip, env().AUTH_SECRET ?? "dev-only-salt") };
 }

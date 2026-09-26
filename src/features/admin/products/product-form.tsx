@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { productTypeLabels } from "@/validation/product";
 import type { ProductFormInput } from "@/validation/admin/product";
 
+import { seoPayload, type SeoDraft } from "../seo-draft";
+import { SeoFields } from "../seo-fields";
 import { AdminCard, adminSelect } from "../ui";
 
 import { saveProductAction } from "./actions";
@@ -28,9 +30,10 @@ export type ProductFormOptions = {
   collections: Option[];
 };
 
-export type ProductFormState = Omit<ProductFormInput, "stock" | "attributes"> & {
+export type ProductFormState = Omit<ProductFormInput, "stock" | "attributes" | "seo"> & {
   stock: string;
   attributes: Record<string, string>;
+  seo: SeoDraft;
 };
 
 const ATTRIBUTE_FIELDS: Record<
@@ -111,7 +114,7 @@ export function ProductForm({
     event.preventDefault();
     setFormError(null);
     start(async () => {
-      const result = await saveProductAction(values, productId);
+      const result = await saveProductAction({ ...values, seo: seoPayload(values.seo) }, productId);
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {});
         setFormError(result.error);
@@ -517,63 +520,16 @@ export function ProductForm({
         </div>
       </AdminCard>
 
-      <AdminCard title="SEO">
-        <Field
-          id={fid("seo-title")}
-          label="Titlu SEO"
-          error={errors["seo.seoTitle"]}
-          hint={
-            <>
-              <Counter value={values.seo?.seoTitle} max={70} /> — gol: se folosește numele
-              produsului.
-            </>
-          }
-        >
-          {(p) => (
-            <Input
-              {...p}
-              value={values.seo?.seoTitle ?? ""}
-              onChange={(e) =>
-                set("seo", {
-                  ...values.seo,
-                  noIndex: values.seo?.noIndex ?? false,
-                  seoTitle: e.target.value,
-                })
-              }
-            />
-          )}
-        </Field>
-        <Field
-          id={fid("seo-desc")}
-          label="Meta descriere"
-          error={errors["seo.metaDescription"]}
-          hint={
-            <>
-              <Counter value={values.seo?.metaDescription} max={160} /> — gol: se folosește
-              descrierea scurtă.
-            </>
-          }
-        >
-          {(p) => (
-            <Textarea
-              {...p}
-              value={values.seo?.metaDescription ?? ""}
-              onChange={(e) =>
-                set("seo", {
-                  ...values.seo,
-                  noIndex: values.seo?.noIndex ?? false,
-                  metaDescription: e.target.value,
-                })
-              }
-              className="min-h-20"
-            />
-          )}
-        </Field>
-        <Checkbox
-          id={fid("noindex")}
-          checked={values.seo?.noIndex ?? false}
-          onCheckedChange={(v) => set("seo", { ...values.seo, noIndex: v === true })}
-          label="Nu indexa această pagină în motoarele de căutare"
+      <AdminCard title="SEO și rețele sociale">
+        <SeoFields
+          value={values.seo}
+          onChange={(seo) => set("seo", seo)}
+          errors={errors}
+          fallbacks={{
+            title: "numele produsului",
+            description: "descrierea scurtă",
+            image: "prima imagine a produsului, apoi imaginea implicită a site-ului",
+          }}
         />
       </AdminCard>
 

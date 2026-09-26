@@ -25,3 +25,15 @@ export const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
     rows.map(({ _count, ...row }) => ({ ...row, productCount: _count.products })),
   );
 });
+
+/** Editor SEO fields of a category page (title, description, canonical, social image, noindex). */
+export async function getCategorySeo(id: string) {
+  const row = await db.category.findUnique({
+    where: { id },
+    select: {
+      image: { select: { url: true } },
+      seo: { include: { ogImage: { select: { url: true } } } },
+    },
+  });
+  return row ? { ...row.seo, image: row.image?.url ?? null } : null;
+}

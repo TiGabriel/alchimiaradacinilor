@@ -53,7 +53,14 @@ export function JournalListing({
         </p>
       ) : null}
 
-      {featured ? <ArticleCard article={featured} variant="feature" /> : null}
+      {featured ? (
+        <section aria-labelledby="recomandat">
+          <h2 id="recomandat" className="sr-only">
+            Articol recomandat
+          </h2>
+          <ArticleCard article={featured} variant="feature" />
+        </section>
+      ) : null}
 
       {rest.length ? (
         <section aria-labelledby="cele-mai-noi" className="flex flex-col gap-8">

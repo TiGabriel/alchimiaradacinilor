@@ -55,6 +55,9 @@ export const limiters = {
   couponAttempts: new SlidingWindowLimiter(10, 15 * MINUTE),
   checkoutByUser: new SlidingWindowLimiter(10, 10 * MINUTE),
   newsletterByIp: new SlidingWindowLimiter(5, 60 * MINUTE),
+  /** Instant search (debounced typing) and analytics beacons: generous, only stops floods. */
+  searchByIp: new SlidingWindowLimiter(120, MINUTE),
+  analyticsByIp: new SlidingWindowLimiter(300, MINUTE),
 };
 
 export function retryAfterText(ms: number): string {

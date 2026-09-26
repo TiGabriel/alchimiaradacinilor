@@ -10,31 +10,12 @@ import { assertCan, type Actor } from "../auth/permissions";
 import { embeddedSlugs, parseArticleContent } from "../journal/content";
 
 import { AdminError } from "./errors";
-
-type Tx = Prisma.TransactionClient;
+import { upsertSeo } from "./seo";
 
 function slugClash(error: unknown): never {
   if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
     throw new AdminError("Slug-ul este deja folosit.", { slug: "Alege un alt slug." });
   throw error;
-}
-
-async function upsertSeo(
-  tx: Tx,
-  seoId: string | null,
-  seo: { seoTitle?: string | null; metaDescription?: string | null; noIndex: boolean },
-) {
-  const data = {
-    seoTitle: seo.seoTitle ?? null,
-    metaDescription: seo.metaDescription ?? null,
-    noIndex: seo.noIndex,
-  };
-  if (seoId) {
-    await tx.seoMeta.update({ where: { id: seoId }, data });
-    return seoId;
-  }
-  if (!data.seoTitle && !data.metaDescription && !data.noIndex) return null;
-  return (await tx.seoMeta.create({ data })).id;
 }
 
 export async function uploadCoverImage(actor: Actor, file: Blob, folder: "routines" | "articles") {
@@ -94,7 +75,7 @@ export async function getAdminRoutine(actor: Actor, id: string) {
   return db.routine.findUnique({
     where: { id },
     include: {
-      seo: true,
+      seo: { include: { ogImage: { select: { url: true } } } },
       image: { select: { url: true } },
       needs: { select: { needId: true } },
       tags: { select: { tagId: true } },
@@ -199,7 +180,7 @@ export async function getAdminArticle(actor: Actor, id: string) {
   return db.article.findUnique({
     where: { id },
     include: {
-      seo: true,
+      seo: { include: { ogImage: { select: { url: true } } } },
       coverImage: { select: { url: true } },
       products: { orderBy: { position: "asc" }, select: { productId: true } },
       routines: { orderBy: { position: "asc" }, select: { routineId: true } },

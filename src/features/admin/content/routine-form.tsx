@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 import { AdminCard, adminSelect } from "../ui";
 
 import { saveRoutineAction } from "./actions";
+import { seoPayload, type SeoDraft } from "../seo-draft";
+import { SeoFields } from "../seo-fields";
+
 import { CoverPicker } from "./cover-picker";
 
 export type StepDraft = {
@@ -38,7 +41,7 @@ export type RoutineDraft = {
   tagIds: string[];
   products: Array<{ id: string; isOptional: boolean; note: string }>;
   steps: StepDraft[];
-  seo: { seoTitle: string; metaDescription: string; noIndex: boolean };
+  seo: SeoDraft;
 };
 
 type Options = {
@@ -80,7 +83,10 @@ export function RoutineForm({
     e.preventDefault();
     const { cover, ...rest } = v;
     start(async () => {
-      const result = await saveRoutineAction({ ...rest, imageId: cover?.id ?? "" }, routineId);
+      const result = await saveRoutineAction(
+        { ...rest, imageId: cover?.id ?? "", seo: seoPayload(rest.seo) },
+        routineId,
+      );
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {});
         toast({ title: result.error, variant: "error" });
@@ -455,35 +461,17 @@ export function RoutineForm({
             ))}
           </fieldset>
         </div>
-        <div className="grid gap-4 border-t border-line pt-4 md:grid-cols-2">
-          <Field
-            id={fid("st")}
-            label="Titlu SEO"
-            error={errors["seo.seoTitle"]}
-            hint={`${v.seo.seoTitle.length}/70`}
-          >
-            {(p) => (
-              <Input
-                {...p}
-                value={v.seo.seoTitle}
-                onChange={(e) => setV({ ...v, seo: { ...v.seo, seoTitle: e.target.value } })}
-              />
-            )}
-          </Field>
-          <Field
-            id={fid("sd")}
-            label="Meta descriere"
-            error={errors["seo.metaDescription"]}
-            hint={`${v.seo.metaDescription.length}/160`}
-          >
-            {(p) => (
-              <Input
-                {...p}
-                value={v.seo.metaDescription}
-                onChange={(e) => setV({ ...v, seo: { ...v.seo, metaDescription: e.target.value } })}
-              />
-            )}
-          </Field>
+        <div className="border-t border-line pt-4">
+          <SeoFields
+            value={v.seo}
+            onChange={(seo) => setV({ ...v, seo })}
+            errors={errors}
+            fallbacks={{
+              title: "titlul rutinei",
+              description: "rezumatul",
+              image: "imaginea rutinei, apoi imaginea implicită a site-ului",
+            }}
+          />
         </div>
       </AdminCard>
 

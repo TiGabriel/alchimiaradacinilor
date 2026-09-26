@@ -215,10 +215,8 @@ export function OrderDetail({ order }: { order: UserOrder }) {
               <dt className="font-semibold">Total</dt>
               <dd className="text-xl font-semibold tabular-nums">{money(order.total)}</dd>
             </div>
-            <p className="text-xs text-ink-muted">
-              Prețurile includ TVA ({money(order.taxTotal)}).
-            </p>
           </dl>
+          <p className="text-xs text-ink-muted">Prețurile includ TVA ({money(order.taxTotal)}).</p>
         </section>
         <section
           aria-label="Adrese"

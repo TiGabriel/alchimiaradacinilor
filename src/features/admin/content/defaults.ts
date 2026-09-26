@@ -1,5 +1,7 @@
 import { bucharestDay } from "@/lib/dates";
 
+import { EMPTY_SEO, seoDraftFrom } from "../seo-draft";
+
 import type { ArticleDraft } from "./article-form";
 import type { RoutineDraft } from "./routine-form";
 
@@ -19,7 +21,7 @@ export const emptyRoutine = (): RoutineDraft => ({
   tagIds: [],
   products: [],
   steps: [{ title: "", instructions: "", durationMinutes: "", productId: "" }],
-  seo: { seoTitle: "", metaDescription: "", noIndex: false },
+  seo: EMPTY_SEO,
 });
 
 type LoadedRoutine = {
@@ -44,7 +46,7 @@ type LoadedRoutine = {
     durationMinutes: number | null;
     productId: string | null;
   }>;
-  seo: { seoTitle: string | null; metaDescription: string | null; noIndex: boolean } | null;
+  seo: Parameters<typeof seoDraftFrom>[0];
 };
 
 export function routineToDraft(r: LoadedRoutine): RoutineDraft {
@@ -73,11 +75,7 @@ export function routineToDraft(r: LoadedRoutine): RoutineDraft {
       durationMinutes: s.durationMinutes == null ? "" : String(s.durationMinutes),
       productId: s.productId ?? "",
     })),
-    seo: {
-      seoTitle: r.seo?.seoTitle ?? "",
-      metaDescription: r.seo?.metaDescription ?? "",
-      noIndex: r.seo?.noIndex ?? false,
-    },
+    seo: seoDraftFrom(r.seo),
   };
 }
 
@@ -95,7 +93,7 @@ export const emptyArticle = (): ArticleDraft => ({
   productIds: [],
   routineIds: [],
   tagIds: [],
-  seo: { seoTitle: "", metaDescription: "", noIndex: false },
+  seo: EMPTY_SEO,
 });
 
 type LoadedArticle = {
@@ -113,7 +111,7 @@ type LoadedArticle = {
   products: Array<{ productId: string }>;
   routines: Array<{ routineId: string }>;
   tags: Array<{ tagId: string }>;
-  seo: { seoTitle: string | null; metaDescription: string | null; noIndex: boolean } | null;
+  seo: Parameters<typeof seoDraftFrom>[0];
 };
 
 export function articleToDraft(a: LoadedArticle): ArticleDraft {
@@ -131,10 +129,6 @@ export function articleToDraft(a: LoadedArticle): ArticleDraft {
     productIds: a.products.map((p) => p.productId),
     routineIds: a.routines.map((r) => r.routineId),
     tagIds: a.tags.map((t) => t.tagId),
-    seo: {
-      seoTitle: a.seo?.seoTitle ?? "",
-      metaDescription: a.seo?.metaDescription ?? "",
-      noIndex: a.seo?.noIndex ?? false,
-    },
+    seo: seoDraftFrom(a.seo),
   };
 }

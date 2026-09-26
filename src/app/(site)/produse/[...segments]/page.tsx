@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CatalogView } from "@/features/catalog/catalog-view";
-import { getCategoryTree } from "@/services/catalog/categories";
+import { getCategorySeo, getCategoryTree } from "@/services/catalog/categories";
 import { categoryHref, findCategoryPath } from "@/services/catalog/category-tree";
 import { countActiveFilters, parseCatalogParams } from "@/services/catalog/listing";
 import { getCatalogPage } from "@/services/catalog/products";
@@ -20,13 +20,21 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!path) return {};
   const current = path.subcategory ?? path.category;
   const filters = parseCatalogParams(await props.searchParams);
+  const seo = await getCategorySeo(current.id);
+  const defaultTitle = path.subcategory
+    ? `${path.subcategory.name} · ${path.category.name}`
+    : path.category.name;
   return pageMetadata({
-    title: path.subcategory
-      ? `${path.subcategory.name} · ${path.category.name}`
-      : path.category.name,
-    description: current.description ?? `Descoperă produsele din categoria ${current.name}.`,
+    title: seo?.seoTitle ?? defaultTitle,
+    description:
+      seo?.metaDescription ??
+      current.description ??
+      `Descoperă produsele din categoria ${current.name}.`,
     path: categoryHref(current, path.subcategory ? path.category : null),
-    noIndex: countActiveFilters(filters) > 0 || filters.sort !== "recomandate",
+    canonical: seo?.canonicalUrl,
+    image: seo?.ogImage?.url ?? seo?.image,
+    // Filtered/sorted variants are not indexed; pagination stays crawlable.
+    noIndex: seo?.noIndex || countActiveFilters(filters) > 0 || filters.sort !== "recomandate",
   });
 }
 

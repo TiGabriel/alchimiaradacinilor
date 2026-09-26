@@ -7,6 +7,7 @@ import { createsCycle, taxonomySchemas, type TaxonomyKind } from "@/validation/a
 import { assertCan, type Actor } from "../auth/permissions";
 
 import { AdminError } from "./errors";
+import { upsertSeo } from "./seo";
 
 export type TaxonomyRow = {
   id: string;
@@ -21,6 +22,15 @@ export type TaxonomyRow = {
   /** How many things use it (products, children, quiz answers…), for the list and delete rules. */
   usage: string;
   isDemo: boolean;
+  /** Categories only: their SeoMeta (the other kinds have no page of their own). */
+  seo?: {
+    seoTitle: string | null;
+    metaDescription: string | null;
+    canonicalUrl: string | null;
+    noIndex: boolean;
+    ogImageId: string | null;
+    ogImage: { url: string } | null;
+  } | null;
 };
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -40,7 +50,10 @@ export async function listTaxonomy(actor: Actor, kind: TaxonomyKind): Promise<Ta
     case "categorii": {
       const rows = await db.category.findMany({
         orderBy: [{ position: "asc" }, { name: "asc" }],
-        include: { _count: { select: { products: true, children: true } } },
+        include: {
+          _count: { select: { products: true, children: true } },
+          seo: { include: { ogImage: { select: { url: true } } } },
+        },
       });
       return rows.map((r) => ({
         ...base,
@@ -51,6 +64,7 @@ export async function listTaxonomy(actor: Actor, kind: TaxonomyKind): Promise<Ta
         position: r.position,
         active: r.active,
         parentId: r.parentId,
+        seo: r.seo,
         usage: `${plural(r._count.products, "produs", "produse")}, ${plural(r._count.children, "subcategorie", "subcategorii")}`,
       }));
     }
@@ -144,16 +158,25 @@ export async function saveTaxonomy(actor: Actor, kind: TaxonomyKind, raw: unknow
   try {
     switch (kind) {
       case "categorii": {
-        const data = taxonomySchemas.categorii.parse(raw);
+        const { seoTitle, metaDescription, canonicalUrl, ogImageId, noIndex, ...data } =
+          taxonomySchemas.categorii.parse(raw);
+        const seo = { seoTitle, metaDescription, canonicalUrl, ogImageId, noIndex };
         if (id) {
           const all = await db.category.findMany({ select: { id: true, parentId: true } });
           if (createsCycle(id, data.parentId, new Map(all.map((c) => [c.id, c.parentId]))))
             throw new AdminError("O categorie nu poate fi propria subcategorie.", {
               parentId: "Alege o altă categorie părinte.",
             });
-          return await db.category.update({ where: { id }, data });
         }
-        return await db.category.create({ data });
+        return await db.$transaction(async (tx) => {
+          const existing = id
+            ? await tx.category.findUnique({ where: { id }, select: { seoId: true } })
+            : null;
+          const seoId = await upsertSeo(tx, existing?.seoId ?? null, seo);
+          return id
+            ? await tx.category.update({ where: { id }, data: { ...data, seoId } })
+            : await tx.category.create({ data: { ...data, seoId } });
+        });
       }
       case "marci": {
         const data = taxonomySchemas.marci.parse(raw);

@@ -1,6 +1,7 @@
 import { hashIp } from "@/services/auth/tokens";
 import { unsubscribeWithSignature } from "@/services/newsletter/newsletter";
 import { env } from "@/lib/env";
+import { clientIp } from "@/lib/request";
 
 /**
  * RFC 8058 one-click unsubscribe (List-Unsubscribe-Post). Mail clients POST
@@ -13,10 +14,7 @@ export async function POST(request: Request) {
     url.searchParams.get("t") ?? "",
     {
       source: "list-unsubscribe",
-      ipHash: hashIp(
-        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
-        env().AUTH_SECRET ?? "dev-only-salt",
-      ),
+      ipHash: hashIp(clientIp(request.headers), env().AUTH_SECRET ?? "dev-only-salt"),
       userAgent: request.headers.get("user-agent"),
     },
   );

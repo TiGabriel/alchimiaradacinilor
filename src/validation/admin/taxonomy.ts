@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { claimFree, optionalId, optionalText, slugSchema } from "./common";
+import { claimFree, optionalId, optionalText, seoFields, slugSchema } from "./common";
 
 const name = z.string().trim().min(2, "Numele are cel puțin 2 caractere.").max(80);
 const position = z.coerce.number().int().min(0).max(9999).default(0);
@@ -24,6 +24,7 @@ export const taxonomySchemas = {
     parentId: optionalId,
     position,
     active: z.boolean().default(true),
+    ...seoFields,
   }),
   marci: z.object({
     name,

@@ -13,6 +13,7 @@ import {
 import { assertCan, type Actor } from "../auth/permissions";
 
 import { AdminError } from "./errors";
+import { upsertSeo } from "./seo";
 
 export const PAGE_SIZE = 25;
 export const LOW_STOCK = 5;
@@ -81,7 +82,7 @@ export async function getAdminProduct(actor: Actor, id: string) {
   return db.product.findUnique({
     where: { id },
     include: {
-      seo: true,
+      seo: { include: { ogImage: { select: { url: true } } } },
       needs: { select: { needId: true, relevance: true } },
       aromaProfiles: { select: { aromaProfileId: true, intensity: true } },
       tags: { select: { tagId: true } },
@@ -141,15 +142,7 @@ export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
       : null;
     if (id && !existing) throw new AdminError("Produsul nu mai există.");
 
-    const seoData = {
-      seoTitle: input.seo.seoTitle ?? null,
-      metaDescription: input.seo.metaDescription ?? null,
-      noIndex: input.seo.noIndex,
-    };
-    const hasSeo = Boolean(seoData.seoTitle || seoData.metaDescription || seoData.noIndex);
-    let seoId = existing?.seoId ?? null;
-    if (seoId) await tx.seoMeta.update({ where: { id: seoId }, data: seoData });
-    else if (hasSeo) seoId = (await tx.seoMeta.create({ data: seoData })).id;
+    const seoId = await upsertSeo(tx, existing?.seoId ?? null, input.seo);
 
     const data = {
       name: input.name,

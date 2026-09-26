@@ -50,7 +50,7 @@ export const routineFormSchema = z.object({
     )
     .min(1, "Adaugă cel puțin un pas.")
     .max(20),
-  seo: seoSchema.default({ noIndex: false }),
+  seo: seoSchema.prefault({}),
 });
 
 export const articleFormSchema = z.object({
@@ -72,7 +72,7 @@ export const articleFormSchema = z.object({
   productIds: z.array(z.uuid()).max(20).default([]),
   routineIds: z.array(z.uuid()).max(10).default([]),
   tagIds: z.array(z.uuid()).max(20).default([]),
-  seo: seoSchema.default({ noIndex: false }),
+  seo: seoSchema.prefault({}),
 });
 
 export type RoutineFormInput = z.input<typeof routineFormSchema>;
