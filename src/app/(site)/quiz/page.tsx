@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { QuizFlow } from "@/features/quiz/quiz-flow";
 import { getQuizView } from "@/services/quiz/quiz";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Quiz aromatic",
-  description:
-    "Câteva întrebări despre preferințele tale și îți recomandăm de unde să începi — cu explicații pentru fiecare alegere.",
-  alternates: { canonical: "/quiz" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Quiz aromatic",
+    description:
+      "Câteva întrebări despre preferințele tale și îți recomandăm de unde să începi — cu explicații pentru fiecare alegere.",
+    path: "/quiz",
+  });
+}
 
 export default async function QuizPage() {
   const quiz = await getQuizView();

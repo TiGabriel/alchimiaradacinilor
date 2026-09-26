@@ -5,6 +5,8 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+import { FocusOrigin, useReturnFocus } from "./use-return-focus";
+
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 export const DialogClose = DialogPrimitive.Close;
@@ -36,8 +38,10 @@ export function DialogContent({
   children,
   size = "md",
   hideClose,
+  onCloseAutoFocus,
   ...props
 }: DialogContentProps) {
+  const { originRef, restoreFocus } = useReturnFocus();
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -47,8 +51,13 @@ export function DialogContent({
           sizes[size],
           className,
         )}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          if (!event.defaultPrevented) restoreFocus(event);
+        }}
         {...props}
       >
+        <FocusOrigin originRef={originRef} />
         {children}
         {hideClose ? null : (
           <DialogPrimitive.Close

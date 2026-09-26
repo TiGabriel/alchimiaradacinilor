@@ -1,6 +1,6 @@
 import "server-only";
 
-import { analyticsPayloadSchema } from "@/lib/analytics/events";
+import { analyticsPayloadSchema } from "@/lib/analytics/schema";
 import { allows, parseChoice } from "@/lib/consent/cookie-choice";
 import { db } from "@/lib/db";
 

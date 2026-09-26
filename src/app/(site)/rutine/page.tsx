@@ -7,13 +7,16 @@ import { NeedPicker } from "@/features/discover/need-picker";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { getNeedsWithCounts } from "@/services/catalog/taxonomy";
 import { listRoutines } from "@/services/routines/routines";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Rutine",
-  description:
-    "Ritualuri simple, pas cu pas, pentru dimineți luminoase, zile concentrate și seri liniștite.",
-  alternates: { canonical: "/rutine" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Rutine",
+    description:
+      "Ritualuri simple, pas cu pas, pentru dimineți luminoase, zile concentrate și seri liniștite.",
+    path: "/rutine",
+  });
+}
 
 export default async function RoutinesPage() {
   const [routines, needs] = await Promise.all([listRoutines(), getNeedsWithCounts()]);

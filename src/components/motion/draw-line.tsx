@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 
 import { easeSoft, revealViewport } from "@/lib/motion";
 
@@ -28,7 +28,7 @@ export function DrawLine({
   return (
     <svg viewBox={viewBox} fill="none" aria-hidden className={className}>
       {paths.map((path, i) => (
-        <motion.path
+        <m.path
           key={i}
           d={path}
           stroke="currentColor"

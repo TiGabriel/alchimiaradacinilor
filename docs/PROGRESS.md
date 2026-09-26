@@ -16,7 +16,7 @@
 | 10    | Reviews, newsletter, cookie consent, analytics       | Done    |
 | 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done    |
 | 12    | Admin part 2 (quiz, content, marketing, settings)    | Done    |
-| 13    | SEO, performance, security, accessibility audit      | Pending |
+| 13    | SEO, performance, security, accessibility audit      | Done    |
 | 14    | Final UX review, tests, documentation                | Pending |
 
 ## Phase 1 — Foundation
@@ -381,3 +381,22 @@
   changing the preview ranking, the delete guard for used answers, coupon code clashes, stats and
   delete guard, routine slug clashes, article embed checks, settings validation and permissions,
   subscriber CSV export (integration).
+
+## Phase 13 — Audit
+
+Full report with the change list and before/after Lighthouse scores: `docs/AUDIT.md`.
+
+- SEO: shared metadata builder (canonical, robots, complete Open Graph and Twitter, fallbacks to
+  the SEO settings and a default social image), editor `noIndex`/canonical honoured, Organization
+  and WebSite JSON-LD on the homepage, absolute image URLs in Product/Article/HowTo JSON-LD, sitemap
+  of indexable content only (plus legal pages), stricter robots.txt, brand favicon and touch icon.
+- Fixed: newly published journal articles stayed hidden until a server restart.
+- Performance: Fraunces without extra variation axes (−330 KB of preloaded fonts), Zod removed from
+  client bundles (−85 KB gzip), LazyMotion. Mobile LCP 7.4 s → 4.5–5.1 s, mobile performance
+  64–71 → 74–83, desktop 98–99.
+- Security: nonce-based CSP, security headers (HSTS on HTTPS), sandboxed uploads, dependency
+  advisories fixed with overrides (`pnpm audit` clean).
+- Accessibility: focus returns after the cart drawer and search palette, busy buttons keep focus,
+  quantity focus ring, logo label-in-name, catalogue heading order; Lighthouse accessibility 100 on
+  the four audited pages.
+- Tests: metadata builder, CSP/header builder (unit).

@@ -4,11 +4,15 @@ import Link from "next/link";
 import { LegalDocument, ToComplete } from "@/features/legal/legal-document";
 import { formatMoney } from "@/lib/money";
 import { getSettings } from "@/services/settings";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Livrare și retur",
-  alternates: { canonical: "/livrare-si-retur" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Livrare și retur",
+    description: "Metode și costuri de livrare, termene și cum returnezi un produs.",
+    path: "/livrare-si-retur",
+  });
+}
 
 export default async function ShippingPage() {
   const { shipping, legal } = await getSettings();

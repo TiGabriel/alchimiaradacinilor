@@ -19,6 +19,7 @@ import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { placeholderKindFor } from "@/components/media/product-image";
 import { SmartImage } from "@/components/media/smart-image";
 import { Spinner } from "@/components/ui/spinner";
+import { FocusOrigin, useReturnFocus } from "@/components/ui/use-return-focus";
 import type { ProductType } from "@/generated/prisma/enums";
 import { formatMoney } from "@/lib/money";
 import { pluralRo } from "@/lib/plural";
@@ -268,6 +269,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
   });
 
   const allOption = options.find((o) => o.kind === "all");
+  const { originRef, restoreFocus } = useReturnFocus();
 
   return (
     <DialogPrimitive.Root
@@ -281,6 +283,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/40 backdrop-blur-[2px] data-[state=closed]:animate-overlay-out data-[state=open]:animate-overlay-in" />
         <DialogPrimitive.Content
           aria-describedby={undefined}
+          onCloseAutoFocus={restoreFocus}
           onOpenAutoFocus={(e) => {
             e.preventDefault();
             setRecent(readRecent());
@@ -288,6 +291,7 @@ export function SearchPalette({ open, onOpenChange }: SearchPaletteProps) {
           }}
           className="fixed inset-0 z-50 flex flex-col bg-paper focus:outline-none data-[state=closed]:animate-fade-out data-[state=open]:animate-fade-in md:inset-x-0 md:top-[9vh] md:bottom-auto md:mx-auto md:max-h-[78vh] md:w-[min(42rem,calc(100vw-2rem))] md:rounded-2xl md:border md:border-line md:bg-surface md:shadow-overlay"
         >
+          <FocusOrigin originRef={originRef} />
           <DialogPrimitive.Title className="sr-only">Caută în magazin</DialogPrimitive.Title>
           <div className="flex items-center gap-3 border-b border-line px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 md:px-5 md:py-4">
             <Search aria-hidden className="size-5 shrink-0 text-ink-muted" />

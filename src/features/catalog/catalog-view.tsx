@@ -106,6 +106,8 @@ export function CatalogView({
           </aside>
 
           <div className="flex min-w-0 flex-col gap-5">
+            {/* Keeps the outline h1 → h2 → h3 (product cards) on mobile, where the filters are hidden. */}
+            <h2 className="sr-only">Produse</h2>
             <CatalogToolbar
               total={data.total}
               facets={data.facets}

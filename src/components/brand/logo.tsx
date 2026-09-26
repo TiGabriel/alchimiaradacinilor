@@ -102,9 +102,10 @@ export function Logo({ brand, href = "/", size = "md", tone = "ink", className }
     <Link
       href={href}
       className={cn("inline-flex rounded-sm focus-visible:outline-offset-4", className)}
-      aria-label={`${brand.siteName} — pagina principală`}
     >
       {content}
+      {/* Visible-text name plus purpose (no aria-label, so the name contains what is shown). */}
+      <span className="sr-only"> — pagina principală</span>
     </Link>
   );
 }

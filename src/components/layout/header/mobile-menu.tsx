@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, Heart, Mail, Menu, Phone, UserRound } from "lucide-react";
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -31,7 +31,7 @@ type MobileMenuProps = {
 function Item({ index, children }: { index: number; children: React.ReactNode }) {
   const reduce = usePrefersReducedMotion();
   return (
-    <motion.li
+    <m.li
       initial={{ opacity: 0, x: -16 }}
       animate={{ opacity: 1, x: 0 }}
       transition={
@@ -41,7 +41,7 @@ function Item({ index, children }: { index: number; children: React.ReactNode })
       }
     >
       {children}
-    </motion.li>
+    </m.li>
   );
 }
 

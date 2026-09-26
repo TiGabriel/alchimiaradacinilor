@@ -45,6 +45,7 @@ export type ProductDetail = {
     seoTitle: string | null;
     metaDescription: string | null;
     canonicalUrl: string | null;
+    noIndex: boolean;
     ogImage: string | null;
   } | null;
 };
@@ -124,6 +125,7 @@ export const getProductBySlug = cache(async (slug: string): Promise<ProductDetai
           seoTitle: p.seo.seoTitle,
           metaDescription: p.seo.metaDescription,
           canonicalUrl: p.seo.canonicalUrl,
+          noIndex: p.seo.noIndex,
           ogImage: p.seo.ogImage?.url ?? null,
         }
       : null,
@@ -169,9 +171,4 @@ export async function getRelatedProducts(productId: string, limit = 4): Promise<
     ? rankSimilar([source], profiles, { limit: limit - curatedIds.length, exclude: curatedIds })
     : [];
   return getProductCards([...curatedIds, ...similar]);
-}
-
-/** Slugs of all active products (sitemap). */
-export async function getProductSlugs() {
-  return db.product.findMany({ where: { active: true }, select: { slug: true, updatedAt: true } });
 }

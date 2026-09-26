@@ -38,7 +38,10 @@ export type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     /** Render the child element (e.g. a Link) with button styles. */
     asChild?: boolean;
-    /** Shows a spinner, disables the button and announces the busy state. */
+    /**
+     * Shows a spinner, ignores activation and announces the busy state. The button
+     * stays focusable (aria-disabled, not disabled) so keyboard focus is not lost.
+     */
     loading?: boolean;
   };
 
@@ -51,11 +54,16 @@ export function Button({
   loading = false,
   disabled,
   children,
+  onClick,
   ...props
 }: ButtonProps) {
   if (asChild) {
     return (
-      <Slot.Root className={cn(buttonVariants({ variant, size, block }), className)} {...props}>
+      <Slot.Root
+        className={cn(buttonVariants({ variant, size, block }), className)}
+        onClick={onClick}
+        {...props}
+      >
         {children}
       </Slot.Root>
     );
@@ -65,9 +73,13 @@ export function Button({
     <button
       type="button"
       className={cn(buttonVariants({ variant, size, block }), className)}
-      disabled={disabled || loading}
+      disabled={disabled}
+      aria-disabled={loading || undefined}
       aria-busy={loading || undefined}
       {...props}
+      // Also blocks form submission while busy (a disabled button would drop focus).
+      // No wrapper otherwise: Server Components render this button without handlers.
+      onClick={loading ? (event) => event.preventDefault() : onClick}
     >
       {loading ? (
         <>

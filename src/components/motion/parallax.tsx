@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "motion/react";
+import { useScroll, useTransform } from "framer-motion";
+import * as m from "framer-motion/m";
 import { useRef } from "react";
 
 import { usePrefersReducedMotion } from "./use-prefers-reduced-motion";
@@ -21,9 +22,9 @@ export function Parallax({ children, className, offset = 40 }: ParallaxProps) {
 
   return (
     <div ref={ref} className={className}>
-      <motion.div style={reduce ? undefined : { y }} className="h-full will-change-transform">
+      <m.div style={reduce ? undefined : { y }} className="h-full will-change-transform">
         {children}
-      </motion.div>
+      </m.div>
     </div>
   );
 }

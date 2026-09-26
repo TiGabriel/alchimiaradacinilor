@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 
 import { LegalDocument, ToComplete } from "@/features/legal/legal-document";
 import { getSetting } from "@/services/settings";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Politica de cookies",
-  description: "Ce cookie-uri și ce date stocate local folosește site-ul.",
-  alternates: { canonical: "/politica-cookies" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Politica de cookies",
+    description: "Ce cookie-uri și ce date stocate local folosește site-ul.",
+    path: "/politica-cookies",
+  });
+}
 
 const rows = [
   {

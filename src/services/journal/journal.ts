@@ -22,7 +22,8 @@ export type ArticleCardData = {
   featured: boolean;
 };
 
-const published = { status: "PUBLISHED" as const, publishedAt: { lte: new Date() } };
+/** Evaluated per query: a module-level `new Date()` would hide articles published after start-up. */
+const published = () => ({ status: "PUBLISHED" as const, publishedAt: { lte: new Date() } });
 
 const cardSelect = {
   id: true,
@@ -88,7 +89,7 @@ export const getArticleCategories = cache(async () => {
       slug: true,
       name: true,
       description: true,
-      _count: { select: { articles: { where: published } } },
+      _count: { select: { articles: { where: published() } } },
     },
   });
   return rows.map(({ _count, ...c }) => ({ ...c, articleCount: _count.articles }));
@@ -107,7 +108,7 @@ export async function listArticles(
 ) {
   const rows = await db.article.findMany({
     where: {
-      ...published,
+      ...published(),
       ...(filter.categorySlug ? { category: { slug: filter.categorySlug } } : {}),
     },
     orderBy: { publishedAt: "desc" },
@@ -132,7 +133,7 @@ export async function listArticles(
 export async function getArticleCards(ids: string[]): Promise<ArticleCardData[]> {
   if (!ids.length) return [];
   const rows = await db.article.findMany({
-    where: { id: { in: ids }, ...published },
+    where: { id: { in: ids }, ...published() },
     select: cardSelect,
   });
   const byId = new Map(rows.map((r) => [r.id, toCard(r)]));
@@ -142,7 +143,7 @@ export async function getArticleCards(ids: string[]): Promise<ArticleCardData[]>
 /** Published article by slug; `includeUnpublished` is for editors' previews only. */
 export const getArticleBySlug = cache(async (slug: string, includeUnpublished = false) => {
   const article = await db.article.findFirst({
-    where: { slug, ...(includeUnpublished ? {} : published) },
+    where: { slug, ...(includeUnpublished ? {} : published()) },
     include: {
       author: { select: { firstName: true, lastName: true } },
       category: { select: { id: true, slug: true, name: true } },
@@ -164,7 +165,7 @@ export const getArticleBySlug = cache(async (slug: string, includeUnpublished = 
 /** Related articles by shared category, routines, products and tags. */
 export async function getRelatedArticles(articleId: string, limit = 3): Promise<ArticleCardData[]> {
   const rows = await db.article.findMany({
-    where: published,
+    where: published(),
     select: {
       id: true,
       categoryId: true,
@@ -190,7 +191,7 @@ export async function getRelatedArticles(articleId: string, limit = 3): Promise<
 /** Articles that mention a product or a routine (relationship queries). */
 export async function getArticlesForProduct(productId: string, take = 3) {
   const rows = await db.article.findMany({
-    where: { ...published, products: { some: { productId } } },
+    where: { ...published(), products: { some: { productId } } },
     orderBy: { publishedAt: "desc" },
     take,
     select: cardSelect,
@@ -202,7 +203,7 @@ export async function getArticlesForProduct(productId: string, take = 3) {
 export const loadArticleProfiles = cache(
   async (): Promise<Array<Profile & { id: string; title: string }>> => {
     const rows = await db.article.findMany({
-      where: published,
+      where: published(),
       select: {
         id: true,
         title: true,

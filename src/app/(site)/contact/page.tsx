@@ -8,11 +8,15 @@ import { Card } from "@/components/ui/card";
 import { ContactForm } from "@/features/contact/contact-form";
 import { getCurrentUser } from "@/features/auth/session";
 import { getSettings } from "@/services/settings";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Scrie-ne pentru orice întrebare despre produse, comenzi sau ritualuri.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Contact",
+    description: "Scrie-ne pentru orice întrebare despre produse, comenzi sau ritualuri.",
+    path: "/contact",
+  });
+}
 
 export default async function ContactPage() {
   const [{ contact, social, brand }, user] = await Promise.all([getSettings(), getCurrentUser()]);

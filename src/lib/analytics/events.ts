@@ -1,5 +1,7 @@
-/** Analytics event catalogue — pure (no browser or server APIs) and unit-tested. */
-import { z } from "zod";
+/**
+ * Analytics event catalogue — pure (no browser or server APIs) and unit-tested.
+ * No Zod here: this module ships to the browser (the schema is in `./schema`).
+ */
 
 export const ANALYTICS_EVENTS = [
   "product_view",
@@ -14,22 +16,14 @@ export const ANALYTICS_EVENTS = [
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];
 
-/** Flat, small, non-personal properties only (ids, slugs, counts, amounts). */
-const propValue = z.union([z.string().max(120), z.number().finite(), z.boolean(), z.null()]);
-export const eventPropsSchema = z
-  .record(z.string().regex(/^[a-z][a-zA-Z0-9_]{0,39}$/), propValue)
-  .refine((p) => Object.keys(p).length <= 12, "Too many properties");
-
 export type EventProps = Record<string, string | number | boolean | null>;
 
-export const analyticsPayloadSchema = z.object({
-  name: z.enum(ANALYTICS_EVENTS),
-  anonymousId: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/),
-  path: z.string().max(300).startsWith("/").optional(),
-  props: eventPropsSchema.default({}),
-});
-
-export type AnalyticsPayload = z.infer<typeof analyticsPayloadSchema>;
+export type AnalyticsPayload = {
+  name: AnalyticsEventName;
+  anonymousId: string;
+  path?: string;
+  props: EventProps;
+};
 
 /** Keys that could carry personal data are never sent, whatever the caller passes. */
 const FORBIDDEN_KEYS = /email|phone|name|address|telefon|adresa/i;

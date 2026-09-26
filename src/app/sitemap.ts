@@ -3,20 +3,17 @@ import type { MetadataRoute } from "next";
 import { siteUrl } from "@/lib/seo";
 import { getCategoryTree } from "@/services/catalog/categories";
 import { categoryHref } from "@/services/catalog/category-tree";
-import { getProductSlugs } from "@/services/catalog/product-detail";
 import { productHref } from "@/services/catalog/product-types";
-import { getArticleCategories, listArticles } from "@/services/journal/journal";
-import { listRoutines } from "@/services/routines/routines";
+import { getArticleCategories } from "@/services/journal/journal";
+import { getSitemapContent } from "@/services/seo";
 
 // Generated per request so new products appear without a rebuild.
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [tree, products, routines, articles, journalCategories] = await Promise.all([
+  const [tree, { products, routines, articles }, journalCategories] = await Promise.all([
     getCategoryTree(),
-    getProductSlugs(),
-    listRoutines(),
-    listArticles(),
+    getSitemapContent(),
     getArticleCategories(),
   ]);
   const staticPaths = [
@@ -30,11 +27,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/jurnal",
     "/contact",
   ];
+  const legalPaths = [
+    "/livrare-si-retur",
+    "/politica-de-retur",
+    "/termeni-si-conditii",
+    "/politica-de-confidentialitate",
+    "/politica-cookies",
+  ];
   return [
     ...staticPaths.map((path) => ({
       url: siteUrl(path),
       changeFrequency: "weekly" as const,
       priority: path === "/" ? 1 : 0.7,
+    })),
+    ...legalPaths.map((path) => ({
+      url: siteUrl(path),
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
     })),
     ...tree.flatMap((category) => [
       { url: siteUrl(categoryHref(category)), changeFrequency: "weekly" as const, priority: 0.8 },
@@ -46,6 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]),
     ...routines.map((r) => ({
       url: siteUrl(`/rutine/${r.slug}`),
+      lastModified: r.updatedAt,
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
@@ -56,7 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...articles.map((a) => ({
       url: siteUrl(`/jurnal/${a.slug}`),
-      lastModified: a.publishedAt ?? undefined,
+      lastModified: a.updatedAt,
       changeFrequency: "monthly" as const,
       priority: 0.6,
     })),

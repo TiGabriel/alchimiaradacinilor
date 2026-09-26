@@ -14,8 +14,9 @@ import { Markdown } from "@/components/ui/markdown";
 import { getCurrentUser } from "@/features/auth/session";
 import { ProductCard } from "@/features/catalog/product-card";
 import { AddRoutineToCartButton, SaveRoutineButton } from "@/features/routines/routine-actions";
-import { siteUrl } from "@/lib/seo";
+import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { productHref } from "@/services/catalog/product-types";
+import { pageMetadata } from "@/services/seo";
 import {
   difficultyLabels,
   getRoutineBySlug,
@@ -28,19 +29,15 @@ type Props = PageProps<"/rutine/[slug]">;
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const routine = await getRoutineBySlug((await props.params).slug);
   if (!routine) return {};
-  const title = routine.seo?.seoTitle ?? routine.title;
-  const description = routine.seo?.metaDescription ?? routine.summary;
-  return {
-    title,
-    description,
-    alternates: { canonical: routine.seo?.canonicalUrl ?? `/rutine/${routine.slug}` },
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      images: routine.seo?.ogImage?.url ?? routine.image?.url,
-    },
-  };
+  return pageMetadata({
+    title: routine.seo?.seoTitle ?? routine.title,
+    description: routine.seo?.metaDescription ?? routine.summary,
+    path: `/rutine/${routine.slug}`,
+    canonical: routine.seo?.canonicalUrl,
+    image: routine.seo?.ogImage?.url ?? routine.image?.url,
+    imageAlt: routine.image?.alt,
+    noIndex: routine.seo?.noIndex,
+  });
 }
 
 export default async function RoutinePage(props: Props) {
@@ -63,9 +60,11 @@ export default async function RoutinePage(props: Props) {
         data={{
           "@context": "https://schema.org",
           "@type": "HowTo",
+          inLanguage: "ro-RO",
           name: routine.title,
           description: routine.summary,
           url: siteUrl(`/rutine/${routine.slug}`),
+          ...(routine.image ? { image: absoluteUrl(routine.image.url) } : {}),
           ...(routine.durationMinutes ? { totalTime: `PT${routine.durationMinutes}M` } : {}),
           step: routine.steps.map((s, i) => ({
             "@type": "HowToStep",

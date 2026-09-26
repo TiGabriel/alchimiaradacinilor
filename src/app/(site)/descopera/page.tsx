@@ -10,13 +10,16 @@ import { NeedCards } from "@/features/discover/need-cards";
 import { NeedPicker } from "@/features/discover/need-picker";
 import { getCategoryTree } from "@/services/catalog/categories";
 import { getAromasWithCounts, getNeedsWithCounts } from "@/services/catalog/taxonomy";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Descoperă",
-  description:
-    "Găsește aroma potrivită: după nevoie, după profil aromatic, după categorie sau cu ajutorul quiz-ului.",
-  alternates: { canonical: "/descopera" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Descoperă",
+    description:
+      "Găsește aroma potrivită: după nevoie, după profil aromatic, după categorie sau cu ajutorul quiz-ului.",
+    path: "/descopera",
+  });
+}
 
 export default async function DiscoverPage() {
   const [needs, aromas, tree] = await Promise.all([

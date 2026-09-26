@@ -462,3 +462,39 @@ banner and `noindex`. Everyone else gets a 404, as for any unpublished article.
 Cells starting with `=`, `+`, `-`, `@`, tab or CR are prefixed with an apostrophe, and the file
 starts with a UTF-8 BOM so spreadsheet apps show diacritics correctly. The export route checks the
 session and permission itself (route handlers do not inherit the admin layout's check).
+
+## Phase 13 — Audit
+
+### D-072 · Nonce-based CSP from the proxy
+
+Every site page already renders dynamically (session, cart and consent cookies), so a per-request
+nonce costs nothing extra and allows `script-src 'self' 'nonce-…' 'strict-dynamic'` without
+`unsafe-inline` for scripts. Styles keep `'unsafe-inline'`: React style props, Radix and Motion
+write style attributes, and style injection is a far smaller risk than script injection. The
+policy is a pure, tested function (`lib/security-headers.ts`) shared with `next.config.ts`.
+
+### D-073 · Public page metadata goes through one builder
+
+`pageMetadata()` fills canonical, robots, Open Graph and Twitter with the settings' fallbacks.
+Next.js replaces a parent's `openGraph` instead of merging it, so partial per-page objects silently
+lost the site name, locale and default image; one builder avoids that class of bug.
+
+### D-074 · Motion through `framer-motion` with LazyMotion
+
+`motion/react` re-exports `framer-motion` but also evaluates `fm.motion` at module level, which
+keeps the full component (drag, layout projection) in every bundle. The app imports `m` from
+`framer-motion/m` and the rest from `framer-motion` (same library and version, now a direct
+dependency) inside `LazyMotion features={domAnimation} strict`.
+
+### D-075 · No data cache yet
+
+Pages are dynamic by design and the catalogue is small; queries are indexed and deduplicated per
+request. A cross-request cache (Next 16 Cache Components / `use cache` with tags revalidated by the
+admin actions) is the next step if traffic grows — adding it now would add stale-data risk for
+little gain.
+
+### D-076 · Busy buttons stay focusable
+
+`Button loading` sets `aria-disabled`/`aria-busy` and ignores clicks instead of `disabled`, because
+disabling the focused button sends keyboard focus to `<body>`. Dialogs opened from code restore
+focus to the element that was focused when they opened.

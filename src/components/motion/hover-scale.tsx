@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 
 import { easeBotanical } from "@/lib/motion";
 
@@ -18,12 +18,12 @@ export function HoverScale({
 }) {
   const reduce = usePrefersReducedMotion();
   return (
-    <motion.div
+    <m.div
       className={className}
       whileHover={reduce ? undefined : { scale }}
       transition={{ duration: 0.6, ease: easeBotanical }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

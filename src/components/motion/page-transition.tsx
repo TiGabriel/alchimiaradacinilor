@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 
 import { easeBotanical } from "@/lib/motion";
 
@@ -14,12 +14,12 @@ import { usePrefersReducedMotion } from "./use-prefers-reduced-motion";
 export function PageTransition({ children }: { children: React.ReactNode }) {
   const reduce = usePrefersReducedMotion();
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={reduce ? { duration: 0 } : { duration: 0.5, ease: easeBotanical }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

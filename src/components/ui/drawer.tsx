@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 import { DialogOverlay } from "./dialog";
+import { FocusOrigin, useReturnFocus } from "./use-return-focus";
 
 export const Drawer = DialogPrimitive.Root;
 export const DrawerTrigger = DialogPrimitive.Trigger;
@@ -42,8 +43,10 @@ export function DrawerContent({
   className,
   bodyClassName,
   children,
+  onCloseAutoFocus,
   ...props
 }: DrawerContentProps) {
+  const { originRef, restoreFocus } = useReturnFocus();
   return (
     <DialogPrimitive.Portal>
       <DialogOverlay />
@@ -54,8 +57,13 @@ export function DrawerContent({
           className,
         )}
         {...(description ? {} : { "aria-describedby": undefined })}
+        onCloseAutoFocus={(event) => {
+          onCloseAutoFocus?.(event);
+          if (!event.defaultPrevented) restoreFocus(event);
+        }}
         {...props}
       >
+        <FocusOrigin originRef={originRef} />
         <div
           className={cn(
             "flex items-center justify-between gap-4 px-6 pt-5 pb-4",

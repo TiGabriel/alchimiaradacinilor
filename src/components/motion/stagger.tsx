@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, type Variants } from "motion/react";
+import { type Variants } from "framer-motion";
+import * as m from "framer-motion/m";
 import { createContext, useContext } from "react";
 
 import { durations, easeBotanical, revealViewport } from "@/lib/motion";
@@ -20,7 +21,7 @@ type StaggerProps = {
 /** Reveals <StaggerItem> children one after another when the group scrolls into view. */
 export function Stagger({ children, className, stagger = 0.08, as = "div" }: StaggerProps) {
   const reduce = usePrefersReducedMotion();
-  const Component = motion[as];
+  const Component = m[as];
   const variants: Variants = {
     hidden: {},
     visible: { transition: { staggerChildren: reduce ? 0 : stagger } },
@@ -52,7 +53,7 @@ export function StaggerItem({
   as?: "div" | "li" | "article";
 }) {
   const reduce = useContext(ReducedContext);
-  const Component = motion[as];
+  const Component = m[as];
   const variants: Variants = {
     hidden: { opacity: 0, y: 16 },
     visible: {

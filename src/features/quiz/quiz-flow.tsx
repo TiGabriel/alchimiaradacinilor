@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "framer-motion";
+import * as m from "framer-motion/m";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
@@ -191,7 +192,7 @@ export function QuizFlow({ quiz }: { quiz: QuizView }) {
       </div>
 
       <AnimatePresence mode="wait" custom={direction} initial={false}>
-        <motion.div
+        <m.div
           key={question.id}
           custom={direction}
           variants={variants}
@@ -263,7 +264,7 @@ export function QuizFlow({ quiz }: { quiz: QuizView }) {
               })}
             </div>
           </fieldset>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       <div aria-live="assertive" className="min-h-6 text-sm font-medium text-danger">

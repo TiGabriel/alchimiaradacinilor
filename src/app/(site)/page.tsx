@@ -1,7 +1,9 @@
 import { ArrowRight, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Leaf, SectionDivider } from "@/components/botanical";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/features/auth/session";
@@ -22,6 +24,7 @@ import { getHomeEssentials, getHomeReviews, getPersonalRow } from "@/services/ho
 import { popularCategories } from "@/services/home/select";
 import { listArticles } from "@/services/journal/journal";
 import { listRoutines } from "@/services/routines/routines";
+import { organizationJsonLd, pageMetadata } from "@/services/seo";
 import { getSettings } from "@/services/settings";
 
 function SectionHeading({
@@ -54,6 +57,15 @@ function SectionHeading({
   );
 }
 
+export async function generateMetadata(): Promise<Metadata> {
+  const { seo } = await getSettings();
+  // The homepage shows the plain site title (no template suffix).
+  return {
+    ...(await pageMetadata({ title: seo.defaultTitle, path: "/" })),
+    title: { absolute: seo.defaultTitle },
+  };
+}
+
 export default async function HomePage() {
   const user = await getCurrentUser();
   const [settings, needs, tree, featured, essentials, routines, articles, reviews, personal] =
@@ -68,11 +80,13 @@ export default async function HomePage() {
       getHomeReviews(3),
       user ? getPersonalRow(user.id) : Promise.resolve(null),
     ]);
+  const structuredData = await organizationJsonLd();
   const categories = popularCategories(tree, 6);
   const pickerNeeds = needs.filter((n) => n.productCount > 0);
 
   return (
     <>
+      <JsonLd data={structuredData} />
       <HomeHero image={settings.homepage.heroImage} />
 
       {user ? <PersonalRowSection firstName={user.firstName} row={personal} /> : null}

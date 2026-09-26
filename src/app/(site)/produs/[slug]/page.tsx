@@ -24,7 +24,7 @@ import { ReviewsSection } from "@/features/reviews/reviews-section";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatMoney } from "@/lib/money";
-import { siteUrl } from "@/lib/seo";
+import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { categoryHref } from "@/services/catalog/category-tree";
 import {
@@ -39,6 +39,7 @@ import { getProductReviews, getReviewEligibility } from "@/services/reviews/revi
 import { getRoutinesForProduct } from "@/services/routines/routines";
 import { getSetting } from "@/services/settings";
 import { productTypeLabels } from "@/validation/product";
+import { pageMetadata } from "@/services/seo";
 
 type Props = PageProps<"/produs/[slug]">;
 
@@ -46,20 +47,15 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const { slug } = await props.params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
-  const title = product.seo?.seoTitle ?? product.name;
-  const description = product.seo?.metaDescription ?? product.shortDescription;
-  const image = product.seo?.ogImage ?? product.images[0]?.url;
-  return {
-    title,
-    description,
-    alternates: { canonical: product.seo?.canonicalUrl ?? productHref(product) },
-    openGraph: {
-      title,
-      description,
-      url: productHref(product),
-      images: image ? [{ url: image }] : undefined,
-    },
-  };
+  return pageMetadata({
+    title: product.seo?.seoTitle ?? product.name,
+    description: product.seo?.metaDescription ?? product.shortDescription,
+    path: productHref(product),
+    canonical: product.seo?.canonicalUrl,
+    image: product.seo?.ogImage ?? product.images[0]?.url,
+    imageAlt: product.images[0]?.alt,
+    noIndex: product.seo?.noIndex,
+  });
 }
 
 function Section({
@@ -140,7 +136,7 @@ function productJsonLd(product: ProductDetail) {
     sku: product.sku,
     description: product.shortDescription,
     url: siteUrl(productHref(product)),
-    ...(product.images.length ? { image: product.images.map((i) => i.url) } : {}),
+    ...(product.images.length ? { image: product.images.map((i) => absoluteUrl(i.url)) } : {}),
     ...(product.brand ? { brand: { "@type": "Brand", name: product.brand.name } } : {}),
     category: product.parentCategory
       ? `${product.parentCategory.name} > ${product.category.name}`
@@ -153,6 +149,7 @@ function productJsonLd(product: ProductDetail) {
       availability:
         product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
+      seller: { "@id": siteUrl("/#organizatie") },
     },
     ...(product.rating != null && product.reviewCount > 0
       ? {

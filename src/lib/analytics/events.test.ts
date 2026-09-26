@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { analyticsPayloadSchema, cleanPath, sanitizeProps } from "./events";
+import { cleanPath, sanitizeProps } from "./events";
+import { analyticsPayloadSchema } from "./schema";
 
 describe("analytics events", () => {
   it("accepts only known events with small flat properties", () => {

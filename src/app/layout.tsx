@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 
 import { Providers } from "@/components/layout/providers";
 import { cn } from "@/lib/utils";
-import { siteUrl } from "@/lib/seo";
+import { DEFAULT_OG_IMAGE, siteUrl } from "@/lib/seo";
 import { getSettings } from "@/services/settings";
 
 import { fontDisplay, fontSans } from "./fonts";
@@ -21,8 +21,9 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       locale: "ro_RO",
       siteName: brand.siteName,
-      ...(seo.ogImageUrl ? { images: [{ url: seo.ogImageUrl }] } : {}),
+      images: [{ url: seo.ogImageUrl ?? DEFAULT_OG_IMAGE }],
     },
+    twitter: { card: "summary_large_image", images: [seo.ogImageUrl ?? DEFAULT_OG_IMAGE] },
     formatDetection: { telephone: false },
   };
 }

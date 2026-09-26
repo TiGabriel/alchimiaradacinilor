@@ -5,20 +5,18 @@ import { getCategoryTree } from "@/services/catalog/categories";
 import { categoryHref } from "@/services/catalog/category-tree";
 import { countActiveFilters, parseCatalogParams } from "@/services/catalog/listing";
 import { getCatalogPage } from "@/services/catalog/products";
+import { pageMetadata } from "@/services/seo";
 
 export async function generateMetadata(props: PageProps<"/produse">): Promise<Metadata> {
   const filters = parseCatalogParams(await props.searchParams);
-  return {
+  return pageMetadata({
     title: "Toate produsele",
     description:
       "Uleiuri esențiale, amestecuri, kit-uri, difuzoare și accesorii pentru ritualurile tale.",
-    alternates: { canonical: "/produse" },
+    path: "/produse",
     // Filtered/sorted variants are not indexed; pagination stays crawlable.
-    robots:
-      countActiveFilters(filters) > 0 || filters.sort !== "recomandate"
-        ? { index: false, follow: true }
-        : undefined,
-  };
+    noIndex: countActiveFilters(filters) > 0 || filters.sort !== "recomandate",
+  });
 }
 
 export default async function ProductsPage(props: PageProps<"/produse">) {

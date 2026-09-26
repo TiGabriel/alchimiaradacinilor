@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const REVIEW_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+import { REVIEW_IMAGE_MAX_BYTES } from "./limits";
+
+export { REVIEW_IMAGE_MAX_BYTES };
 
 export const reviewSchema = z.object({
   productId: z.uuid(),

@@ -13,7 +13,7 @@ and care products, with an aroma quiz, routines and a journal (blog).
 
 Next.js 16 (App Router, React 19, Turbopack) · TypeScript strict · PostgreSQL 16 ·
 Prisma 7 (`prisma-client` generator, `@prisma/adapter-pg`) · Zod 4 · Tailwind CSS 4 ·
-Radix primitives (`radix-ui`) · Motion · Vitest · ESLint 9 + Prettier · pnpm.
+Radix primitives (`radix-ui`) · Motion (`framer-motion`, via `LazyMotion` + `m.*`) · Vitest · ESLint 9 + Prettier · pnpm.
 
 Next.js 16 differs from older versions: read `node_modules/next/dist/docs/` before
 using an API you are unsure about (async `params`/`searchParams`/`cookies()`,

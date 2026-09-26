@@ -6,6 +6,7 @@ import { getCategoryTree } from "@/services/catalog/categories";
 import { categoryHref, findCategoryPath } from "@/services/catalog/category-tree";
 import { countActiveFilters, parseCatalogParams } from "@/services/catalog/listing";
 import { getCatalogPage } from "@/services/catalog/products";
+import { pageMetadata } from "@/services/seo";
 
 type Props = PageProps<"/produse/[...segments]">;
 
@@ -19,17 +20,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!path) return {};
   const current = path.subcategory ?? path.category;
   const filters = parseCatalogParams(await props.searchParams);
-  return {
+  return pageMetadata({
     title: path.subcategory
       ? `${path.subcategory.name} · ${path.category.name}`
       : path.category.name,
     description: current.description ?? `Descoperă produsele din categoria ${current.name}.`,
-    alternates: { canonical: categoryHref(current, path.subcategory ? path.category : null) },
-    robots:
-      countActiveFilters(filters) > 0 || filters.sort !== "recomandate"
-        ? { index: false, follow: true }
-        : undefined,
-  };
+    path: categoryHref(current, path.subcategory ? path.category : null),
+    noIndex: countActiveFilters(filters) > 0 || filters.sort !== "recomandate",
+  });
 }
 
 export default async function CategoryPage(props: Props) {

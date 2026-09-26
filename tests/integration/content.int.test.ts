@@ -185,3 +185,31 @@ describe("site search across sources", () => {
     expect(byType.article).not.toContain("Ciornă despre lavandă");
   });
 });
+
+describe("journal publication time", () => {
+  it("shows an article published after the server started (no start-up clock)", async () => {
+    // The module is already loaded; an article published "now" must still be listed.
+    await new Promise((r) => setTimeout(r, 20));
+    await db.article.create({
+      data: {
+        slug: "proaspat",
+        title: "Proaspăt publicat",
+        content: "Text",
+        status: "PUBLISHED",
+        publishedAt: new Date(),
+      },
+    });
+    await db.article.create({
+      data: {
+        slug: "programat",
+        title: "Programat",
+        content: "Text",
+        status: "PUBLISHED",
+        publishedAt: new Date(Date.now() + 86_400_000),
+      },
+    });
+    const slugs = (await listArticles()).map((a) => a.slug);
+    expect(slugs).toContain("proaspat");
+    expect(slugs).not.toContain("programat");
+  });
+});

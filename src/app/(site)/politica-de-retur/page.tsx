@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 
 import { LegalDocument, ToComplete } from "@/features/legal/legal-document";
 import { getSettings } from "@/services/settings";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Politica de retur",
-  alternates: { canonical: "/politica-de-retur" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Politica de retur",
+    description: "Dreptul de retragere în 14 zile, condițiile de retur și rambursarea.",
+    path: "/politica-de-retur",
+  });
+}
 
 export default async function ReturnPolicyPage() {
   const { legal, contact } = await getSettings();

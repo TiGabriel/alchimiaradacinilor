@@ -19,6 +19,8 @@ export async function GET(_request: Request, ctx: { params: Promise<{ key: strin
       "Content-Type": TYPES[key.split(".").pop()!] ?? "application/octet-stream",
       "Cache-Control": "public, max-age=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
+      // Opened directly, a file can never run anything.
+      "Content-Security-Policy": "default-src 'none'; sandbox",
     },
   });
 }

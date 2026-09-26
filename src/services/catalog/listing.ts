@@ -7,7 +7,6 @@
  * *other* active filter). Suitable for catalogues up to a few thousand
  * products — see DECISIONS D-021 for the scaling path.
  */
-import { z } from "zod";
 
 export type ListingRow = {
   id: string;
@@ -87,36 +86,40 @@ function readParam(params: RawParams, key: string): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-const slugList = z
-  .string()
-  .transform((s) =>
-    [...new Set(s.split(",").map((v) => v.trim().toLowerCase()))].filter((v) =>
-      /^[a-z0-9-]{1,80}$/.test(v),
-    ),
+// Hand-written parsers: this module ships to the browser (filters UI), so no Zod here.
+const slugList = (s: string) =>
+  [...new Set(s.split(",").map((v) => v.trim().toLowerCase()))].filter((v) =>
+    /^[a-z0-9-]{1,80}$/.test(v),
   );
-const wholeNumber = z.coerce.number().int().nonnegative().max(1_000_000);
+
+/** An integer within [min, max], or null for anything else (absent, blank, decimal, out of range). */
+function intParam(raw: string | undefined, min: number, max: number): number | null {
+  if (!raw?.trim()) return null;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= min && n <= max ? n : null;
+}
 
 /** Lenient: invalid values are dropped rather than failing the page. */
 export function parseCatalogParams(params: RawParams): CatalogFilters {
   const filters: CatalogFilters = { ...EMPTY_FILTERS };
   for (const facet of MULTI_FACETS) {
     const raw = readParam(params, facet);
-    if (raw) filters[facet] = slugList.parse(raw);
+    if (raw) filters[facet] = slugList(raw);
   }
-  const min = wholeNumber.safeParse(readParam(params, "pret_min"));
-  const max = wholeNumber.safeParse(readParam(params, "pret_max"));
-  if (readParam(params, "pret_min") && min.success) filters.pretMin = min.data;
-  if (readParam(params, "pret_max") && max.success) filters.pretMax = max.data;
+  const min = intParam(readParam(params, "pret_min"), 0, 1_000_000);
+  const max = intParam(readParam(params, "pret_max"), 0, 1_000_000);
+  if (min != null) filters.pretMin = min;
+  if (max != null) filters.pretMax = max;
   if (filters.pretMin != null && filters.pretMax != null && filters.pretMin > filters.pretMax) {
     [filters.pretMin, filters.pretMax] = [filters.pretMax, filters.pretMin];
   }
-  const rating = z.coerce.number().int().min(1).max(5).safeParse(readParam(params, "rating"));
-  if (readParam(params, "rating") && rating.success) filters.rating = rating.data;
+  const rating = intParam(readParam(params, "rating"), 1, 5);
+  if (rating != null) filters.rating = rating;
   filters.inStock = readParam(params, "stoc") === "1";
   const sort = readParam(params, "sortare");
   if (SORT_OPTIONS.some((o) => o.value === sort)) filters.sort = sort as SortKey;
-  const page = z.coerce.number().int().min(1).max(10_000).safeParse(readParam(params, "pagina"));
-  if (readParam(params, "pagina") && page.success) filters.page = page.data;
+  const page = intParam(readParam(params, "pagina"), 1, 10_000);
+  if (page != null) filters.page = page;
   return filters;
 }
 

@@ -13,6 +13,7 @@ import { NeedPicker } from "@/features/discover/need-picker";
 import { ArticleCard } from "@/features/journal/article-card";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { getNeedBySlug, getNeedsWithCounts } from "@/services/catalog/taxonomy";
+import { pageMetadata } from "@/services/seo";
 import {
   criteriaForNeed,
   recommendArticles,
@@ -25,12 +26,12 @@ type Props = PageProps<"/descopera/[nevoie]">;
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const need = await getNeedBySlug((await props.params).nevoie);
   if (!need) return {};
-  return {
+  return pageMetadata({
     title: `${need.name} — ce ți se potrivește`,
     description:
       need.description ?? `Produse, rutine și articole pentru ${need.name.toLowerCase()}.`,
-    alternates: { canonical: `/descopera/${need.slug}` },
-  };
+    path: `/descopera/${need.slug}`,
+  });
 }
 
 export default async function NeedPage(props: Props) {

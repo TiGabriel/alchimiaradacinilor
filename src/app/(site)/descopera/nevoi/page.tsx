@@ -4,13 +4,16 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Reveal } from "@/components/motion";
 import { NeedCards } from "@/features/discover/need-cards";
 import { getNeedsWithCounts } from "@/services/catalog/taxonomy";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Descoperă după nevoie",
-  description:
-    "Relaxare, energie, concentrare, o casă proaspătă — alege produsele potrivite momentului tău.",
-  alternates: { canonical: "/descopera/nevoi" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Descoperă după nevoie",
+    description:
+      "Relaxare, energie, concentrare, o casă proaspătă — alege produsele potrivite momentului tău.",
+    path: "/descopera/nevoi",
+  });
+}
 
 export default async function NeedsPage() {
   const needs = await getNeedsWithCounts();

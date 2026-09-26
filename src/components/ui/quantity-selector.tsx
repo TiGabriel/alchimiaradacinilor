@@ -52,6 +52,8 @@ export function QuantitySelector({
     <div
       className={cn(
         "inline-flex items-center overflow-hidden rounded-full border border-line-strong bg-surface",
+        // The input hides its own outline (it would be clipped); the pill shows focus instead.
+        "has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-forest",
         size === "md" ? "h-11" : "h-9",
         disabled && "opacity-60",
         className,

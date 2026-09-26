@@ -3,12 +3,12 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useId, useState, useTransition } from "react";
-import { z } from "zod";
 
 import { subscribeNewsletterAction } from "@/features/newsletter/actions";
 import { cn } from "@/lib/utils";
 
-const emailSchema = z.email();
+/** Quick client-side check (the server validates with Zod); keeps Zod out of every page. */
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** Newsletter sign-up (double opt-in: the server emails a confirmation link). */
 export function NewsletterForm({
@@ -27,7 +27,7 @@ export function NewsletterForm({
   const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const value = email.trim();
-    if (!emailSchema.safeParse(value).success) {
+    if (!EMAIL_PATTERN.test(value)) {
       setError("Introdu o adresă de email validă.");
       return;
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 
 import { durations } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ export function BotanicalFloat({
 }: BotanicalFloatProps) {
   const reduce = usePrefersReducedMotion();
   return (
-    <motion.div
+    <m.div
       aria-hidden
       className={cn("pointer-events-none", className)}
       animate={reduce ? { y: 0, rotate: 0 } : { y: [0, -drift, 0], rotate: [0, sway, 0] }}
@@ -39,6 +39,6 @@ export function BotanicalFloat({
       }
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }

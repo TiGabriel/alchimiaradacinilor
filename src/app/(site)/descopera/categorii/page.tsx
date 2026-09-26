@@ -4,12 +4,15 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Reveal } from "@/components/motion";
 import { CategoryDirectory } from "@/features/discover/category-cards";
 import { getCategoryTree } from "@/services/catalog/categories";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Descoperă după categorie",
-  description: "Uleiuri individuale, amestecuri, kit-uri, difuzoare, accesorii și îngrijire.",
-  alternates: { canonical: "/descopera/categorii" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Descoperă după categorie",
+    description: "Uleiuri individuale, amestecuri, kit-uri, difuzoare, accesorii și îngrijire.",
+    path: "/descopera/categorii",
+  });
+}
 
 export default async function CategoriesPage() {
   const tree = await getCategoryTree();

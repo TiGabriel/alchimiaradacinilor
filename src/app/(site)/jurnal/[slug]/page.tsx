@@ -13,7 +13,7 @@ import { ArticleCard, articleDate } from "@/features/journal/article-card";
 import { ArticleContent } from "@/features/journal/article-content";
 import { JournalListing } from "@/features/journal/journal-listing";
 import { RoutineCard } from "@/features/routines/routine-card";
-import { siteUrl } from "@/lib/seo";
+import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { getProductCards } from "@/services/catalog/products";
 import {
   getArticleBySlug,
@@ -24,6 +24,7 @@ import {
 } from "@/services/journal/journal";
 import { can } from "@/services/auth/permissions";
 import { getRoutineCards } from "@/services/routines/routines";
+import { pageMetadata } from "@/services/seo";
 
 type Props = PageProps<"/jurnal/[slug]">;
 
@@ -32,32 +33,30 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const { slug } = await props.params;
   const category = await getArticleCategory(slug);
   if (category) {
-    return {
+    return pageMetadata({
       title: `${category.name} · Jurnal`,
-      description: category.description ?? undefined,
-      alternates: { canonical: `/jurnal/${category.slug}` },
-    };
+      description: category.description,
+      path: `/jurnal/${category.slug}`,
+    });
   }
   const preview = (await props.searchParams).previzualizare === "1" && (await canPreview());
   const article = await getArticleBySlug(slug, preview);
   if (!article) return {};
   if (preview)
     return { title: `Previzualizare: ${article.title}`, robots: { index: false, follow: false } };
-  const title = article.seo?.seoTitle ?? article.title;
-  const description = article.seo?.metaDescription ?? article.excerpt ?? undefined;
-  return {
-    title,
-    description,
-    alternates: { canonical: article.seo?.canonicalUrl ?? `/jurnal/${article.slug}` },
-    openGraph: {
-      type: "article",
-      title,
-      description,
-      publishedTime: article.publishedAt?.toISOString(),
-      authors: [article.author],
-      images: article.seo?.ogImage?.url ?? article.coverImage?.url,
-    },
-  };
+  return pageMetadata({
+    title: article.seo?.seoTitle ?? article.title,
+    description: article.seo?.metaDescription ?? article.excerpt,
+    path: `/jurnal/${article.slug}`,
+    canonical: article.seo?.canonicalUrl,
+    image: article.seo?.ogImage?.url ?? article.coverImage?.url,
+    imageAlt: article.coverImage?.alt,
+    noIndex: article.seo?.noIndex,
+    type: "article",
+    publishedTime: article.publishedAt,
+    modifiedTime: article.updatedAt,
+    authors: [article.author],
+  });
 }
 
 async function canPreview() {
@@ -117,14 +116,16 @@ export default async function JournalSlugPage(props: Props) {
       <JsonLd
         data={{
           "@context": "https://schema.org",
-          "@type": "Article",
+          "@type": "BlogPosting",
+          inLanguage: "ro-RO",
           headline: article.title,
           description: article.excerpt ?? undefined,
           datePublished: article.publishedAt?.toISOString(),
           dateModified: article.updatedAt.toISOString(),
           author: { "@type": "Organization", name: article.author },
+          publisher: { "@id": siteUrl("/#organizatie") },
           mainEntityOfPage: siteUrl(`/jurnal/${article.slug}`),
-          ...(article.coverImage ? { image: [article.coverImage.url] } : {}),
+          ...(article.coverImage ? { image: [absoluteUrl(article.coverImage.url)] } : {}),
         }}
       />
       <div className="container-page pt-6 md:pt-8">

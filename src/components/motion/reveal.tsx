@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as m from "framer-motion/m";
 
 import { durations, easeBotanical, revealViewport } from "@/lib/motion";
 
@@ -21,7 +21,7 @@ type RevealProps = {
  */
 export function Reveal({ children, className, y = 18, delay = 0, as = "div" }: RevealProps) {
   const reduce = usePrefersReducedMotion();
-  const Component = motion[as];
+  const Component = m[as];
   return (
     <Component
       className={className}

@@ -5,7 +5,7 @@ import { useActionState, useEffect, useId, useRef, useState } from "react";
 
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { REVIEW_IMAGE_MAX_BYTES } from "@/validation/review";
+import { REVIEW_IMAGE_MAX_BYTES } from "@/validation/limits";
 
 import { FormMessage, SubmitButton } from "../auth/components/form-bits";
 import { idleState } from "../auth/form-state";

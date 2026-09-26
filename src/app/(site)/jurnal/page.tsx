@@ -2,13 +2,16 @@ import type { Metadata } from "next";
 
 import { JournalListing } from "@/features/journal/journal-listing";
 import { getArticleCategories, listArticles } from "@/services/journal/journal";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Jurnal",
-  description:
-    "Povești despre plante și arome, ghiduri pentru început și idei de ritualuri simple.",
-  alternates: { canonical: "/jurnal" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Jurnal",
+    description:
+      "Povești despre plante și arome, ghiduri pentru început și idei de ritualuri simple.",
+    path: "/jurnal",
+  });
+}
 
 export default async function JournalPage(props: PageProps<"/jurnal">) {
   const { q } = await props.searchParams;

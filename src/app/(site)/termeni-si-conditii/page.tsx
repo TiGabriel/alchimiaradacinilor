@@ -4,11 +4,15 @@ import Link from "next/link";
 import { CompanyDetails } from "@/features/legal/company";
 import { LegalDocument, ToComplete } from "@/features/legal/legal-document";
 import { getSettings } from "@/services/settings";
+import { pageMetadata } from "@/services/seo";
 
-export const metadata: Metadata = {
-  title: "Termeni și condiții",
-  alternates: { canonical: "/termeni-si-conditii" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: "Termeni și condiții",
+    description: "Condițiile de utilizare a site-ului și de vânzare pe Alchimia Rădăcinilor.",
+    path: "/termeni-si-conditii",
+  });
+}
 
 export default async function TermsPage() {
   const { legal, contact } = await getSettings();
