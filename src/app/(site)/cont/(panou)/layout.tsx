@@ -1,8 +1,11 @@
-import { MailWarning } from "lucide-react";
+import { MailWarning, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { AccountNav } from "@/features/account/account-nav";
 import { ResendVerificationForm } from "@/features/auth/components/resend-verification";
 import { requireUser } from "@/features/auth/session";
+import { can } from "@/services/auth/permissions";
 
 /** Every /cont page below requires a signed-in user (checked on the server). */
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -18,6 +21,14 @@ export default async function AccountLayout({ children }: { children: React.Reac
           </p>
           <p className="truncate text-sm text-ink-muted">{user.email}</p>
         </div>
+        {/* Same permission as the /admin guard; this link is only a shortcut, not the check. */}
+        {can(user.roles, "admin:access") ? (
+          <Button asChild size="sm" className="self-start lg:self-stretch">
+            <Link href="/admin">
+              <ShieldCheck aria-hidden /> Panou administrator
+            </Link>
+          </Button>
+        ) : null}
         <AccountNav />
       </aside>
       <div className="flex min-w-0 flex-col gap-6">

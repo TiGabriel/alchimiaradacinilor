@@ -18,11 +18,22 @@ const dateTime = new Intl.DateTimeFormat("ro-RO", {
   timeZone: "Europe/Bucharest",
 });
 
-function Kpi({ label, value, change }: { label: string; value: string; change?: number | null }) {
+function Kpi({
+  label,
+  value,
+  change,
+  note,
+}: {
+  label: string;
+  value: string;
+  change?: number | null;
+  note?: string;
+}) {
   return (
     <div className="flex flex-col gap-1 rounded-xl border border-line bg-surface p-5">
       <span className="text-sm text-ink-muted">{label}</span>
       <span className="font-display text-3xl tabular-nums">{value}</span>
+      {note ? <span className="text-xs text-ink-muted">{note}</span> : null}
       {change != null ? (
         <span
           className={
@@ -47,6 +58,7 @@ function Kpi({ label, value, change }: { label: string; value: string; change?: 
 export default async function AdminDashboard() {
   const { user } = await requirePermission("admin:access");
   const d = await getDashboard({ id: user.id, roles: user.roles });
+  const t = d.totals;
 
   return (
     <>
@@ -71,6 +83,33 @@ export default async function AdminDashboard() {
         <Kpi label="Abonați newsletter" value={String(d.kpis.subscribers)} />
         <Kpi label="Recenzii de moderat" value={String(d.kpis.pendingReviews)} />
       </div>
+
+      <section aria-labelledby="totaluri" className="flex flex-col gap-3">
+        <h2 id="totaluri" className="text-xs font-bold tracking-[0.12em] text-ink-muted uppercase">
+          De la lansare
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {t.products != null ? (
+            <Kpi
+              label="Produse"
+              value={String(t.products)}
+              note={`${t.activeProducts ?? 0} active în magazin`}
+            />
+          ) : null}
+          {t.users != null ? <Kpi label="Conturi" value={String(t.users)} /> : null}
+          {t.orders != null ? <Kpi label="Comenzi" value={String(t.orders)} /> : null}
+          {t.revenue != null ? (
+            <Kpi
+              label="Vânzări totale"
+              value={formatMoney(t.revenue)}
+              note="Fără comenzile anulate sau rambursate"
+            />
+          ) : null}
+          {t.quizResults != null ? (
+            <Kpi label="Rezultate quiz" value={String(t.quizResults)} />
+          ) : null}
+        </div>
+      </section>
 
       {d.sales ? (
         <AdminCard title="Vânzări pe zile">
@@ -157,22 +196,54 @@ export default async function AdminDashboard() {
         </AdminCard>
       </div>
 
-      {d.sales && d.recent.length ? (
-        <AdminCard title="Comenzi recente">
-          <ul className="flex flex-col divide-y divide-line text-sm">
-            {d.recent.map((o) => (
-              <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                <Link href={`/admin/comenzi/${o.id}`} className="font-semibold hover:text-forest">
-                  {o.number}
-                </Link>
-                <span className="text-ink-muted">{dateTime.format(o.placedAt)}</span>
-                <OrderStatusBadge status={o.status} />
-                <span className="font-semibold tabular-nums">{formatMoney(o.total)}</span>
-              </li>
-            ))}
-          </ul>
-        </AdminCard>
-      ) : null}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {d.sales && d.recent.length ? (
+          <AdminCard title="Comenzi recente">
+            <ul className="flex flex-col divide-y divide-line text-sm">
+              {d.recent.map((o) => (
+                <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                  <Link href={`/admin/comenzi/${o.id}`} className="font-semibold hover:text-forest">
+                    {o.number}
+                  </Link>
+                  <span className="text-ink-muted">{dateTime.format(o.placedAt)}</span>
+                  <OrderStatusBadge status={o.status} />
+                  <span className="font-semibold tabular-nums">{formatMoney(o.total)}</span>
+                </li>
+              ))}
+            </ul>
+          </AdminCard>
+        ) : null}
+        {d.recentUsers.length ? (
+          <AdminCard
+            title="Conturi recente"
+            actions={
+              <Link
+                href="/admin/clienti"
+                className="text-sm font-semibold text-forest hover:underline"
+              >
+                Toți clienții
+              </Link>
+            }
+          >
+            <ul className="flex flex-col divide-y divide-line text-sm">
+              {d.recentUsers.map((u) => (
+                <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                  <span className="flex min-w-0 flex-col">
+                    <Link
+                      href={`/admin/clienti/${u.id}`}
+                      className="truncate font-semibold hover:text-forest"
+                    >
+                      {u.firstName} {u.lastName}
+                    </Link>
+                    <span className="truncate text-ink-muted">{u.email}</span>
+                  </span>
+                  <span className="text-ink-muted">{dateTime.format(u.createdAt)}</span>
+                </li>
+              ))}
+            </ul>
+          </AdminCard>
+        ) : null}
+      </div>
     </>
   );
 }

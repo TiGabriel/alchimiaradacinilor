@@ -7,11 +7,10 @@ import { activeNavHref, navFor } from "./nav";
 const hrefs = (roles: string[]) => navFor(roles).flatMap((g) => g.items.map((i) => i.href));
 
 describe("admin authorization", () => {
-  it("shows admins everything, editors the catalogue only, customers nothing", () => {
+  it("shows admins everything and everyone else nothing", () => {
     expect(hrefs(["admin"])).toContain("/admin/comenzi");
-    expect(hrefs(["editor"])).toContain("/admin/produse");
-    expect(hrefs(["editor"])).not.toContain("/admin/comenzi");
-    expect(hrefs(["editor"])).not.toContain("/admin/clienti");
+    expect(hrefs(["admin"])).toContain("/admin/produse");
+    expect(hrefs(["editor"])).toEqual([]);
     expect(hrefs(["customer"])).toEqual([]);
     expect(hrefs([])).toEqual([]);
   });
@@ -24,7 +23,7 @@ describe("admin authorization", () => {
       ForbiddenError,
     );
     expect(() => assertCan({ id: "u", roles: ["admin"] }, "settings:manage")).not.toThrow();
-    expect(() => assertCan({ id: "u", roles: ["editor"] }, "catalog:edit")).not.toThrow();
+    expect(() => assertCan({ id: "u", roles: ["editor"] }, "catalog:edit")).toThrow(ForbiddenError);
   });
 
   it("highlights the deepest matching section", () => {

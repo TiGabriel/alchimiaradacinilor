@@ -75,22 +75,23 @@ describe("permissions", () => {
     expect(can(["admin"], "settings:manage")).toBe(true);
     expect(can(["customer"], "account:manage-own")).toBe(true);
     expect(can(["customer"], "admin:access")).toBe(false);
-    expect(can(["editor"], "catalog:edit")).toBe(true);
+    expect(can(["editor"], "catalog:edit")).toBe(false);
     expect(can(["editor"], "users:manage")).toBe(false);
   });
 
-  it("gives editors the catalogue and content, never orders, customers or settings", () => {
+  it("keeps staff rights admin-only: editors get no more than customers", () => {
     const allowed = PERMISSIONS.filter((p) => can(["editor"], p));
-    expect(allowed).toEqual(["account:manage-own", "admin:access", "catalog:edit", "content:edit"]);
-    // Several roles combine; a customer who is also an editor gets the editor's rights.
-    expect(can(["customer", "editor"], "content:edit")).toBe(true);
+    expect(allowed).toEqual(["account:manage-own"]);
+    // Several roles combine; only the admin role opens the admin area.
+    expect(can(["customer", "editor"], "admin:access")).toBe(false);
+    expect(can(["customer", "admin"], "admin:access")).toBe(true);
   });
 
   it("assertCan throws a ForbiddenError naming the missing permission", () => {
-    const editor = { id: "u1", roles: ["editor"] };
-    expect(() => assertCan(editor, "catalog:edit")).not.toThrow();
+    const admin = { id: "u1", roles: ["admin"] };
+    expect(() => assertCan(admin, "catalog:edit")).not.toThrow();
     try {
-      assertCan(editor, "settings:manage");
+      assertCan({ id: "u2", roles: ["customer"] }, "settings:manage");
       expect.unreachable();
     } catch (error) {
       expect(error).toBeInstanceOf(ForbiddenError);

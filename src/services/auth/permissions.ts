@@ -16,7 +16,8 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 const ROLE_PERMISSIONS: Record<RoleKey, readonly Permission[]> = {
   customer: ["account:manage-own"],
-  editor: ["account:manage-own", "admin:access", "catalog:edit", "content:edit"],
+  // Admin View is admin-only: the editor role (still in the DB) has no staff rights for now.
+  editor: ["account:manage-own"],
   admin: PERMISSIONS,
 };
 

@@ -38,7 +38,7 @@ async function rejection(promise: Promise<unknown>) {
 }
 
 describe("quiz manager", () => {
-  async function setup(editor: Actor) {
+  async function setup(admin: Actor) {
     const seara = await db.need.create({ data: { slug: "seara", name: "Seară" } });
     const energie = await db.need.create({ data: { slug: "energie", name: "Energie" } });
     const lavender = await makeProduct({ slug: "lavanda" });
@@ -49,12 +49,12 @@ describe("quiz manager", () => {
         { productId: lemon.id, needId: energie.id, relevance: 3 },
       ],
     });
-    const question = await saveQuizQuestion(editor, {
+    const question = await saveQuizQuestion(admin, {
       text: "Ce cauți?",
       type: "MULTIPLE_CHOICE",
       required: true,
     });
-    const answer = await saveQuizAnswer(editor, question.id, {
+    const answer = await saveQuizAnswer(admin, question.id, {
       text: "Seri liniștite",
       needs: [{ id: seara.id, weight: 3 }],
     });
@@ -62,20 +62,20 @@ describe("quiz manager", () => {
   }
 
   it("previews with the real engine and reflects weight changes", async () => {
-    const { editor } = await actors();
-    const { energie, lavender, lemon, question, answer } = await setup(editor);
+    const { admin } = await actors();
+    const { energie, lavender, lemon, question, answer } = await setup(admin);
 
-    const before = await adminPreviewQuiz(editor, [answer.id]);
+    const before = await adminPreviewQuiz(admin, [answer.id]);
     expect(before.results[0]?.id).toBe(lavender.id);
     expect(before.signals.length).toBeGreaterThan(0);
 
     await saveQuizAnswer(
-      editor,
+      admin,
       question.id,
       { text: "Seri liniștite", needs: [{ id: energie.id, weight: 4 }] },
       answer.id,
     );
-    const after = await adminPreviewQuiz(editor, [answer.id]);
+    const after = await adminPreviewQuiz(admin, [answer.id]);
     expect(after.results[0]?.id).toBe(lemon.id);
     expect(after.results.map((r) => r.id)).not.toContain(lavender.id);
     // Nothing is stored by the preview.
@@ -83,23 +83,23 @@ describe("quiz manager", () => {
   });
 
   it("keeps answers that customers already chose", async () => {
-    const { editor } = await actors();
-    const { answer } = await setup(editor);
+    const { admin } = await actors();
+    const { answer } = await setup(admin);
     await submitQuiz({ answerIds: [answer.id], anonymousId: "anon-1" });
 
-    const error = await rejection(deleteQuizAnswer(editor, answer.id));
+    const error = await rejection(deleteQuizAnswer(admin, answer.id));
     expect(error).toBeInstanceOf(AdminError);
     expect(await db.quizAnswer.count({ where: { id: answer.id } })).toBe(1);
   });
 
   it("rejects zero and out-of-range weights, and customers", async () => {
-    const { editor, customer } = await actors();
-    const { seara, question } = await setup(editor);
+    const { admin, customer } = await actors();
+    const { seara, question } = await setup(admin);
     await expect(
-      saveQuizAnswer(editor, question.id, { text: "X", needs: [{ id: seara.id, weight: 0 }] }),
+      saveQuizAnswer(admin, question.id, { text: "X", needs: [{ id: seara.id, weight: 0 }] }),
     ).rejects.toThrow();
     await expect(
-      saveQuizAnswer(editor, question.id, { text: "X", needs: [{ id: seara.id, weight: 11 }] }),
+      saveQuizAnswer(admin, question.id, { text: "X", needs: [{ id: seara.id, weight: 11 }] }),
     ).rejects.toThrow();
     await expect(adminPreviewQuiz(customer, [])).rejects.toBeInstanceOf(ForbiddenError);
   });
@@ -157,27 +157,27 @@ describe("content admin", () => {
   };
 
   it("saves routines with steps and reports slug clashes on the field", async () => {
-    const { editor } = await actors();
-    const saved = await saveRoutine(editor, routine);
+    const { admin } = await actors();
+    const saved = await saveRoutine(admin, routine);
     expect(await db.routineStep.count({ where: { routineId: saved!.id } })).toBe(1);
 
-    const error = await rejection(saveRoutine(editor, { ...routine, title: "Alta" }));
+    const error = await rejection(saveRoutine(admin, { ...routine, title: "Alta" }));
     expect((error as AdminError).fieldErrors).toHaveProperty("slug");
   });
 
   it("refuses article cards that point at missing products", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const article = {
       title: "Despre lavandă",
       slug: "despre-lavanda",
       content: "Câteva rânduri despre lavandă și serile liniștite de vară.\n\n{{produs:nu-exista}}",
       status: "DRAFT",
     };
-    const error = await rejection(saveArticle(editor, article));
+    const error = await rejection(saveArticle(admin, article));
     expect((error as AdminError).fieldErrors?.content).toContain("nu-exista");
 
     await makeProduct({ slug: "lavanda" });
-    const saved = await saveArticle(editor, {
+    const saved = await saveArticle(admin, {
       ...article,
       content: "Câteva rânduri despre lavandă și serile liniștite de vară.\n\n{{produs:lavanda}}",
     });
@@ -241,8 +241,8 @@ describe("SEO fields", () => {
   });
 
   it("saves canonical and noindex on routines", async () => {
-    const { editor } = await actors();
-    const saved = await saveRoutine(editor, {
+    const { admin } = await actors();
+    const saved = await saveRoutine(admin, {
       title: "Dimineață",
       slug: "dimineata",
       summary: "Un început de zi luminos, cu arome citrice.",
@@ -264,7 +264,7 @@ describe("SEO fields", () => {
 });
 
 describe("admin permissions across services", () => {
-  it("refuses customers everywhere and editors outside catalogue and content", async () => {
+  it("refuses customers and editors everywhere (admin-only)", async () => {
     const { listAdminOrders } = await import("@/services/admin/orders");
     const { listCustomers } = await import("@/services/admin/customers");
     const { listReviewsForModeration } = await import("@/services/admin/moderation");
@@ -272,7 +272,7 @@ describe("admin permissions across services", () => {
     const { listAdminRoutines } = await import("@/services/admin/content");
     const { getQuizEditor } = await import("@/services/admin/quiz");
     const { listTaxonomy } = await import("@/services/admin/taxonomy");
-    const { editor, customer } = await actors();
+    const { admin, editor, customer } = await actors();
 
     const everyone = [
       (a: Actor) => listAdminOrders(a, {}),
@@ -285,12 +285,11 @@ describe("admin permissions across services", () => {
       (a: Actor) => getQuizEditor(a),
       (a: Actor) => listTaxonomy(a, "categorii"),
     ];
-    for (const call of everyone)
+    for (const call of everyone) {
       await expect(call(customer)).rejects.toBeInstanceOf(ForbiddenError);
-
-    // Editors: catalogue and content only.
-    for (const call of everyone.slice(0, 5))
       await expect(call(editor)).rejects.toBeInstanceOf(ForbiddenError);
-    for (const call of everyone.slice(5)) await expect(call(editor)).resolves.toBeDefined();
+    }
+    // The read-only catalogue and content calls work for the admin.
+    for (const call of everyone.slice(5)) await expect(call(admin)).resolves.toBeDefined();
   });
 });

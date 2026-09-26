@@ -1,3 +1,4 @@
+import { UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -24,6 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     getSetting("brand"),
   ]);
   const groups = navFor(user.roles);
+  const account = { name: `${user.firstName} ${user.lastName}`, email: user.email };
   return (
     <div className="flex min-h-dvh flex-col bg-paper">
       <a
@@ -32,10 +34,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       >
         Sari la conținut
       </a>
-      <header className="relative border-b border-line bg-surface">
+      <header className="relative border-t-4 border-b border-t-forest border-b-line bg-surface">
         <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
           <div className="flex items-center gap-3">
-            <AdminMobileNav groups={groups} />
+            <AdminMobileNav groups={groups} account={account} />
             <Logo brand={brand} size="sm" href="/admin" />
             <span className="rounded-full bg-forest-soft px-2.5 py-0.5 text-xs font-bold text-forest-deep">
               Admin
@@ -46,6 +48,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               Vezi magazinul
             </Link>
             <span className="text-ink-muted max-md:hidden">{user.email}</span>
+            <Link
+              href="/cont"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-line-strong px-3 font-semibold text-ink transition-colors hover:border-forest hover:text-forest"
+            >
+              <UserRound aria-hidden className="size-4" />
+              <span className="max-sm:sr-only">Înapoi la cont</span>
+            </Link>
             <form action={logoutAction}>
               <button type="submit" className="font-semibold text-danger hover:underline">
                 Ieșire
@@ -55,7 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
       <div className="flex flex-1">
-        <AdminSidebar groups={groups} />
+        <AdminSidebar groups={groups} account={account} />
         <main
           id="admin-continut"
           tabIndex={-1}

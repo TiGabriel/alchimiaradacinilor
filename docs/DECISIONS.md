@@ -511,3 +511,14 @@ same settings as checkout, so the help page cannot contradict the shop after an 
 `SEED_DEMO=false` keeps the structural data (roles, taxonomy, quiz, journal categories, default
 settings) and skips demo brands, products, routines and articles, so a production database never
 needs a manual demo purge.
+
+## Post-launch
+
+### D-079 · Admin View is admin-only, entered from the account
+
+The admin area already checked permissions on every page, action and service, but nothing linked
+to it. Admins now get **Panou administrator** in `/cont` and **Înapoi la cont** in the admin shell;
+the link is only a shortcut, rendered when the server-side check (`admin:access`) passes. The
+`editor` role keeps its key in the database but has no staff rights: every admin permission,
+including catalogue and content, belongs to `admin` only, so no other role can call admin actions
+directly either.

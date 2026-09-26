@@ -1,5 +1,7 @@
 "use server";
 
+import { can } from "@/services/auth/permissions";
+
 import { getCurrentUser } from "./session";
 
 export type ClientUser = {
@@ -17,6 +19,6 @@ export async function getSessionUserAction(): Promise<ClientUser | null> {
     firstName: user.firstName,
     email: user.email,
     emailVerified: user.emailVerified,
-    isStaff: user.roles.some((r) => r === "admin" || r === "editor"),
+    isStaff: can(user.roles, "admin:access"),
   };
 }

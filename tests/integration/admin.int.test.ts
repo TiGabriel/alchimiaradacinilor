@@ -79,30 +79,49 @@ describe("admin authorization", () => {
     await expect(
       saveTaxonomy(customer, "etichete", { name: "Nou", slug: "nou" }),
     ).rejects.toBeInstanceOf(ForbiddenError);
-    await expect(listAdminProducts(editor, {})).resolves.toMatchObject({ total: 0 });
+    // Admin View is admin-only: editors are refused like customers.
+    await expect(listAdminProducts(editor, {})).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(
+      saveTaxonomy(editor, "etichete", { name: "Nou", slug: "nou" }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(getDashboard(editor)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(getDashboard(customer)).rejects.toBeInstanceOf(ForbiddenError);
     await expect(listAdminOrders(admin, {})).resolves.toMatchObject({ total: 0 });
-    expect((await getDashboard(editor)).sales).toBe(false);
     expect((await getDashboard(admin)).sales).toBe(true);
+  });
+
+  it("dashboard shows real all-time totals and recent accounts", async () => {
+    const { admin } = await actors();
+    const cat = await category();
+    const { id: productId } = await saveProduct(admin, productInput(cat.id));
+    await placeTestOrder(admin.id, [productId]);
+
+    const forAdmin = await getDashboard(admin);
+    expect(forAdmin.totals.activeProducts).toBe(1);
+    const users = await db.user.count();
+    expect(forAdmin.totals).toMatchObject({ products: 1, users, orders: 1, quizResults: 0 });
+    expect(forAdmin.totals.revenue).toBeGreaterThan(0);
+    expect(forAdmin.recentUsers.map((u) => u.email)).toContain("admin@example.ro");
   });
 });
 
 describe("product admin", () => {
   it("creates and updates a product with its relations and SEO", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const cat = await category();
     const need = await db.need.create({ data: { slug: "seara", name: "Seară" } });
     const aroma = await db.aromaProfile.create({ data: { slug: "floral", name: "Floral" } });
     const tag = await db.tag.create({ data: { slug: "nou", name: "Nou" } });
 
     const { id } = await saveProduct(
-      editor,
+      admin,
       productInput(cat.id, {
         needs: [{ id: need.id, relevance: 3 }],
         aromas: [{ id: aroma.id, intensity: 5 }],
         tagIds: [tag.id],
       }),
     );
-    let product = await getAdminProduct(editor, id);
+    let product = await getAdminProduct(admin, id);
     expect(product).toMatchObject({
       price: 5990,
       stock: 10,
@@ -112,8 +131,8 @@ describe("product admin", () => {
     expect(product?.seo).toMatchObject({ seoTitle: "Lavandă" });
     expect(product?.needs).toEqual([{ needId: need.id, relevance: 3 }]);
 
-    await saveProduct(editor, productInput(cat.id, { price: "64,90", needs: [], tagIds: [] }), id);
-    product = await getAdminProduct(editor, id);
+    await saveProduct(admin, productInput(cat.id, { price: "64,90", needs: [], tagIds: [] }), id);
+    product = await getAdminProduct(admin, id);
     expect(product).toMatchObject({ price: 6490 });
     expect(product?.needs).toEqual([]);
     expect(product?.tags).toEqual([]);
@@ -121,10 +140,10 @@ describe("product admin", () => {
   });
 
   it("reports slug/SKU clashes on the fields", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const cat = await category();
-    await saveProduct(editor, productInput(cat.id));
-    const clash = await saveProduct(editor, productInput(cat.id, { sku: "ALT-SKU" })).catch(
+    await saveProduct(admin, productInput(cat.id));
+    const clash = await saveProduct(admin, productInput(cat.id, { sku: "ALT-SKU" })).catch(
       (e) => e,
     );
     expect(clash).toBeInstanceOf(AdminError);
@@ -132,10 +151,10 @@ describe("product admin", () => {
   });
 
   it("uploads, reorders, picks the thumbnail and removes images", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const product = await makeProduct();
     for (const color of ["#aa0000", "#00aa00", "#0000aa"])
-      await addProductImage(editor, product.id, new Blob([new Uint8Array(await jpeg(color))]), "");
+      await addProductImage(admin, product.id, new Blob([new Uint8Array(await jpeg(color))]), "");
     const images = async () =>
       (
         await db.productImage.findMany({
@@ -144,11 +163,11 @@ describe("product admin", () => {
         })
       ).map((i) => i.id);
     const [a, b, c] = await images();
-    await reorderProductImages(editor, product.id, [c!, a!, b!]);
+    await reorderProductImages(admin, product.id, [c!, a!, b!]);
     expect(await images()).toEqual([c, a, b]);
-    await setProductThumbnail(editor, product.id, b!);
+    await setProductThumbnail(admin, product.id, b!);
     expect(await images()).toEqual([b, c, a]);
-    await expect(reorderProductImages(editor, product.id, [a!, b!])).rejects.toBeInstanceOf(
+    await expect(reorderProductImages(admin, product.id, [a!, b!])).rejects.toBeInstanceOf(
       AdminError,
     );
 
@@ -156,7 +175,7 @@ describe("product admin", () => {
       where: { id: c! },
       include: { media: true },
     });
-    await removeProductImage(editor, product.id, c!);
+    await removeProductImage(admin, product.id, c!);
     expect(await images()).toEqual([b, a]);
     expect(await readLocalObject(media.media.storageKey)).toBeNull();
     const positions = await db.productImage.findMany({
@@ -164,47 +183,47 @@ describe("product admin", () => {
       select: { position: true },
     });
     expect(positions.map((p) => p.position).sort()).toEqual([0, 1]);
-    for (const id of await images()) await removeProductImage(editor, product.id, id);
+    for (const id of await images()) await removeProductImage(admin, product.id, id);
   });
 
   it("deletes only products that were never ordered", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const ordered = await makeProduct();
     const unused = await makeProduct();
     const buyer = await makeVerifiedUser({ email: "b@example.ro" });
     await placeTestOrder(buyer.id, [ordered.id]);
-    await expect(deleteProduct(editor, ordered.id)).rejects.toThrow("Dezactivează-l");
-    await deleteProduct(editor, unused.id);
+    await expect(deleteProduct(admin, ordered.id)).rejects.toThrow("Dezactivează-l");
+    await deleteProduct(admin, unused.id);
     expect(await db.product.findUnique({ where: { id: unused.id } })).toBeNull();
   });
 });
 
 describe("taxonomy admin", () => {
   it("prevents category cycles and deleting categories in use", async () => {
-    const { editor } = await actors();
+    const { admin } = await actors();
     const root = await category("root");
     const child = await db.category.create({
       data: { slug: "child", name: "Child", parentId: root.id },
     });
     const cycle = await saveTaxonomy(
-      editor,
+      admin,
       "categorii",
       { name: "Root", slug: "root", parentId: child.id },
       root.id,
     ).catch((e) => e);
     expect(cycle).toBeInstanceOf(AdminError);
     expect(cycle.fieldErrors).toHaveProperty("parentId");
-    await expect(deleteTaxonomy(editor, "categorii", root.id)).rejects.toThrow("subcategorii");
+    await expect(deleteTaxonomy(admin, "categorii", root.id)).rejects.toThrow("subcategorii");
     await makeProduct(); // lands in the helper's "test" category
     const used = await db.category.findUniqueOrThrow({ where: { slug: "test" } });
-    await expect(deleteTaxonomy(editor, "categorii", used.id)).rejects.toThrow("produse");
-    await deleteTaxonomy(editor, "categorii", child.id);
+    await expect(deleteTaxonomy(admin, "categorii", used.id)).rejects.toThrow("produse");
+    await deleteTaxonomy(admin, "categorii", child.id);
   });
 
   it("reports duplicate slugs on the slug field", async () => {
-    const { editor } = await actors();
-    await saveTaxonomy(editor, "etichete", { name: "Nou", slug: "nou" });
-    const dup = await saveTaxonomy(editor, "etichete", { name: "Nou 2", slug: "nou" }).catch(
+    const { admin } = await actors();
+    await saveTaxonomy(admin, "etichete", { name: "Nou", slug: "nou" });
+    const dup = await saveTaxonomy(admin, "etichete", { name: "Nou 2", slug: "nou" }).catch(
       (e) => e,
     );
     expect(dup).toBeInstanceOf(AdminError);

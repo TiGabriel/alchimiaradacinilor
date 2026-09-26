@@ -14,6 +14,9 @@ const CLOSED: OrderStatus[] = ["CANCELLED", "REFUNDED"];
 export async function getDashboard(actor: Actor) {
   assertCan(actor, "admin:access");
   const sales = can(actor.roles, "orders:manage");
+  const catalog = can(actor.roles, "catalog:edit");
+  const people = can(actor.roles, "users:manage");
+  const content = can(actor.roles, "content:edit");
   const now = new Date();
   const since = new Date(now.getTime() - DAYS * 86_400_000);
   const before = new Date(since.getTime() - DAYS * 86_400_000);
@@ -30,6 +33,13 @@ export async function getDashboard(actor: Actor) {
     subscribers,
     newCustomers,
     recent,
+    products,
+    activeProducts,
+    users,
+    ordersAllTime,
+    salesAllTime,
+    quizResults,
+    recentUsers,
   ] = await Promise.all([
     sales
       ? db.$queryRaw<Array<{ day: string; revenue: bigint; orders: bigint }>>`
@@ -91,6 +101,22 @@ export async function getDashboard(actor: Actor) {
           },
         })
       : Promise.resolve([]),
+    // All-time totals, each only for the roles allowed to see that area.
+    catalog ? db.product.count() : null,
+    catalog ? db.product.count({ where: { active: true } }) : null,
+    people ? db.user.count() : null,
+    sales ? db.order.count() : null,
+    sales
+      ? db.order.aggregate({ where: { status: { notIn: CLOSED } }, _sum: { total: true } })
+      : null,
+    content ? db.quizResult.count() : null,
+    people
+      ? db.user.findMany({
+          orderBy: { createdAt: "desc" },
+          take: 6,
+          select: { id: true, firstName: true, lastName: true, email: true, createdAt: true },
+        })
+      : Promise.resolve([]),
   ]);
 
   const revenue = current?._sum.total ?? 0;
@@ -135,5 +161,15 @@ export async function getDashboard(actor: Actor) {
     ]),
     lowStock,
     recent,
+    /** All-time figures; null where the role may not see that area. */
+    totals: {
+      products,
+      activeProducts,
+      users,
+      orders: ordersAllTime,
+      revenue: salesAllTime ? (salesAllTime._sum.total ?? 0) : null,
+      quizResults,
+    },
+    recentUsers,
   };
 }

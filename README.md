@@ -135,8 +135,10 @@ ADMIN_EMAIL=you@example.ro ADMIN_PASSWORD='a-long-password-2026' pnpm admin:crea
 
 Creates the account (email marked verified) or promotes an existing one; with only `ADMIN_EMAIL`
 it grants the role to an existing account. Optional: `ADMIN_FIRST_NAME`, `ADMIN_LAST_NAME`.
-Roles: `customer`, `editor` (catalogue and content), `admin` (everything, including orders,
-customers and settings). Non-staff visitors get a 404 on `/admin`.
+Roles: `customer` and `admin` (everything, including orders, customers and settings). The
+`editor` role still exists but currently has no staff rights: the admin area is admin-only.
+Admins reach it from **Panou administrator** in `/cont` and return with **Înapoi la cont**;
+everyone else gets a 404 on `/admin`.
 
 ## Image storage
 
