@@ -2,22 +2,22 @@
 
 ## Phase overview
 
-| Phase | Scope                                                | Status  |
-| ----- | ---------------------------------------------------- | ------- |
-| 1     | Inspection, architecture, foundation                 | Done    |
-| 2     | Design system and global layout                      | Done    |
-| 3     | Catalog, product page, search                        | Done    |
-| 4     | Cart and wishlist                                    | Done    |
-| 5     | Accounts, authentication, consent, legal pages       | Done    |
-| 6     | Recommendation engine, quiz, need discovery          | Done    |
-| 7     | Routines and journal                                 | Done    |
-| 8     | Homepage                                             | Done    |
-| 9     | Checkout, orders, coupons                            | Done    |
-| 10    | Reviews, newsletter, cookie consent, analytics       | Done    |
-| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done    |
-| 12    | Admin part 2 (quiz, content, marketing, settings)    | Done    |
-| 13    | SEO, performance, security, accessibility audit      | Done    |
-| 14    | Final UX review, tests, documentation                | Pending |
+| Phase | Scope                                                | Status |
+| ----- | ---------------------------------------------------- | ------ |
+| 1     | Inspection, architecture, foundation                 | Done   |
+| 2     | Design system and global layout                      | Done   |
+| 3     | Catalog, product page, search                        | Done   |
+| 4     | Cart and wishlist                                    | Done   |
+| 5     | Accounts, authentication, consent, legal pages       | Done   |
+| 6     | Recommendation engine, quiz, need discovery          | Done   |
+| 7     | Routines and journal                                 | Done   |
+| 8     | Homepage                                             | Done   |
+| 9     | Checkout, orders, coupons                            | Done   |
+| 10    | Reviews, newsletter, cookie consent, analytics       | Done   |
+| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done   |
+| 12    | Admin part 2 (quiz, content, marketing, settings)    | Done   |
+| 13    | SEO, performance, security, accessibility audit      | Done   |
+| 14    | Final UX review, tests, documentation                | Done   |
 
 ## Phase 1 — Foundation
 
@@ -400,3 +400,29 @@ Full report with the change list and before/after Lighthouse scores: `docs/AUDIT
   quantity focus ring, logo label-in-name, catalogue heading order; Lighthouse accessibility 100 on
   the four audited pages.
 - Tests: metadata builder, CSP/header builder (unit).
+
+## Phase 13 follow-up
+
+- SEO fields completed: canonical URL and social image (upload) next to title, description and
+  noindex for products, categories, routines and articles (shared `SeoFields` + `upsertSeo`);
+  categories gained SEO editing; the category page and the sitemap use it.
+- Per-IP rate limits on `/api/search` and `/api/analytics`; analytics refuses cross-origin beacons.
+- axe-core on 27 pages (public, cart, checkout, account, admin): heading order and list structure
+  fixed; 0 violations. Query, index and image review in `docs/AUDIT.md`.
+
+## Phase 14 — Final review, tests, documentation
+
+Final report: `docs/FINAL-REPORT.md` (customer review answers, what is production-ready, what
+needs content or credentials, next steps).
+
+- Customer review at 390/820/1440 px of every section. Fixed: "Despre" and "Întrebări frecvente"
+  were placeholders (now real pages; the FAQ is built from the settings and has FAQPage data),
+  English names of the demo oils, inconsistent quiz duration. The unused "coming soon" component
+  was removed.
+- Tests: role/permission matrix and `assertCan` (unit), every admin service refusing customers
+  and editors outside their area (integration). Coverage now spans auth, quiz scoring,
+  recommendations, cart, orders, coupons, permissions and consent: 289 unit + 85 integration tests.
+- `SEED_DEMO=false` seeds taxonomy, quiz, journal categories and settings without demo data.
+- README rewritten (install, env, database, seed, first admin, storage, email, payments, Vercel +
+  Postgres + S3 deployment, DNS for alchimiaradacinilor.ro at hostgate.ro); `.env.example`
+  completed and commented.

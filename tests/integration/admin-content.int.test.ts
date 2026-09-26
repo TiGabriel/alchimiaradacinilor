@@ -262,3 +262,35 @@ describe("SEO fields", () => {
     );
   });
 });
+
+describe("admin permissions across services", () => {
+  it("refuses customers everywhere and editors outside catalogue and content", async () => {
+    const { listAdminOrders } = await import("@/services/admin/orders");
+    const { listCustomers } = await import("@/services/admin/customers");
+    const { listReviewsForModeration } = await import("@/services/admin/moderation");
+    const { listSubscribers } = await import("@/services/admin/newsletter");
+    const { listAdminRoutines } = await import("@/services/admin/content");
+    const { getQuizEditor } = await import("@/services/admin/quiz");
+    const { listTaxonomy } = await import("@/services/admin/taxonomy");
+    const { editor, customer } = await actors();
+
+    const everyone = [
+      (a: Actor) => listAdminOrders(a, {}),
+      (a: Actor) => listCustomers(a, {}),
+      (a: Actor) => listCouponsWithStats(a),
+      (a: Actor) => listSubscribers(a, {}),
+      (a: Actor) => saveSetting(a, "seo", {}),
+      (a: Actor) => listReviewsForModeration(a, "PENDING"),
+      (a: Actor) => listAdminRoutines(a),
+      (a: Actor) => getQuizEditor(a),
+      (a: Actor) => listTaxonomy(a, "categorii"),
+    ];
+    for (const call of everyone)
+      await expect(call(customer)).rejects.toBeInstanceOf(ForbiddenError);
+
+    // Editors: catalogue and content only.
+    for (const call of everyone.slice(0, 5))
+      await expect(call(editor)).rejects.toBeInstanceOf(ForbiddenError);
+    for (const call of everyone.slice(5)) await expect(call(editor)).resolves.toBeDefined();
+  });
+});

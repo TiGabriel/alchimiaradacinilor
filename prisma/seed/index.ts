@@ -224,11 +224,14 @@ async function seedRoutines(ids: {
   return routineIds;
 }
 
-async function seedJournal(ids: {
-  products: Map<string, string>;
-  routines: Map<string, string>;
-  tags: Map<string, string>;
-}) {
+async function seedJournal(
+  ids: {
+    products: Map<string, string>;
+    routines: Map<string, string>;
+    tags: Map<string, string>;
+  },
+  withDemo: boolean,
+) {
   const categoryIds = await upsertBySlug(articleCategories, (c, position) =>
     db.articleCategory.upsert({
       where: { slug: c.slug },
@@ -237,7 +240,7 @@ async function seedJournal(ids: {
     }),
   );
   const now = Date.now();
-  for (const a of articles) {
+  for (const a of withDemo ? articles : []) {
     const data = {
       title: a.title,
       excerpt: a.excerpt,
@@ -280,10 +283,12 @@ async function seedJournal(ids: {
       }),
     ]);
   }
-  return { categories: categoryIds.size, articles: articles.length };
+  return { categories: categoryIds.size, articles: withDemo ? articles.length : 0 };
 }
 
 async function main() {
+  // SEED_DEMO=false: taxonomy, quiz, journal categories and settings only (production).
+  const withDemo = process.env.SEED_DEMO !== "false";
   await seedRoles();
   const categoryIds = await seedCategories();
 
@@ -304,7 +309,7 @@ async function main() {
   const tagIds = await upsertBySlug(tags, (t) =>
     db.tag.upsert({ where: { slug: t.slug }, create: t, update: t }),
   );
-  const brandIds = await upsertBySlug(demoBrands, (b) =>
+  const brandIds = await upsertBySlug(withDemo ? demoBrands : [], (b) =>
     db.brand.upsert({
       where: { slug: b.slug },
       create: { ...b, isDemo: true },
@@ -315,7 +320,7 @@ async function main() {
   // Pass 1: products themselves.
   const productIds = new Map<string, string>();
   const now = Date.now();
-  for (const p of demoProducts) {
+  for (const p of withDemo ? demoProducts : []) {
     const data = {
       name: p.name,
       sku: p.sku,
@@ -343,7 +348,7 @@ async function main() {
   }
 
   // Pass 2: relations (rebuilt from scratch for demo products).
-  for (const p of demoProducts) {
+  for (const p of withDemo ? demoProducts : []) {
     const productId = requireId(productIds, p.slug, "product");
     await db.$transaction([
       db.productTag.deleteMany({ where: { productId } }),
@@ -388,8 +393,13 @@ async function main() {
   }
 
   await seedQuiz({ needs: needIds, aromas: aromaIds, tags: tagIds });
-  const routineIds = await seedRoutines({ products: productIds, needs: needIds, tags: tagIds });
-  const journal = await seedJournal({ products: productIds, routines: routineIds, tags: tagIds });
+  const routineIds = withDemo
+    ? await seedRoutines({ products: productIds, needs: needIds, tags: tagIds })
+    : new Map<string, string>();
+  const journal = await seedJournal(
+    { products: productIds, routines: routineIds, tags: tagIds },
+    withDemo,
+  );
   await seedSettings();
 
   console.log(

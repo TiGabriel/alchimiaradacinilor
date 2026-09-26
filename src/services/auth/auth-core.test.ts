@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { latestConsents, isGranted } from "../consent/latest";
 
 import { hashPassword, verifyAgainstDummy, verifyPassword } from "./password";
-import { can, hasRole } from "./permissions";
+import { assertCan, can, ForbiddenError, hasRole, PERMISSIONS } from "./permissions";
 import { SlidingWindowLimiter, retryAfterText } from "./rate-limit";
 import { generateToken, hashIp, hashToken } from "./tokens";
 
@@ -77,6 +77,25 @@ describe("permissions", () => {
     expect(can(["customer"], "admin:access")).toBe(false);
     expect(can(["editor"], "catalog:edit")).toBe(true);
     expect(can(["editor"], "users:manage")).toBe(false);
+  });
+
+  it("gives editors the catalogue and content, never orders, customers or settings", () => {
+    const allowed = PERMISSIONS.filter((p) => can(["editor"], p));
+    expect(allowed).toEqual(["account:manage-own", "admin:access", "catalog:edit", "content:edit"]);
+    // Several roles combine; a customer who is also an editor gets the editor's rights.
+    expect(can(["customer", "editor"], "content:edit")).toBe(true);
+  });
+
+  it("assertCan throws a ForbiddenError naming the missing permission", () => {
+    const editor = { id: "u1", roles: ["editor"] };
+    expect(() => assertCan(editor, "catalog:edit")).not.toThrow();
+    try {
+      assertCan(editor, "settings:manage");
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ForbiddenError);
+      expect((error as ForbiddenError).permission).toBe("settings:manage");
+    }
   });
 
   it("ignores unknown roles and empty role lists", () => {

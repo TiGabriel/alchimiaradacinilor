@@ -498,3 +498,16 @@ little gain.
 `Button loading` sets `aria-disabled`/`aria-busy` and ignores clicks instead of `disabled`, because
 disabling the focused button sends keyboard focus to `<body>`. Dialogs opened from code restore
 focus to the element that was focused when they opened.
+
+## Phase 14 — Final review
+
+### D-077 · FAQ answers come from the settings
+
+Delivery prices, the free-shipping threshold and payment methods in the FAQ are rendered from the
+same settings as checkout, so the help page cannot contradict the shop after an admin edit.
+
+### D-078 · Production seeds without demo data
+
+`SEED_DEMO=false` keeps the structural data (roles, taxonomy, quiz, journal categories, default
+settings) and skips demo brands, products, routines and articles, so a production database never
+needs a manual demo purge.
