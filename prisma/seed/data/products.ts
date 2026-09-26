@@ -49,7 +49,7 @@ export const demoProducts: DemoProduct[] = [
   {
     slug: "lemon",
     sku: "DEMO-OIL-LEMON",
-    name: "Lemon",
+    name: "Lămâie",
     brand: "botanica-demo",
     category: "uleiuri-citrice",
     productType: "INDIVIDUAL_OIL",
@@ -78,7 +78,7 @@ export const demoProducts: DemoProduct[] = [
   {
     slug: "peppermint",
     sku: "DEMO-OIL-PEPPERMINT",
-    name: "Peppermint",
+    name: "Mentă piperată",
     brand: "botanica-demo",
     category: "uleiuri-din-frunze-si-ierburi",
     productType: "INDIVIDUAL_OIL",
@@ -107,7 +107,7 @@ export const demoProducts: DemoProduct[] = [
   {
     slug: "lavender",
     sku: "DEMO-OIL-LAVENDER",
-    name: "Lavender",
+    name: "Lavandă",
     brand: "botanica-demo",
     category: "uleiuri-din-flori",
     productType: "INDIVIDUAL_OIL",
@@ -136,7 +136,7 @@ export const demoProducts: DemoProduct[] = [
   {
     slug: "tea-tree",
     sku: "DEMO-OIL-TEA-TREE",
-    name: "Tea Tree",
+    name: "Arbore de ceai",
     brand: "botanica-demo",
     category: "uleiuri-din-frunze-si-ierburi",
     productType: "INDIVIDUAL_OIL",
@@ -164,7 +164,7 @@ export const demoProducts: DemoProduct[] = [
   {
     slug: "wild-orange",
     sku: "DEMO-OIL-WILD-ORANGE",
-    name: "Wild Orange",
+    name: "Portocală dulce",
     brand: "botanica-demo",
     category: "uleiuri-citrice",
     productType: "INDIVIDUAL_OIL",

@@ -128,8 +128,7 @@ export function QuizFlow({ quiz }: { quiz: QuizView }) {
           <h1 className="text-display-xl">Hai să găsim aromele potrivite ție</h1>
           <p className="max-w-xl text-lg text-ink-muted">
             {quiz.description ?? "Câteva întrebări simple despre ce îți place și ce cauți."} Durează
-            aproximativ un minut și primești recomandări explicate — știi mereu de ce îți propunem
-            ceva.
+            cam două minute, iar pentru fiecare recomandare îți spunem de ce am ales-o.
           </p>
           <ul className="flex flex-col gap-2 text-ink-muted">
             <li className="flex items-center gap-2">

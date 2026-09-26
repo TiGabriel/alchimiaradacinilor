@@ -22,6 +22,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/quiz",
     "/rutine",
     "/jurnal",
+    "/despre",
+    "/intrebari-frecvente",
     "/contact",
   ];
   const legalPaths = [

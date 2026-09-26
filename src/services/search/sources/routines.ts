@@ -26,7 +26,7 @@ export const routineSource: SearchSource = {
       title: r.title,
       subtitle: r.summary,
       href: `/rutine/${r.slug}`,
-      // Product names make "Lav" find the routines that use Lavender.
+      // Product names make "lav" find the routines that use Lavandă.
       keywords: [
         ...r.needs.map((n) => n.need.name),
         ...r.tags.map((t) => t.tag.name),
