@@ -6,6 +6,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache/turbopack/**"
 
 # Production deploys apply pending migrations first (DIRECT_DATABASE_URL, the non-pooled URL).
 # Deploy previews and branch deploys are not migrated: keep them off while they share the
