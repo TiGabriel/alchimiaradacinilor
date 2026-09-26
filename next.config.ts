@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
   experimental: {
     // Barrel packages not in Next's default list: import only what is used.
     optimizePackageImports: ["radix-ui"],
-    // Review photos go through a Server Action (images are capped at 5 MB in validation).
+    // Review photos go through a Server Action (images are capped at 4 MB, src/validation/limits.ts).
     serverActions: { bodySizeLimit: "6mb" },
   },
   images: {

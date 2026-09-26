@@ -33,7 +33,7 @@ export async function uploadSiteImage(actor: Actor, purpose: keyof typeof IMAGE_
   const rules = IMAGE_RULES[purpose];
   const stored = await storeImage(file, {
     folder: "site",
-    maxBytes: 5 * 1024 * 1024,
+    maxBytes: 4 * 1024 * 1024,
     maxDimension: rules.maxDimension,
     formats: [...rules.formats],
   });

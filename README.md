@@ -31,6 +31,8 @@ newsletter and a full admin.
 - [Email](#email)
 - [Payments](#payments)
 - [Production deployment (Vercel + Postgres + S3)](#production-deployment-vercel--postgres--s3)
+- [Hosting on Netlify (+ Neon Postgres)](#hosting-on-netlify--neon-postgres)
+- [Self-hosting on one server (Oracle Cloud Always Free)](#self-hosting-on-one-server-oracle-cloud-always-free)
 - [Domain: alchimiaradacinilor.ro at hostgate.ro](#domain-alchimiaradacinilorro-at-hostgatero)
 - [Scripts](#scripts)
 - [Project structure](#project-structure)
@@ -226,6 +228,75 @@ Security headers, the nonce-based Content Security Policy and HSTS are sent auto
 and `upgrade-insecure-requests` when `APP_URL` is `https`). Rate limits are kept in memory per
 server instance — enough against casual abuse; for stronger guarantees on serverless, move
 `SlidingWindowLimiter` to a shared store (e.g. Upstash Redis).
+
+## Hosting on Netlify (+ Neon Postgres)
+
+`netlify.toml` configures the build; Netlify's Next.js adapter is picked up automatically.
+Uploaded images go to **Netlify Blobs** (`STORAGE_DRIVER=netlify`), served by `/uploads/…`.
+
+1. **Database** — create a [Neon](https://neon.tech) project (PostgreSQL 16) in **AWS US East 2
+   (Ohio)**: on the Free plan Netlify runs functions in Ohio (`cmh`), and the database must be
+   next to them. (Netlify Pro can move functions to Frankfurt; then create the database in
+   `aws-eu-central-1` instead.) Copy both connection strings: **pooled** (host contains
+   `-pooler`) and **direct**.
+2. **Site** — Netlify → _Add new project_ → _Import an existing project_ → GitHub → this
+   repository, production branch as needed. In _Deploy Previews_ / _Branch deploys_ choose
+   **none**: previews would use the production database.
+3. **Environment variables** (Site configuration → Environment variables, or `netlify env:set`):
+
+   ```text
+   DATABASE_URL=postgresql://…-pooler…/neondb?sslmode=require
+   DIRECT_DATABASE_URL=postgresql://…(no -pooler)…/neondb?sslmode=require
+   APP_URL=https://<site>.netlify.app          # later https://alchimiaradacinilor.ro
+   AUTH_SECRET=<openssl rand -base64 32>
+   STORAGE_DRIVER=netlify
+   EMAIL_PROVIDER=resend                        # or smtp + SMTP_*
+   EMAIL_FROM=Alchimia Rădăcinilor <salut@alchimiaradacinilor.ro>
+   RESEND_API_KEY=re_…
+   ```
+
+   `APP_URL` is read at build time too (security headers): trigger a new deploy after changing it.
+
+4. **Deploy** — every push to the production branch builds on Netlify; production builds run
+   `pnpm db:deploy` (with `DIRECT_DATABASE_URL`) before `pnpm build`.
+5. **First data** — once, from your machine with the **direct** URL:
+
+   ```bash
+   DATABASE_URL="postgresql://…direct…" SEED_DEMO=false pnpm db:seed
+   DATABASE_URL="postgresql://…direct…" ADMIN_EMAIL=… ADMIN_PASSWORD='…' pnpm admin:create
+   ```
+
+6. **Settings and domain** — fill in `/admin/setari`; add the domain under _Domain management_
+   (at Hostgate: `A @ 75.2.60.5`, `CNAME www <site>.netlify.app`), then set `APP_URL` to it and
+   redeploy.
+
+Limits to know: uploads are capped at 4 MB (Netlify request limit), rate limits are per function
+instance (see above), and personal data is stored in the USA on the Free plan — say so in the
+privacy policy (Neon and Netlify as processors).
+
+## Self-hosting on one server (Oracle Cloud Always Free)
+
+Alternative to Vercel with no monthly cost: the app, PostgreSQL and uploaded images
+(`STORAGE_DRIVER=local`) on one Ubuntu 24.04 VM. Scripts are in [`deploy/`](deploy/).
+
+1. **Server** — in Oracle Cloud create a Compute instance: image **Ubuntu 24.04**, shape
+   **VM.Standard.A1.Flex** (Always Free, e.g. 2 OCPU / 12 GB), a public IPv4 address, and the
+   public key `~/.ssh/alchimia_oracle.pub` (create it with
+   `ssh-keygen -t ed25519 -f ~/.ssh/alchimia_oracle`). In the subnet's **Security List** add
+   ingress rules for TCP **80** and **443** from `0.0.0.0/0`.
+2. **Target** — write `ubuntu@<public ip>` to `deploy/.target` (git-ignored).
+3. **Setup** — `bash deploy/deploy.sh setup` installs Node 22, pnpm, PostgreSQL 16, nginx and
+   certbot, opens the firewall, creates the database, writes `/srv/alchimia/shared/.env` (random
+   database password and `AUTH_SECRET`), a systemd service and daily backups to
+   `/srv/alchimia/backups` (14 days; copy them off the server from time to time).
+4. **First release** — `bash deploy/deploy.sh --seed` (later releases: `bash deploy/deploy.sh`).
+   Each release is built on the server in `/srv/alchimia/releases/<timestamp>`, migrated, then
+   `current` is switched and the service restarted; the last three releases are kept.
+5. **DNS** — at Hostgate point `@` and `www` to the server with **A** records (see below, but use
+   the server IP instead of Vercel's records), then `bash deploy/deploy.sh https`.
+6. **Admin** — `ADMIN_EMAIL=… ADMIN_PASSWORD='…' bash deploy/deploy.sh admin`.
+7. **Email** — edit `/srv/alchimia/shared/.env` on the server (`EMAIL_PROVIDER=smtp`, `SMTP_*`,
+   `EMAIL_FROM`) and redeploy. `bash deploy/deploy.sh logs` shows the app log.
 
 ## Domain: alchimiaradacinilor.ro at hostgate.ro
 

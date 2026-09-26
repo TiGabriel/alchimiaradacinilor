@@ -12,6 +12,7 @@ import {
 } from "../images";
 
 import { localStorageDriver } from "./local";
+import { netlifyStorageDriver } from "./netlify";
 import { s3StorageDriver } from "./s3";
 import type { StorageDriver } from "./types";
 
@@ -21,6 +22,7 @@ export class StorageError extends Error {}
 
 export function resolveStorage(config: ServerEnv): StorageDriver {
   if (config.STORAGE_DRIVER === "local") return localStorageDriver;
+  if (config.STORAGE_DRIVER === "netlify") return netlifyStorageDriver;
   const missing = (
     ["S3_REGION", "S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY", "S3_PUBLIC_URL"] as const
   ).filter((k) => !config[k]);

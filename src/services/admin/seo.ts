@@ -43,7 +43,7 @@ export async function uploadSeoImage(actor: Actor, file: Blob) {
     throw new ForbiddenError("catalog:edit");
   const stored = await storeImage(file, {
     folder: "seo",
-    maxBytes: 5 * 1024 * 1024,
+    maxBytes: 4 * 1024 * 1024,
     maxDimension: 1200,
     formats: ["jpeg", "png", "webp"],
   });

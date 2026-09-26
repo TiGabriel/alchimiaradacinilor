@@ -25,7 +25,7 @@ export type ManagedImage = {
   height: number | null;
 };
 
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = 4 * 1024 * 1024;
 
 /** Upload, order, alt text and thumbnail choice. Position 1 is the product's thumbnail. */
 export function ImageManager({ productId, images }: { productId: string; images: ManagedImage[] }) {
@@ -51,7 +51,7 @@ export function ImageManager({ productId, images }: { productId: string; images:
       for (const file of list) {
         setProgress(`Se încarcă ${done + 1} din ${list.length}…`);
         if (file.size > MAX_BYTES) {
-          toast({ title: `${file.name}: imaginea poate avea cel mult 5 MB.`, variant: "error" });
+          toast({ title: `${file.name}: imaginea poate avea cel mult 4 MB.`, variant: "error" });
           continue;
         }
         const data = new FormData();
@@ -200,7 +200,7 @@ export function ImageManager({ productId, images }: { productId: string; images:
         </label>
         <p className="text-xs text-ink-muted" aria-live="polite">
           {progress ??
-            "JPG, PNG, WebP sau AVIF, max. 5 MB fiecare, până la 12 imagini. Convertim automat în WebP."}
+            "JPG, PNG, WebP sau AVIF, max. 4 MB fiecare, până la 12 imagini. Convertim automat în WebP."}
         </p>
       </div>
     </div>

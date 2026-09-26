@@ -20,7 +20,7 @@ function slugClash(error: unknown): never {
 
 export async function uploadCoverImage(actor: Actor, file: Blob, folder: "routines" | "articles") {
   assertCan(actor, "content:edit");
-  const stored = await storeImage(file, { folder, maxBytes: 5 * 1024 * 1024, maxDimension: 2400 });
+  const stored = await storeImage(file, { folder, maxBytes: 4 * 1024 * 1024, maxDimension: 2400 });
   const media = await db.mediaAsset.create({
     data: {
       storageKey: stored.key,

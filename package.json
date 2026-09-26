@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1141.0",
+    "@netlify/blobs": "^11.1.1",
     "@node-rs/argon2": "^2.2.1",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
@@ -66,6 +67,10 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.2",
+    "mysql2": "^3.24.4"
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {

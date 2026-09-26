@@ -10,6 +10,14 @@ describe("parseServerEnv", () => {
     expect(env.APP_URL).toBe("http://localhost:3000");
   });
 
+  it("accepts the Netlify Blobs storage driver", () => {
+    const env = parseServerEnv({
+      DATABASE_URL: "postgresql://u:p@localhost:5432/db",
+      STORAGE_DRIVER: "netlify",
+    });
+    expect(env.STORAGE_DRIVER).toBe("netlify");
+  });
+
   it("requires AUTH_SECRET in production", () => {
     expect(() =>
       parseServerEnv({

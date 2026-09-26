@@ -105,5 +105,5 @@ export const productFormSchema = z
 export type ProductFormInput = z.input<typeof productFormSchema>;
 export type ProductFormValues = z.output<typeof productFormSchema>;
 
-export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const PRODUCT_IMAGE_MAX_BYTES = 4 * 1024 * 1024;
 export const imageAltSchema = z.string().trim().max(160, "Cel mult 160 de caractere.");

@@ -48,7 +48,7 @@ export function ReviewForm({
     setPreview(null);
     if (!file) return;
     if (file.size > REVIEW_IMAGE_MAX_BYTES) {
-      setImageError("Imaginea poate avea cel mult 5 MB.");
+      setImageError("Imaginea poate avea cel mult 4 MB.");
       e.target.value = "";
       return;
     }
@@ -183,7 +183,7 @@ export function ReviewForm({
           />
         </label>
         <p id={`${id}-image-hint`} className="text-xs text-ink-muted">
-          JPG, PNG sau WebP, cel mult 5 MB. Eliminăm automat datele ascunse din fișier (ex.
+          JPG, PNG sau WebP, cel mult 4 MB. Eliminăm automat datele ascunse din fișier (ex.
           locația).
         </p>
         {imageError || state.errors?.image ? (
