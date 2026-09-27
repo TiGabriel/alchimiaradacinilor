@@ -2,30 +2,24 @@ import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { Blossom, Leaf, ROOT_PATHS, SPRIG_PATHS } from "@/components/botanical";
-import { BotanicalFloat, DrawLine, Parallax } from "@/components/motion";
+import { Blossom, Leaf } from "@/components/botanical";
+import { LogoGraphic } from "@/components/brand/logo";
+import { BotanicalFloat, Parallax } from "@/components/motion";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import type { SettingValue } from "@/validation/settings";
 
-type HeroProps = { image: { src: string; alt: string } | null };
-
-/**
- * The sprig and its roots are drawn in one shared viewBox, centred on x = 100, so the
- * stem always grows out of the root axis at any size: the sprig's stem foot (60, 150)
- * lands on the roots' taproot (100, 60). Both layers use the same box, anchored to the
- * bottom of the arch so the root tips run off its edge.
- */
-const PLANT_VIEWBOX = "0 0 200 252";
-const SPRIG_TRANSFORM = "translate(22 -24) scale(1.3)";
-const ROOTS_TRANSFORM = "translate(0 111)";
-const PLANT_BOX = "absolute left-0 -bottom-[4%] w-full";
+type HeroProps = {
+  image: { src: string; alt: string } | null;
+  brand: SettingValue<"brand">;
+};
 
 /**
  * Editorial hero. The heading is never animated (it is the LCP element when no photo
  * is configured); the rest rises in with a CSS animation that starts at first paint.
- * A configured photo is served by next/image with high priority.
+ * A configured photo is served by next/image with high priority; without one the arch
+ * shows the site logo, growing in from its roots once on load (`animate-logo-grow`).
  */
-export function HomeHero({ image }: HeroProps) {
+export function HomeHero({ image, brand }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="container-page grid items-center gap-10 pt-8 pb-14 md:pt-14 lg:grid-cols-[1.1fr_1fr] lg:gap-10 lg:pb-24">
@@ -67,23 +61,13 @@ export function HomeHero({ image }: HeroProps) {
                   className="object-cover"
                 />
               ) : (
-                <>
-                  <DrawLine
-                    d={ROOT_PATHS}
-                    viewBox={PLANT_VIEWBOX}
-                    transform={ROOTS_TRANSFORM}
-                    className={cn(PLANT_BOX, "text-forest/25")}
-                    strokeWidth={0.8}
-                    duration={3}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <LogoGraphic
+                    brand={brand}
+                    sizes="(min-width: 1024px) 24vw, (min-width: 640px) 32vw, 50vw"
+                    className="aspect-square w-[62%] origin-bottom animate-logo-grow object-contain text-forest motion-reduce:animate-none"
                   />
-                  <DrawLine
-                    d={SPRIG_PATHS}
-                    viewBox={PLANT_VIEWBOX}
-                    transform={SPRIG_TRANSFORM}
-                    className={cn(PLANT_BOX, "text-forest/70")}
-                    strokeWidth={0.9}
-                  />
-                </>
+                </div>
               )}
             </div>
           </Parallax>

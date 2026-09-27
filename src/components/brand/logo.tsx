@@ -42,6 +42,36 @@ function Mark({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Just the logo graphic, without the wordmark text or link: the uploaded logo image
+ * when there is one, the seedling mark otherwise. Decorative — the header logo
+ * already carries the site name.
+ */
+export function LogoGraphic({
+  brand,
+  sizes,
+  className,
+}: {
+  brand: SettingValue<"brand">;
+  /** `sizes` for an uploaded logo image, which is otherwise sized from its intrinsic width. */
+  sizes?: string;
+  className?: string;
+}) {
+  if (brand.logo.kind === "image") {
+    return (
+      <Image
+        src={brand.logo.src}
+        alt=""
+        width={brand.logo.width}
+        height={brand.logo.height}
+        sizes={sizes}
+        className={cn("h-auto w-full", className)}
+      />
+    );
+  }
+  return <Mark className={className} />;
+}
+
 const sizes = {
   sm: { mark: "size-7", primary: "text-lg", secondary: "text-[0.5625rem]" },
   md: { mark: "size-9", primary: "text-[1.375rem]", secondary: "text-[0.625rem]" },

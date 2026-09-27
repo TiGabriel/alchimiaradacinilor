@@ -87,7 +87,7 @@ export default async function HomePage() {
   return (
     <>
       <JsonLd data={structuredData} />
-      <HomeHero image={settings.homepage.heroImage} />
+      <HomeHero image={settings.homepage.heroImage} brand={settings.brand} />
 
       {user ? <PersonalRowSection firstName={user.firstName} row={personal} /> : null}
 

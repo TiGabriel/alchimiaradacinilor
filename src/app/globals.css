@@ -63,6 +63,7 @@
   /* Motion */
   --ease-botanical: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-grow: cubic-bezier(0.4, 0.1, 0.2, 1); /* even build-up, soft landing */
 
   --animate-fade-in: fade-in 220ms var(--ease-soft);
   --animate-fade-out: fade-out 160ms var(--ease-soft);
@@ -84,6 +85,9 @@
   --animate-pop: pop 360ms var(--ease-botanical);
   /* Hero entrance: pure CSS so it starts at first paint (no hydration wait). */
   --animate-rise: rise 800ms var(--ease-botanical) both;
+  /* Hero logo: grows in from its roots. Fill mode `backwards` only, so once it ends the
+     mask, blur and transform are gone and the logo is the plain, sharp graphic. */
+  --animate-logo-grow: logo-grow 1600ms var(--ease-grow) 150ms backwards;
 
   @keyframes fade-in {
     from {
@@ -173,6 +177,36 @@
     from {
       opacity: 0;
       transform: translateY(14px);
+    }
+  }
+  /* A feathered mask (opaque at the bottom, clear above) slides up over the logo, so
+     its lines appear from the base upwards: roots, ground line, stem, then leaves.
+     The mask layer is 2.4× the element's height; at 0% the element sits in its clear
+     part, at 100% in its opaque part. A soft sage glow and blur clear as it settles. */
+  @keyframes logo-grow {
+    0% {
+      opacity: 0;
+      transform: translateY(0.75rem) scale(0.96);
+      filter: blur(6px) drop-shadow(0 0 0.75rem rgb(141 163 138 / 0.7));
+      mask-image: linear-gradient(to top, #000 42%, transparent 57%);
+      mask-size: 100% 240%;
+      mask-repeat: no-repeat;
+      mask-position: 0 0;
+    }
+    12% {
+      opacity: 1;
+    }
+    70% {
+      filter: blur(0.5px) drop-shadow(0 0 0.5rem rgb(141 163 138 / 0.35));
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+      filter: blur(0) drop-shadow(0 0 0 rgb(141 163 138 / 0));
+      mask-image: linear-gradient(to top, #000 42%, transparent 57%);
+      mask-size: 100% 240%;
+      mask-repeat: no-repeat;
+      mask-position: 0 100%;
     }
   }
   @keyframes pop {
