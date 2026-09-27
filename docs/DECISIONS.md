@@ -5,12 +5,11 @@ context → decision → consequences.
 
 ## Phase 1 — Foundation
 
-### D-001 · No CLAUDE.md existed; phases confirmed implicitly
+### D-001 · Project guide and defaults
 
-The repository was empty and had no CLAUDE.md. The user moved on to Phase 2–4
-prompts without answering the Phase 1 questions, which was taken as confirmation
-of the proposed defaults (D-003, D-004, D-010). A draft CLAUDE.md was written from
-the Phase 1 plan; replace or merge it with the owner's version when available.
+The project started from an empty repository. Architecture, content and design rules
+are written down in `CONTRIBUTING.md`; the proposed defaults (D-003, D-004, D-010)
+were adopted.
 
 ### D-002 · Stack
 
@@ -420,7 +419,7 @@ the check by forgetting it, and the rules are covered by integration tests witho
 ### D-064 · Copy is checked for medical claims at write time
 
 Product, taxonomy and (next phase) content validation refuse common Romanian therapeutic wording
-(`lib/claims.ts`). It is a guard rail for the CLAUDE.md rule, not a substitute for editorial review.
+(`lib/claims.ts`). It is a guard rail for the content rule in `CONTRIBUTING.md`, not a substitute for editorial review.
 
 ### D-065 · Deactivate instead of delete for anything with history
 

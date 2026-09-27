@@ -53,7 +53,7 @@ newsletter and a full admin.
 | Tests      | Vitest (unit) + Vitest against a real Postgres (integration)                  |
 | Tooling    | pnpm 10, ESLint 9, Prettier                                                   |
 
-Architecture, content and design rules: [`CLAUDE.md`](CLAUDE.md). Decisions and their reasons:
+Architecture, content and design rules: [`CONTRIBUTING.md`](CONTRIBUTING.md). Decisions and their reasons:
 [`docs/DECISIONS.md`](docs/DECISIONS.md). Audit results: [`docs/AUDIT.md`](docs/AUDIT.md).
 Payments: [`docs/PAYMENTS.md`](docs/PAYMENTS.md). Final status: [`docs/FINAL-REPORT.md`](docs/FINAL-REPORT.md).
 

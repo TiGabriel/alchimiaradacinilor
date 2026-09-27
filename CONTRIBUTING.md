@@ -1,10 +1,4 @@
-@AGENTS.md
-
-# Alchimia Rădăcinilor — project guide
-
-> **Draft.** This file was created by Claude because no CLAUDE.md existed in the
-> repository. If you have your own version, replace or merge it — the rules and
-> phase checklist below are Claude's proposal from Phase 1.
+# Alchimia Rădăcinilor — development guide
 
 Romanian e-commerce site for essential oils, blends, kits, diffusers, accessories
 and care products, with an aroma quiz, routines and a journal (blog).
@@ -114,7 +108,7 @@ Motion: use `src/lib/motion` / `components/motion`. Every animation must respect
 Accessibility: keyboard reachable, visible focus rings, labelled controls,
 AA contrast, `aria-live` for cart/toast updates.
 
-## Phase checklist (run at the end of every phase)
+## Release checklist (run before every release)
 
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm lint` passes

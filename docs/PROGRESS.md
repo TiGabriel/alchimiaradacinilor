@@ -30,11 +30,10 @@
 - Idempotent seed: roles, 6 categories + 5 sample subcategories, 8 needs, 8 aroma
   profiles, 6 tags, 2 fictional brands, 16 demo products (oils, blends, kits,
   diffusers, accessories, care) with tags, needs, aromas, related products and kit contents.
-- `.env.example`, README, CLAUDE.md (draft), this file and DECISIONS.md.
+- `.env.example`, README, CONTRIBUTING.md, this file and DECISIONS.md.
 
 **Open items**
 
-- Replace the draft CLAUDE.md with the owner's version if one exists.
 - Real product data, images and official specs before launch (demo purge: delete rows
   where `isDemo = true`).
 

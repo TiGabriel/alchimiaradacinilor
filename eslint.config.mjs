@@ -2,7 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
-// Layering (see CLAUDE.md): app → features → services → lib.
+// Layering (see CONTRIBUTING.md): app → features → services → lib.
 // Services and lib must stay free of UI code; UI primitives must not fetch data.
 const noUiInServerLayers = {
   patterns: [
