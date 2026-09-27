@@ -65,7 +65,7 @@ export function HomeHero({ image, brand }: HeroProps) {
                   <LogoGraphic
                     brand={brand}
                     sizes="(min-width: 1024px) 24vw, (min-width: 640px) 32vw, 50vw"
-                    className="aspect-square w-[62%] origin-bottom animate-logo-grow object-contain text-forest motion-reduce:animate-none"
+                    className="aspect-square w-[86%] origin-bottom animate-logo-grow object-contain text-forest motion-reduce:animate-none"
                   />
                 </div>
               )}
