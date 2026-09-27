@@ -1,0 +1,181 @@
+import sharp from "sharp";
+import { describe, expect, it } from "vitest";
+
+import {
+  composeFinal,
+  encodeWebp,
+  placement,
+  prepareInputs,
+} from "../../scripts/product-images/compose";
+import {
+  buildPrompt,
+  CANVAS,
+  CROP_SAFE,
+  LAYOUT,
+  outputFilename,
+  parseSourceFilename,
+  PRODUCT_PHOTOS,
+} from "../../scripts/product-images/manifest";
+
+describe("parseSourceFilename", () => {
+  it("reads a name with the quantity glued to it", () => {
+    expect(parseSourceFilename("lavender15ml-large-500x1350-eu.png")).toEqual({
+      name: "lavender",
+      quantity: "15ml",
+    });
+    expect(parseSourceFilename("wildorange15ml-large-500x1350-eu.png")).toEqual({
+      name: "wildorange",
+      quantity: "15ml",
+    });
+  });
+
+  it("reads a name followed by the quantity", () => {
+    expect(parseSourceFilename("Lavanda_10ml.png")).toEqual({ name: "Lavanda", quantity: "10ml" });
+    expect(parseSourceFilename("Portocala_15ml.png")).toEqual({
+      name: "Portocala",
+      quantity: "15ml",
+    });
+    expect(parseSourceFilename("Menta-5 ML.webp")).toEqual({ name: "Menta", quantity: "5ml" });
+  });
+
+  it("does not guess when the name or the quantity is missing", () => {
+    expect(parseSourceFilename("lavender.png")).toBeNull();
+    expect(parseSourceFilename("15ml.png")).toBeNull();
+    expect(parseSourceFilename("IMG_2041.jpg")).toBeNull();
+  });
+});
+
+describe("outputFilename", () => {
+  it("follows <ProductName>_<Quantity>_2000x2000.webp", () => {
+    expect(outputFilename("Lavanda", "10ml")).toBe("Lavanda_10ml_2000x2000.webp");
+    expect(outputFilename("WildOrange", "15ml")).toBe("WildOrange_15ml_2000x2000.webp");
+  });
+});
+
+describe("PRODUCT_PHOTOS", () => {
+  it("takes every name and quantity from its filename, without inventing any", () => {
+    for (const photo of PRODUCT_PHOTOS) {
+      const parsed = parseSourceFilename(photo.source);
+      expect(parsed, photo.source).not.toBeNull();
+      expect(photo.productName.toLowerCase()).toBe(parsed!.name.toLowerCase());
+      expect(photo.quantity).toBe(parsed!.quantity);
+    }
+  });
+
+  it("gives every image its own source, output and product", () => {
+    const unique = (values: unknown[]) => new Set(values).size === values.length;
+    expect(unique(PRODUCT_PHOTOS.map((p) => p.source))).toBe(true);
+    expect(unique(PRODUCT_PHOTOS.map((p) => outputFilename(p.productName, p.quantity)))).toBe(true);
+    const slugs = PRODUCT_PHOTOS.map((p) => p.productSlug).filter(Boolean);
+    expect(unique(slugs)).toBe(true);
+  });
+
+  it("shares one photography direction and adds the product's own scene", () => {
+    const [a, b] = PRODUCT_PHOTOS;
+    const shared = buildPrompt(a!).split("\n\n")[0];
+    expect(buildPrompt(b!).split("\n\n")[0]).toBe(shared);
+    expect(buildPrompt(a!)).toContain(a!.scene);
+  });
+});
+
+describe("placement", () => {
+  it("puts every product at the same height and baseline, inside every site crop", () => {
+    // The real originals are 500×1350 with the product 496–500 × 1302–1319 px.
+    for (const box of [
+      { left: 0, top: 14, width: 500, height: 1318 },
+      { left: 3, top: 21, width: 496, height: 1302 },
+    ]) {
+      const at = placement(box);
+      expect(at.height).toBe(LAYOUT.productHeight);
+      expect(at.top + at.height).toBe(LAYOUT.baseline);
+      expect(at.left).toBeGreaterThanOrEqual(CROP_SAFE.left);
+      expect(at.left + at.width).toBeLessThanOrEqual(CROP_SAFE.right);
+      expect(at.top).toBeGreaterThanOrEqual(CROP_SAFE.top);
+      expect(at.top + at.height).toBeLessThanOrEqual(CROP_SAFE.bottom);
+    }
+  });
+
+  it("never enlarges a product", () => {
+    expect(() => placement({ left: 0, top: 0, width: 200, height: 600 })).toThrow();
+  });
+});
+
+/** A 500×1350 cut-out: a two-colour "bottle" on a transparent canvas. */
+async function syntheticSource() {
+  const bottle = await sharp({
+    create: {
+      width: 400,
+      height: 1300,
+      channels: 4,
+      background: { r: 90, g: 50, b: 20, alpha: 1 },
+    },
+  })
+    .composite([
+      {
+        input: await sharp({
+          create: { width: 300, height: 500, channels: 4, background: "#b98ce0" },
+        })
+          .png()
+          .toBuffer(),
+        left: 50,
+        top: 600,
+      },
+    ])
+    .png()
+    .toBuffer();
+  return sharp({
+    create: { width: 500, height: 1350, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([{ input: bottle, left: 50, top: 25 }])
+    .png()
+    .toBuffer();
+}
+
+describe("compose", () => {
+  it("masks the product (kept) and leaves the rest to be painted", async () => {
+    const { image, mask, at } = await prepareInputs(await syntheticSource());
+    for (const buffer of [image, mask]) {
+      const meta = await sharp(buffer).metadata();
+      expect([meta.width, meta.height]).toEqual([CANVAS, CANVAS]);
+    }
+    const { data, info } = await sharp(mask).raw().toBuffer({ resolveWithObject: true });
+    const alphaAt = (x: number, y: number) => data[(y * info.width + x) * info.channels + 3];
+    const centre = [
+      Math.floor(at.left + at.width / 2),
+      Math.floor(at.top + at.height / 2),
+    ] as const;
+    expect(alphaAt(...centre)).toBe(255);
+    expect(alphaAt(100, 100)).toBe(0);
+  });
+
+  it("puts the original product pixels back over whatever the model returns", async () => {
+    const source = await syntheticSource();
+    const { image, at } = await prepareInputs(source);
+    // A "model output" that also repainted the product area.
+    const generated = await sharp({
+      create: { width: 1024, height: 1024, channels: 3, background: "#3a7d44" },
+    })
+      .png()
+      .toBuffer();
+    const final = await composeFinal(generated, source);
+
+    const read = (buffer: Buffer) =>
+      sharp(buffer)
+        .removeAlpha()
+        .extract({
+          left: at.left + 20,
+          top: at.top + 20,
+          width: at.width - 40,
+          height: at.height - 40,
+        })
+        .raw()
+        .toBuffer();
+    expect((await read(final)).equals(await read(image))).toBe(true);
+
+    const webp = await encodeWebp(final);
+    const meta = await sharp(webp).metadata();
+    expect(meta).toMatchObject({ format: "webp", width: CANVAS, height: CANVAS });
+    expect(meta.exif).toBeUndefined();
+    expect(meta.icc).toBeUndefined();
+  });
+});

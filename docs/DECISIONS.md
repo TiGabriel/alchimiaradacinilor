@@ -521,3 +521,13 @@ the link is only a shortcut, rendered when the server-side check (`admin:access`
 `editor` role keeps its key in the database but has no staff rights: every admin permission,
 including catalogue and content, belongs to `admin` only, so no other role can call admin actions
 directly either.
+
+### D-080 · Product photography keeps the real product pixels
+
+Product photos are generated around the producer's original cut-out, never instead of it. The
+image model receives the product in place with a mask and paints only the environment; the
+script then composites the original pixels back at the same place, so the label, logo and bottle
+cannot drift even when the model repaints the masked area. Every image shares one scale, baseline
+and photography direction (`scripts/product-images`), and the product stays inside the crops the
+site applies to square images (4:5 cards, 4:3 quick view). Finished images go through the normal
+admin upload, so no second image system exists.

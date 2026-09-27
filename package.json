@@ -22,6 +22,7 @@
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "admin:create": "tsx scripts/create-admin.ts",
+    "images:products": "tsx scripts/product-images/generate.ts",
     "test:integration": "vitest run --config vitest.integration.config.mts"
   },
   "dependencies": {

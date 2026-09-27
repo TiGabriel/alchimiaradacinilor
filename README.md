@@ -360,9 +360,31 @@ first.
 | `pnpm db:reset`         | Drop, re-migrate and re-seed (development)                    |
 | `pnpm db:studio`        | Prisma Studio                                                 |
 | `pnpm admin:create`     | Create or promote an administrator                            |
+| `pnpm images:products`  | Product photography from the real product images (see below)  |
 
 Integration tests apply the migrations to `DATABASE_URL_TEST` themselves before running and
 truncate its tables between tests — never point it at a database you care about.
+
+## Product photography
+
+`pnpm images:products` turns the original product images in `doTerra uleiuri esentiale poze/`
+into 2000×2000 WebP photographs: the real product in a generated botanical environment, all in
+one consistent style (same camera, light, scale and baseline). The originals are only read.
+
+- `scripts/product-images/manifest.ts` lists every original with its product name and quantity
+  (taken from the filename), the matching product slug, a suggested alt text and the scene; the
+  photography direction shared by all images is `STYLE` in the same file.
+- `pnpm images:products --prepare` writes, per product, what the model receives — the product in
+  place (`input.png`), the edit mask (`mask.png`) and the prompt — to
+  `storage/product-images/work/` for review. No API call.
+- `pnpm images:products` (needs `OPENAI_API_KEY`) generates every missing image to
+  `storage/product-images/<ProductName>_<Quantity>_2000x2000.webp`. `--only lavender,lemon`
+  limits the run, `--force` regenerates existing files. The model paints only the environment;
+  the original product pixels are then composited back, so the bottle, cap, label and logo are
+  exactly those of the source image.
+- Review each result, then upload it to its product in **Admin → Produse → Imagini** (position 0
+  is the thumbnail used by cards). Products marked `productSlug: null` in the manifest do not
+  exist in the catalogue yet.
 
 ## Project structure
 
