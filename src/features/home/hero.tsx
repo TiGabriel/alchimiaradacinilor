@@ -5,8 +5,20 @@ import Link from "next/link";
 import { Blossom, Leaf, ROOT_PATHS, SPRIG_PATHS } from "@/components/botanical";
 import { BotanicalFloat, DrawLine, Parallax } from "@/components/motion";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type HeroProps = { image: { src: string; alt: string } | null };
+
+/**
+ * The sprig and its roots are drawn in one shared viewBox, centred on x = 100, so the
+ * stem always grows out of the root axis at any size: the sprig's stem foot (60, 150)
+ * lands on the roots' taproot (100, 60). Both layers use the same box, anchored to the
+ * bottom of the arch so the root tips run off its edge.
+ */
+const PLANT_VIEWBOX = "0 0 200 252";
+const SPRIG_TRANSFORM = "translate(22 -24) scale(1.3)";
+const ROOTS_TRANSFORM = "translate(0 111)";
+const PLANT_BOX = "absolute left-0 -bottom-[4%] w-full";
 
 /**
  * Editorial hero. The heading is never animated (it is the LCP element when no photo
@@ -57,27 +69,25 @@ export function HomeHero({ image }: HeroProps) {
               ) : (
                 <>
                   <DrawLine
-                    d={SPRIG_PATHS}
-                    viewBox="0 0 120 160"
-                    className="absolute inset-x-[18%] top-[14%] h-[70%] text-forest/70"
-                    strokeWidth={0.9}
-                  />
-                  <DrawLine
                     d={ROOT_PATHS}
-                    viewBox="0 0 200 140"
-                    className="absolute inset-x-0 -bottom-[4%] w-full text-forest/25"
+                    viewBox={PLANT_VIEWBOX}
+                    transform={ROOTS_TRANSFORM}
+                    className={cn(PLANT_BOX, "text-forest/25")}
                     strokeWidth={0.8}
                     duration={3}
+                  />
+                  <DrawLine
+                    d={SPRIG_PATHS}
+                    viewBox={PLANT_VIEWBOX}
+                    transform={SPRIG_TRANSFORM}
+                    className={cn(PLANT_BOX, "text-forest/70")}
+                    strokeWidth={0.9}
                   />
                 </>
               )}
             </div>
           </Parallax>
-          <BotanicalFloat
-            className="absolute top-[12%] -left-[2%] w-16 md:w-20"
-            drift={12}
-            sway={6}
-          >
+          <BotanicalFloat className="absolute top-[12%] left-0 w-16 md:w-20" drift={12} sway={6}>
             <Leaf className="w-full text-sage" />
           </BotanicalFloat>
           <BotanicalFloat
