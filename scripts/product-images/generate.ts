@@ -28,7 +28,7 @@ import {
   CANVAS,
   OUTPUT_DIR,
   outputFilename,
-  parseSourceFilename,
+  matchesFilename,
   PRODUCT_PHOTOS,
   SKIPPED_SOURCES,
   SOURCE_DIR,
@@ -71,11 +71,7 @@ async function checkSources(): Promise<void> {
       console.warn(`! ${file} is not in scripts/product-images/manifest.ts — skipped.`);
   for (const photo of PRODUCT_PHOTOS) {
     if (!files.includes(photo.source)) throw new Error(`Missing original: ${photo.source}`);
-    const parsed = parseSourceFilename(photo.source);
-    if (
-      parsed?.name.toLowerCase() !== photo.productName.toLowerCase() ||
-      parsed.quantity !== photo.quantity
-    )
+    if (!matchesFilename(photo))
       throw new Error(`${photo.source}: manifest entry does not match the filename.`);
   }
 }

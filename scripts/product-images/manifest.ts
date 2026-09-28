@@ -62,8 +62,24 @@ export function parseSourceFilename(filename: string): ParsedSource | null {
   return { name: match[1]!, quantity: `${match[2]}${match[3]!.toLowerCase()}` };
 }
 
-export function outputFilename(productName: string, quantity: string): string {
-  return `${productName}_${quantity}_${CANVAS}x${CANVAS}.webp`;
+/** `<ProductName>_<Quantity>_2000x2000.webp`, or `<ProductName>_2000x2000.webp` without a quantity. */
+export function outputFilename(productName: string, quantity: string | null): string {
+  return `${[productName, quantity].filter(Boolean).join("_")}_${CANVAS}x${CANVAS}.webp`;
+}
+
+/**
+ * The entry's name and quantity come from its filename. Products sold without
+ * a quantity (diffusers) have none in the filename: then the name is the
+ * filename's first word ("roam-diffuser-large-852x1350-eu.png" → "roam").
+ */
+export function matchesFilename(photo: Pick<ProductPhoto, "source" | "productName" | "quantity">) {
+  const name = photo.productName.toLowerCase();
+  if (photo.quantity === null) {
+    const firstWord = photo.source.split(/[-_\s.]/)[0]!.toLowerCase();
+    return parseSourceFilename(photo.source) === null && firstWord === name;
+  }
+  const parsed = parseSourceFilename(photo.source);
+  return parsed?.name.toLowerCase() === name && parsed.quantity === photo.quantity;
 }
 
 export type ProductPhoto = {
@@ -71,7 +87,8 @@ export type ProductPhoto = {
   source: string;
   /** The name from the filename, capitalised as on the label (same letters). */
   productName: string;
-  quantity: string;
+  /** From the filename; null for products sold without one (diffusers). */
+  quantity: string | null;
   /** Product name as printed on the label, for reference. */
   label: string;
   /**
@@ -262,6 +279,29 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
       "bark) tied with jute behind on the right, two loose quills in front on the left. " +
       "Background: warm terracotta plaster. Cosy, warm light.",
   },
+  {
+    source: "lumo-w-serenity-1290x1350px-eu.png",
+    productName: "Lumo",
+    quantity: null,
+    label: "dōTERRA Lumo™ Diffuser",
+    productSlug: "difuzor-lumo",
+    alt: "Difuzorul dōTERRA Lumo, cu bază din lemn de arțar, pe o comodă într-o cameră luminoasă",
+    scene:
+      "A pale oak sideboard in a calm, bright living room. A small stack of linen-bound books " +
+      "behind on the left, a sprig of dried lavender in a small ceramic vase on the right. " +
+      "Background: soft off-white wall with gentle window light. Calm, warm evening light.",
+  },
+  {
+    source: "roam-diffuser-large-852x1350-eu.png",
+    productName: "Roam",
+    quantity: null,
+    label: "dōTERRA Roam™ Diffuser",
+    productSlug: "difuzor-roam",
+    alt: "Difuzorul dōTERRA Roam, cu exterior din piatră naturală, pe un birou din lemn deschis",
+    scene:
+      "A light ash-wood desk by a window. A folded linen cloth behind on the left and a small " +
+      "potted green plant on the right. Background: soft sage-grey wall. Fresh, even daylight.",
+  },
 ];
 
 /** Files in SOURCE_DIR deliberately not used, and why. */
@@ -299,5 +339,6 @@ export const STYLE =
   "people. Photorealistic, authentic, not glossy CGI.";
 
 export function buildPrompt(photo: ProductPhoto): string {
-  return `${STYLE}\n\nScene for ${photo.label} (${photo.quantity}): ${photo.scene}`;
+  const size = photo.quantity ? ` (${photo.quantity})` : "";
+  return `${STYLE}\n\nScene for ${photo.label}${size}: ${photo.scene}`;
 }

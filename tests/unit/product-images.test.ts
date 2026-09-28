@@ -12,6 +12,7 @@ import {
   CANVAS,
   CROP_SAFE,
   LAYOUT,
+  matchesFilename,
   outputFilename,
   parseSourceFilename,
   PRODUCT_PHOTOS,
@@ -71,12 +72,18 @@ describe("outputFilename", () => {
 
 describe("PRODUCT_PHOTOS", () => {
   it("takes every name and quantity from its filename, without inventing any", () => {
-    for (const photo of PRODUCT_PHOTOS) {
-      const parsed = parseSourceFilename(photo.source);
-      expect(parsed, photo.source).not.toBeNull();
-      expect(photo.productName.toLowerCase()).toBe(parsed!.name.toLowerCase());
-      expect(photo.quantity).toBe(parsed!.quantity);
-    }
+    for (const photo of PRODUCT_PHOTOS) expect(matchesFilename(photo), photo.source).toBe(true);
+  });
+
+  it("names products without a quantity after the filename's first word", () => {
+    const roam = { source: "roam-diffuser-large-852x1350-eu.png", productName: "Roam" };
+    expect(matchesFilename({ ...roam, quantity: null })).toBe(true);
+    expect(matchesFilename({ ...roam, productName: "Lumo", quantity: null })).toBe(false);
+    // A filename that carries a quantity must use it.
+    expect(
+      matchesFilename({ source: "lemon15ml-x.png", productName: "Lemon", quantity: null }),
+    ).toBe(false);
+    expect(outputFilename("Roam", null)).toBe("Roam_2000x2000.webp");
   });
 
   it("gives every image its own source, output and product", () => {
