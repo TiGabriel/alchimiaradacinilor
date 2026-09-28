@@ -7,6 +7,8 @@ type ImagePlaceholderProps = {
   /** Accent colour (e.g. the product's main aroma colour). */
   tone?: string | null;
   label?: string;
+  /** The corner sprig; off when the frame draws its own (`ProductSprigs`). */
+  sprig?: boolean;
   className?: string;
 };
 
@@ -65,11 +67,74 @@ const silhouettes: Record<PlaceholderKind, React.ReactNode> = {
   ),
 };
 
+const sprigCorners = {
+  "bottom-right": "-right-[6%] -bottom-[8%]",
+  // The same sprig turned half a circle, hanging down from the top edge just
+  // right of the corner badges, so it stays visible beside them.
+  "top-left": "left-[11%] -top-[8%] rotate-180",
+} as const;
+
+/** The quiet line sprig that grows in from a corner of an image frame. */
+export function CornerSprig({
+  corner = "bottom-right",
+  className,
+}: {
+  corner?: keyof typeof sprigCorners;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 120 160"
+      aria-hidden
+      className={cn("absolute w-[38%] text-forest/15", sprigCorners[corner], className)}
+      fill="none"
+    >
+      <path d="M60 150C60 110 58 70 62 20" stroke="currentColor" strokeWidth="1.5" />
+      <path
+        d="M61 118C48 114 38 104 34 90C47 92 57 102 61 118Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M61 96C74 92 83 82 86 68C73 71 64 81 61 96Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M61 74C50 70 42 61 40 49C51 52 59 61 61 74Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Two opposite corner sprigs over a product image frame (photo or placeholder):
+ * one growing up from the bottom right, one hanging down from the top left.
+ * The frame must be `relative overflow-hidden`.
+ */
+export function ProductSprigs() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <CornerSprig corner="top-left" />
+      <CornerSprig corner="bottom-right" />
+    </div>
+  );
+}
+
 /**
  * Branded stand-in for missing images: warm paper gradient, a tinted silhouette
- * of the product type and a quiet sprig. Decorative; the parent supplies text.
+ * of the product type and a quiet sprig (`sprig={false}` when the frame already
+ * draws `ProductSprigs`). Decorative; the parent supplies text.
  */
-export function ImagePlaceholder({ kind = "leaf", tone, label, className }: ImagePlaceholderProps) {
+export function ImagePlaceholder({
+  kind = "leaf",
+  tone,
+  label,
+  sprig = true,
+  className,
+}: ImagePlaceholderProps) {
   const color = tone ?? "var(--color-sage)";
   return (
     <div
@@ -90,29 +155,7 @@ export function ImagePlaceholder({ kind = "leaf", tone, label, className }: Imag
           {silhouettes[kind]}
         </g>
       </svg>
-      <svg
-        viewBox="0 0 120 160"
-        aria-hidden
-        className="absolute -right-[6%] -bottom-[8%] w-[38%] text-forest/15"
-        fill="none"
-      >
-        <path d="M60 150C60 110 58 70 62 20" stroke="currentColor" strokeWidth="1.5" />
-        <path
-          d="M61 118C48 114 38 104 34 90C47 92 57 102 61 118Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M61 96C74 92 83 82 86 68C73 71 64 81 61 96Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-        <path
-          d="M61 74C50 70 42 61 40 49C51 52 59 61 61 74Z"
-          stroke="currentColor"
-          strokeWidth="1.5"
-        />
-      </svg>
+      {sprig ? <CornerSprig /> : null}
     </div>
   );
 }

@@ -41,28 +41,31 @@ export async function productBox(source: Buffer): Promise<Box> {
 }
 
 /**
- * Same scale and baseline for every product, centred. Only ever scales down:
- * enlarging would soften the label, so a too-small source is rejected.
+ * Same scale and baseline for every product, centred. One scale for all keeps
+ * real sizes (a 5 ml bottle stays smaller than a 15 ml one); it only ever
+ * scales down, so the label is never softened.
  */
 export function placement(box: Box): Placement {
-  const scale = LAYOUT.productHeight / box.height;
-  if (scale > 1)
-    throw new Error(
-      `The product is ${box.height}px tall; at least ${LAYOUT.productHeight}px is needed ` +
-        "to place it without enlarging it.",
-    );
+  const { scale } = LAYOUT;
   const width = Math.round(box.width * scale);
+  const height = Math.round(box.height * scale);
   return {
     scale,
     width,
-    height: LAYOUT.productHeight,
+    height,
     left: Math.round((CANVAS - width) / 2),
-    top: LAYOUT.baseline - LAYOUT.productHeight,
+    top: LAYOUT.baseline - height,
   };
 }
 
 /** The product cut-out, cropped to its box and scaled to its place (RGBA PNG). */
 export async function placedProduct(source: Buffer): Promise<{ png: Buffer; at: Placement }> {
+  const { height } = await sharp(source).metadata();
+  if (height !== LAYOUT.sourceHeight)
+    throw new Error(
+      `Expected a ${LAYOUT.sourceHeight}px tall product image (the producer's scale), ` +
+        `got ${height}px.`,
+    );
   const box = await productBox(source);
   const at = placement(box);
   const png = await sharp(source)

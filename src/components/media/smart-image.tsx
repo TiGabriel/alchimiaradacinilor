@@ -12,6 +12,8 @@ type SmartImageProps = Omit<ImageProps, "src" | "alt"> & {
   alt: string;
   placeholderKind?: PlaceholderKind;
   placeholderTone?: string | null;
+  /** The placeholder's corner sprig; off when the frame draws `ProductSprigs`. */
+  placeholderSprig?: boolean;
   /** Classes for the wrapper (which sets the aspect ratio). */
   wrapperClassName?: string;
   aspect?: "square" | "portrait" | "landscape" | "wide" | "auto";
@@ -34,6 +36,7 @@ export function SmartImage({
   alt,
   placeholderKind,
   placeholderTone,
+  placeholderSprig = true,
   wrapperClassName,
   aspect = "square",
   className,
@@ -64,7 +67,12 @@ export function SmartImage({
           {...props}
         />
       ) : (
-        <ImagePlaceholder kind={placeholderKind} tone={placeholderTone} label={alt || undefined} />
+        <ImagePlaceholder
+          kind={placeholderKind}
+          tone={placeholderTone}
+          label={alt || undefined}
+          sprig={placeholderSprig}
+        />
       )}
     </div>
   );

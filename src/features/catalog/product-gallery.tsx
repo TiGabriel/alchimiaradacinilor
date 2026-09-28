@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-import { ImagePlaceholder } from "@/components/media/image-placeholder";
+import { ImagePlaceholder, ProductSprigs } from "@/components/media/image-placeholder";
 import { placeholderKindFor } from "@/components/media/product-image";
 import { SmartImage } from "@/components/media/smart-image";
 import type { ProductType } from "@/generated/prisma/enums";
@@ -52,9 +52,16 @@ export function ProductGallery({
         sizes="(min-width: 1024px) 50vw, 100vw"
         placeholderKind={kind}
         placeholderTone={tone}
+        placeholderSprig={false}
       />
     ) : (
-      <ImagePlaceholder kind={kind} tone={tone} label={name} className="aspect-[4/5]" />
+      <ImagePlaceholder
+        kind={kind}
+        tone={tone}
+        label={name}
+        sprig={false}
+        className="aspect-[4/5]"
+      />
     );
 
   return (
@@ -110,6 +117,7 @@ export function ProductGallery({
           </div>
         </div>
 
+        <ProductSprigs />
         {badges ? <div className="pointer-events-none absolute top-4 left-4">{badges}</div> : null}
         {action ? <div className="absolute top-3 right-3">{action}</div> : null}
 

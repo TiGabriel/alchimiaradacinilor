@@ -29,6 +29,21 @@ describe("parseSourceFilename", () => {
     });
   });
 
+  it("keeps hyphenated names whole", () => {
+    expect(parseSourceFilename("air-x_15ml_large_1720x1350.png")).toEqual({
+      name: "air-x",
+      quantity: "15ml",
+    });
+    expect(parseSourceFilename("abode-15ml-large-1720x1350.png")).toEqual({
+      name: "abode",
+      quantity: "15ml",
+    });
+    expect(parseSourceFilename("cinnamon5ml-large-404x1350-eu.png")).toEqual({
+      name: "cinnamon",
+      quantity: "5ml",
+    });
+  });
+
   it("reads a name followed by the quantity", () => {
     expect(parseSourceFilename("Lavanda_10ml.png")).toEqual({ name: "Lavanda", quantity: "10ml" });
     expect(parseSourceFilename("Portocala_15ml.png")).toEqual({
@@ -42,6 +57,8 @@ describe("parseSourceFilename", () => {
     expect(parseSourceFilename("lavender.png")).toBeNull();
     expect(parseSourceFilename("15ml.png")).toBeNull();
     expect(parseSourceFilename("IMG_2041.jpg")).toBeNull();
+    expect(parseSourceFilename("1103.webp")).toBeNull();
+    expect(parseSourceFilename("air-x.jpg")).toBeNull();
   });
 });
 
@@ -79,15 +96,15 @@ describe("PRODUCT_PHOTOS", () => {
 });
 
 describe("placement", () => {
-  it("puts every product at the same height and baseline, inside every site crop", () => {
-    // The real originals are 500×1350 with the product 496–500 × 1302–1319 px.
-    for (const box of [
-      { left: 0, top: 14, width: 500, height: 1318 },
-      { left: 3, top: 21, width: 496, height: 1302 },
-    ]) {
+  // Product boxes in the real 1350 px originals: 15 ml bottles and the 5 ml one.
+  const fifteen = { left: 0, top: 14, width: 517, height: 1319 };
+  const five = { left: 0, top: 300, width: 404, height: 1050 };
+
+  it("puts every product on the same baseline, centred, inside every site crop", () => {
+    for (const box of [fifteen, { left: 3, top: 21, width: 496, height: 1302 }, five]) {
       const at = placement(box);
-      expect(at.height).toBe(LAYOUT.productHeight);
       expect(at.top + at.height).toBe(LAYOUT.baseline);
+      expect(Math.abs(at.left + at.width / 2 - CANVAS / 2)).toBeLessThanOrEqual(1);
       expect(at.left).toBeGreaterThanOrEqual(CROP_SAFE.left);
       expect(at.left + at.width).toBeLessThanOrEqual(CROP_SAFE.right);
       expect(at.top).toBeGreaterThanOrEqual(CROP_SAFE.top);
@@ -95,8 +112,10 @@ describe("placement", () => {
     }
   });
 
-  it("never enlarges a product", () => {
-    expect(() => placement({ left: 0, top: 0, width: 200, height: 600 })).toThrow();
+  it("keeps real sizes: one scale, never enlarged, a 5 ml bottle smaller than 15 ml", () => {
+    expect(LAYOUT.scale).toBeLessThanOrEqual(1);
+    expect(placement(five).height).toBeLessThan(placement(fifteen).height);
+    expect(placement(fifteen).height).toBe(Math.round(fifteen.height * LAYOUT.scale));
   });
 });
 

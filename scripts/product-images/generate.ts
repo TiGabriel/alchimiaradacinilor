@@ -30,6 +30,7 @@ import {
   outputFilename,
   parseSourceFilename,
   PRODUCT_PHOTOS,
+  SKIPPED_SOURCES,
   SOURCE_DIR,
   WORK_DIR,
   type ProductPhoto,
@@ -65,7 +66,8 @@ async function checkSources(): Promise<void> {
   const files = (await readdir(SOURCE_DIR)).filter((f) => /\.(png|webp|jpe?g)$/i.test(f));
   const listed = new Set(PRODUCT_PHOTOS.map((p) => p.source));
   for (const file of files)
-    if (!listed.has(file))
+    if (SKIPPED_SOURCES[file]) console.log(`skipped   ${file}: ${SKIPPED_SOURCES[file]}`);
+    else if (!listed.has(file))
       console.warn(`! ${file} is not in scripts/product-images/manifest.ts — skipped.`);
   for (const photo of PRODUCT_PHOTOS) {
     if (!files.includes(photo.source)) throw new Error(`Missing original: ${photo.source}`);

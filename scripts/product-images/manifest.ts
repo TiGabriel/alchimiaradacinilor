@@ -3,10 +3,11 @@
  * SOURCE_DIR. Pure data and naming rules — no file or network access — so the
  * rules are unit-tested (tests/unit/product-images.test.ts).
  *
- * Naming rule: the first word of the original filename is the product name and
- * the filename also carries the quantity ("lavender15ml-large-500x1350-eu.png"
- * → "lavender", "15ml"). Output: `<ProductName>_<Quantity>_2000x2000.webp`,
- * where ProductName is that same word, capitalised as printed on the label.
+ * Naming rule: the filename starts with the product name, followed by the
+ * quantity ("lavender15ml-large-500x1350-eu.png" → "lavender", "15ml";
+ * "air-x_15ml_large_1720x1350.png" → "air-x", "15ml"). Output:
+ * `<ProductName>_<Quantity>_2000x2000.webp`, where ProductName is that same
+ * name, capitalised as printed on the label.
  */
 
 export const SOURCE_DIR = "doTerra uleiuri esentiale poze";
@@ -18,13 +19,18 @@ export const CANVAS = 2000;
 
 /**
  * Where the product sits in every image, so all of them read as one photoshoot:
- * same scale, same baseline, centred. The box stays inside the crops the site
- * applies to a square image (4:5 cards and gallery keep the middle 80% of the
- * width; the 4:3 quick view on phones keeps the middle 75% of the height).
+ * same scale, same baseline, centred. The producer's images share one scale (a
+ * 1350 px tall frame fits the 15 ml bottle), so keeping that scale keeps real
+ * sizes: a 5 ml bottle stays smaller than a 15 ml one. A 15 ml bottle ends up
+ * about 1180 px tall, inside the crops the site applies to a square image (4:5
+ * cards and gallery keep the middle 80% of the width; the 4:3 quick view on
+ * phones keeps the middle 75% of the height).
  */
 export const LAYOUT = {
-  /** Height of the product's visible pixels. */
-  productHeight: 1180,
+  /** Height of the producer's image frame; other sizes are rejected. */
+  sourceHeight: 1350,
+  /** Scale from the producer's pixels to the canvas (never above 1). */
+  scale: 0.9,
   /** y of the product's base: where it stands on the surface. */
   baseline: 1600,
 } as const;
@@ -39,25 +45,21 @@ export const CROP_SAFE = {
 
 export type ParsedSource = { name: string; quantity: string };
 
-const QUANTITY = /(\d+(?:[.,]\d+)?)\s?(ml|l|g|kg|buc)\b/i;
+/** Name (letters, optionally hyphenated), then the quantity, glued or separated. */
+const NAME_AND_QUANTITY = /^(\p{L}+(?:-\p{L}+)*)[-_\s]*(\d+(?:[.,]\d+)?)\s?(ml|l|g|kg)(?!\p{L})/iu;
 
 /**
  * Reads the product name and quantity from an original filename, or null when
- * the filename does not carry both (then the image needs a manual decision).
+ * the filename does not start with both (then the image needs a manual decision).
  *
  *   "lavender15ml-large-500x1350-eu.png" → { name: "lavender", quantity: "15ml" }
+ *   "air-x_15ml_large_1720x1350.png"     → { name: "air-x", quantity: "15ml" }
  *   "Lavanda_10ml.png"                  → { name: "Lavanda", quantity: "10ml" }
  */
 export function parseSourceFilename(filename: string): ParsedSource | null {
-  const stem = filename.replace(/\.[a-z0-9]+$/i, "");
-  const firstWord = stem.split(/[-_\s]+/)[0] ?? "";
-  // The quantity may be glued to the name ("lavender15ml") or a later word.
-  const glued = firstWord.match(new RegExp(`^(\\p{L}+?)${QUANTITY.source}$`, "iu"));
-  if (glued) return { name: glued[1]!, quantity: `${glued[2]}${glued[3]!.toLowerCase()}` };
-  const name = firstWord.match(/^\p{L}+$/u)?.[0];
-  const quantity = stem.slice(firstWord.length).match(QUANTITY);
-  if (!name || !quantity) return null;
-  return { name, quantity: `${quantity[1]}${quantity[2]!.toLowerCase()}` };
+  const match = filename.match(NAME_AND_QUANTITY);
+  if (!match) return null;
+  return { name: match[1]!, quantity: `${match[2]}${match[3]!.toLowerCase()}` };
 }
 
 export function outputFilename(productName: string, quantity: string): string {
@@ -67,7 +69,7 @@ export function outputFilename(productName: string, quantity: string): string {
 export type ProductPhoto = {
   /** Original file in SOURCE_DIR. Never modified, renamed or moved. */
   source: string;
-  /** The filename's first word, capitalised as on the label (same letters). */
+  /** The name from the filename, capitalised as on the label (same letters). */
   productName: string;
   quantity: string;
   /** Product name as printed on the label, for reference. */
@@ -210,7 +212,63 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
       "the right, two star anise pods in front on the left, a feathery fennel frond and a mint " +
       "sprig behind on the left. Background: soft warm beige plaster. Calm, soft light.",
   },
+  {
+    source: "abode-15ml-large-1720x1350.png",
+    productName: "Abode",
+    quantity: "15ml",
+    label: "abōde — Refreshing Blend",
+    productSlug: "amestec-casa-proaspata",
+    alt: "Flacon abōde 15 ml pe un raft de lemn deschis, lângă lenjerie proaspătă",
+    scene:
+      "A pale oak shelf in a bright, tidy home. A neatly folded stack of fresh white linen " +
+      "behind on the right, a small sprig of green eucalyptus in a clear glass of water " +
+      "behind on the left. Background: soft off-white wall with window light. Fresh, clean " +
+      "morning light.",
+  },
+  {
+    source: "air-x_15ml_large_1720x1350.png",
+    productName: "Air-X",
+    quantity: "15ml",
+    label: "Air-X — Essential Oil Blend",
+    productSlug: "amestec-dimineata-senina",
+    alt: "Flacon Air-X 15 ml pe piatră deschisă, în lumina dimineții",
+    scene:
+      "A pale limestone ledge by a window in early morning. A small branch of fresh green " +
+      "leaves rests behind on the left; a folded light-grey linen cloth on the right. " +
+      "Background: airy pale blue-grey, softly out of focus. Bright, fresh morning light.",
+  },
+  {
+    source: "serenity15ml-large-500x1350-eu.png",
+    productName: "Serenity",
+    quantity: "15ml",
+    label: "Serenity — Restful Blend",
+    productSlug: "amestec-liniste-de-seara",
+    alt: "Flacon Serenity 15 ml pe lemn cald, cu lavandă, mușețel și o păstaie de vanilie",
+    scene:
+      "A warm walnut surface in the evening. Botanicals from the blend: a few lavender sprigs " +
+      "and small chamomile flowers behind on the left, a vanilla pod in front on the right. " +
+      "A soft wool throw at the back right. Background: deep warm taupe. Low, warm evening " +
+      "light.",
+  },
+  {
+    source: "cinnamon5ml-large-404x1350-eu.png",
+    productName: "Cinnamon",
+    quantity: "5ml",
+    label: "Cinnamon — Cinnamomum zeylanicum",
+    productSlug: "cinnamon",
+    alt: "Flacon Cinnamon 5 ml pe lemn cald, lângă batoane de scorțișoară",
+    scene:
+      "A warm oiled walnut board. A small bundle of Ceylon cinnamon quills (thin, layered " +
+      "bark) tied with jute behind on the right, two loose quills in front on the left. " +
+      "Background: warm terracotta plaster. Cosy, warm light.",
+  },
 ];
+
+/** Files in SOURCE_DIR deliberately not used, and why. */
+export const SKIPPED_SOURCES: Record<string, string> = {
+  "air-x.jpg": "smaller duplicate of air-x_15ml_large_1720x1350.png on a white background",
+  "1103.webp": "smaller (460×460) duplicate of abode-15ml-large-1720x1350.png",
+};
 
 /**
  * Shared photography direction — the same for every image so the set reads as

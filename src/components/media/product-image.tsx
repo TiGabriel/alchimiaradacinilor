@@ -25,6 +25,8 @@ type ProductImageProps = {
   aspect?: "square" | "portrait";
   sizes?: string;
   priority?: boolean;
+  /** The placeholder's corner sprig; off when the frame draws `ProductSprigs`. */
+  placeholderSprig?: boolean;
   className?: string;
 };
 
@@ -37,6 +39,7 @@ export function ProductImage({
   aspect = "portrait",
   sizes,
   priority,
+  placeholderSprig,
   className,
 }: ProductImageProps) {
   return (
@@ -48,6 +51,7 @@ export function ProductImage({
       priority={priority}
       placeholderKind={placeholderKindFor(productType)}
       placeholderTone={tone}
+      placeholderSprig={placeholderSprig}
       wrapperClassName={className}
     />
   );

@@ -4,6 +4,7 @@ import { Eye, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
+import { ProductSprigs } from "@/components/media/image-placeholder";
 import { ProductImage } from "@/components/media/product-image";
 import { SmartImage } from "@/components/media/smart-image";
 import { Price } from "@/components/ui/price";
@@ -65,6 +66,7 @@ export function ProductCard({
               tone={product.tone}
               sizes={sizes}
               priority={priority}
+              placeholderSprig={false}
             />
           </div>
           {second ? (
@@ -73,10 +75,12 @@ export function ProductCard({
               alt=""
               aspect="portrait"
               sizes={sizes}
+              placeholderSprig={false}
               wrapperClassName="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
             />
           ) : null}
         </div>
+        <ProductSprigs />
 
         <ProductBadges product={product} className="absolute top-3 left-3 z-10" />
         <WishlistButton product={product} className="absolute top-2.5 right-2.5 z-10" />
