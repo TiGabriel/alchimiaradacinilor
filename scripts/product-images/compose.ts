@@ -133,6 +133,53 @@ export async function composeFinal(generated: Buffer, source: Buffer): Promise<B
     .toBuffer();
 }
 
+/**
+ * A studio shot without any generated content: the original product on a
+ * seamless warm-paper sweep (brand `paper` → `paper-deep`) with a soft contact
+ * shadow, light from the upper left like the product's own highlights.
+ * Returns a lossless PNG; encode it with `encodeWebp`.
+ */
+export async function composeStudio(source: Buffer): Promise<Buffer> {
+  const { png, at } = await placedProduct(source);
+  const backdrop = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS}" height="${CANVAS}">
+      <defs>
+        <radialGradient id="light" cx="42%" cy="38%" r="75%">
+          <stop offset="0" stop-color="#fbf8f2"/>
+          <stop offset="0.55" stop-color="#f5efe4"/>
+          <stop offset="1" stop-color="#ebe2d2"/>
+        </radialGradient>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#light)"/>
+    </svg>`,
+  );
+  const cx = at.left + at.width / 2;
+  const base = at.top + at.height;
+  // A wide, soft pool of shade falling to the lower right, and a tight contact line.
+  const shadow = (rx: number, ry: number, dx: number, opacity: number, blur: number) =>
+    sharp(
+      Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS}" height="${CANVAS}">
+          <ellipse cx="${cx + dx}" cy="${base - ry * 0.35}" rx="${rx}" ry="${ry}"
+            fill="rgb(45,38,28)" fill-opacity="${opacity}"/>
+        </svg>`,
+      ),
+    )
+      .blur(blur)
+      .png()
+      .toBuffer();
+
+  return sharp(backdrop)
+    .composite([
+      { input: await shadow(at.width * 0.78, 46, 70, 0.16, 38) },
+      { input: await shadow(at.width * 0.56, 18, 18, 0.32, 12) },
+      { input: await shadow(at.width * 0.47, 7, 4, 0.45, 3) },
+      { input: png, left: at.left, top: at.top },
+    ])
+    .png()
+    .toBuffer();
+}
+
 /** Web delivery: WebP, high quality, sRGB, no metadata (sharp drops it by default). */
 export function encodeWebp(image: Buffer): Promise<Buffer> {
   return sharp(image)

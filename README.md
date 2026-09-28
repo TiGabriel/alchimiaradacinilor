@@ -382,6 +382,8 @@ one consistent style (same camera, light, scale and baseline). The originals are
   limits the run, `--force` regenerates existing files. The model paints only the environment;
   the original product pixels are then composited back, so the bottle, cap, label and logo are
   exactly those of the source image.
+- `pnpm images:products --studio` needs no API key: the original product on a seamless
+  warm-paper backdrop with a soft shadow, same placement, to `storage/product-images/studio/`.
 - Review each result, then upload it to its product in **Admin → Produse → Imagini** (position 0
   is the thumbnail used by cards). Products marked `productSlug: null` in the manifest do not
   exist in the catalogue yet.

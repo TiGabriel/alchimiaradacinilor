@@ -4,6 +4,7 @@
  *   pnpm images:products --prepare            # inputs + prompts only, no API call
  *   pnpm images:products                      # generate every missing image
  *   pnpm images:products --only lavender,lemon --force
+ *   pnpm images:products --studio             # no AI: product on a paper backdrop
  *
  * Reads the originals in SOURCE_DIR (never writes there). --prepare writes the
  * model inputs (product in place, edit mask, prompt) to WORK_DIR for review.
@@ -12,13 +13,16 @@
  * label and logo in the result are exactly those of the source image. Output:
  * OUTPUT_DIR/<ProductName>_<Quantity>_2000x2000.webp, then upload it to the
  * product in Admin → Produse → Imagini.
+ *
+ * --studio needs no API key: the original product on a seamless warm-paper
+ * backdrop with a soft shadow, same placement, to OUTPUT_DIR/studio/.
  */
 import "dotenv/config";
 
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { composeFinal, encodeWebp, prepareInputs } from "./compose";
+import { composeFinal, composeStudio, encodeWebp, prepareInputs } from "./compose";
 import {
   buildPrompt,
   CANVAS,
@@ -35,7 +39,7 @@ const API_URL = "https://api.openai.com/v1/images/edits";
 const MODEL = process.env.PRODUCT_IMAGE_MODEL || "gpt-image-2.5-sunburst";
 const QUALITY = process.env.PRODUCT_IMAGE_QUALITY || "high";
 
-type Options = { prepare: boolean; force: boolean; only: Set<string> | null };
+type Options = { prepare: boolean; studio: boolean; force: boolean; only: Set<string> | null };
 
 function parseArgs(argv: string[]): Options {
   const onlyArg = argv.find((a) => a.startsWith("--only"));
@@ -44,6 +48,7 @@ function parseArgs(argv: string[]): Options {
     : argv[argv.indexOf("--only") + 1];
   return {
     prepare: argv.includes("--prepare"),
+    studio: argv.includes("--studio"),
     force: argv.includes("--force"),
     only: onlyArg ? new Set((onlyValue ?? "").split(",").map((s) => s.trim().toLowerCase())) : null,
   };
@@ -109,10 +114,11 @@ async function main() {
   );
   if (!photos.length) throw new Error("No product matches --only.");
 
-  if (!options.prepare && !process.env.OPENAI_API_KEY) {
+  if (!options.prepare && !options.studio && !process.env.OPENAI_API_KEY) {
     console.error(
       "OPENAI_API_KEY is not set, so no images were generated.\n" +
-        "Add it to .env (see .env.example), or run with --prepare to write the inputs and prompts.",
+        "Add it to .env (see .env.example), run with --prepare to write the inputs and prompts,\n" +
+        "or with --studio for photos on a plain paper backdrop (no API needed).",
     );
     process.exitCode = 1;
     return;
@@ -120,10 +126,23 @@ async function main() {
 
   let failed = 0;
   for (const photo of photos) {
-    const output = path.join(OUTPUT_DIR, outputFilename(photo.productName, photo.quantity));
+    const outputDir = options.studio ? path.join(OUTPUT_DIR, "studio") : OUTPUT_DIR;
+    const output = path.join(outputDir, outputFilename(photo.productName, photo.quantity));
     const source = await readFile(path.join(SOURCE_DIR, photo.source));
-    const { image, mask } = await prepareInputs(source);
 
+    if (options.studio) {
+      if (!options.force && (await exists(output))) {
+        console.log(`exists    ${output} (use --force to redo)`);
+        continue;
+      }
+      const webp = await encodeWebp(await composeStudio(source));
+      await mkdir(outputDir, { recursive: true });
+      await writeFile(output, webp);
+      console.log(`studio    ${output} (${Math.round(webp.length / 1024)} KB)`);
+      continue;
+    }
+
+    const { image, mask } = await prepareInputs(source);
     if (options.prepare) {
       const dir = path.join(WORK_DIR, photo.productName);
       await mkdir(dir, { recursive: true });
