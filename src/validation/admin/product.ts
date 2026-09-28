@@ -74,6 +74,16 @@ export const productFormSchema = z
       .array(z.object({ id: z.uuid(), intensity: z.number().int().min(1).max(5) }))
       .max(20)
       .default([]),
+    /** Kit contents, in display order. Kept only for KIT products. */
+    kitItems: z
+      .array(
+        z.object({
+          id: z.uuid("Alege produsul din listă."),
+          quantity: z.number().int().min(1, "Cel puțin 1.").max(99, "Cel mult 99."),
+        }),
+      )
+      .max(30)
+      .default([]),
     tagIds: z.array(z.uuid()).max(30).default([]),
     collectionIds: z.array(z.uuid()).max(20).default([]),
     attributes: attributesInput,
@@ -95,9 +105,17 @@ export const productFormSchema = z
       ctx.addIssue({ code: "custom", path: ["needs"], message: "O nevoie apare de două ori." });
     if (new Set(value.aromas.map((a) => a.id)).size !== value.aromas.length)
       ctx.addIssue({ code: "custom", path: ["aromas"], message: "Un profil apare de două ori." });
+    if (new Set(value.kitItems.map((k) => k.id)).size !== value.kitItems.length)
+      ctx.addIssue({
+        code: "custom",
+        path: ["kitItems"],
+        message: "Un produs apare de două ori în kit.",
+      });
   })
   .transform((value) => ({
     ...value,
+    // Only a kit has contents; switching the type away from KIT drops them.
+    kitItems: value.productType === "KIT" ? value.kitItems : [],
     // Keep only the attributes that belong to this product type.
     attributes: productAttributeSchemas[value.productType].parse(
       Object.fromEntries(Object.entries(value.attributes).filter(([, v]) => v != null)),

@@ -5,6 +5,7 @@
  *   pnpm images:products                      # generate every missing image
  *   pnpm images:products --only lavender,lemon --force
  *   pnpm images:products --studio             # no AI: product on a paper backdrop
+ *   pnpm images:products --kit KitPrimiiPasi --items lavender,lemon,peppermint
  *
  * Reads the originals in SOURCE_DIR (never writes there). --prepare writes the
  * model inputs (product in place, edit mask, prompt) to WORK_DIR for review.
@@ -16,13 +17,17 @@
  *
  * --studio needs no API key: the original product on a seamless warm-paper
  * backdrop with a soft shadow, same placement, to OUTPUT_DIR/studio/.
+ *
+ * --kit <Name> --items <a,b,…> puts the listed products (manifest names) in one
+ * studio shot, side by side at their real relative sizes, as
+ * OUTPUT_DIR/studio/<Name>_2000x2000.webp — the photo for a kit.
  */
 import "dotenv/config";
 
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { composeFinal, composeStudio, encodeWebp, prepareInputs } from "./compose";
+import { composeFinal, composeKit, composeStudio, encodeWebp, prepareInputs } from "./compose";
 import {
   buildPrompt,
   CANVAS,
@@ -53,6 +58,40 @@ function parseArgs(argv: string[]): Options {
     force: argv.includes("--force"),
     only: onlyArg ? new Set((onlyValue ?? "").split(",").map((s) => s.trim().toLowerCase())) : null,
   };
+}
+
+const argValue = (argv: string[], flag: string) => {
+  const inline = argv.find((a) => a.startsWith(`${flag}=`));
+  if (inline) return inline.slice(flag.length + 1);
+  const i = argv.indexOf(flag);
+  return i >= 0 ? argv[i + 1] : undefined;
+};
+
+/** One studio photo with every listed product of a kit. */
+async function generateKit(name: string, list: string) {
+  if (!/^[A-Za-z][A-Za-z0-9-]*$/.test(name))
+    throw new Error("--kit: use letters, digits and hyphens.");
+  const wanted = list
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const photos = wanted.map((w) => {
+    const photo = PRODUCT_PHOTOS.find((p) => p.productName.toLowerCase() === w);
+    if (!photo) throw new Error(`--items: "${w}" is not a product name in the manifest.`);
+    return photo;
+  });
+  const items = await Promise.all(
+    photos.map(async (p) => ({
+      source: await readFile(path.join(SOURCE_DIR, p.source)),
+      relativeHeight: p.relativeHeight,
+    })),
+  );
+  const webp = await encodeWebp(await composeKit(items));
+  const dir = path.join(OUTPUT_DIR, "studio");
+  const output = path.join(dir, `${name}_${CANVAS}x${CANVAS}.webp`);
+  await mkdir(dir, { recursive: true });
+  await writeFile(output, webp);
+  console.log(`kit       ${output} (${photos.map((p) => p.productName).join(", ")})`);
 }
 
 const exists = (file: string) =>
@@ -104,8 +143,12 @@ async function generateEnvironment(photo: ProductPhoto, image: Buffer, mask: Buf
 }
 
 async function main() {
-  const options = parseArgs(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  const options = parseArgs(argv);
   await checkSources();
+
+  const kit = argValue(argv, "--kit");
+  if (kit) return generateKit(kit, argValue(argv, "--items") ?? "");
 
   const photos = PRODUCT_PHOTOS.filter(
     (p) => !options.only || options.only.has(p.productName.toLowerCase()),

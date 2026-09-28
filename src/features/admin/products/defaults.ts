@@ -25,6 +25,7 @@ type LoadedProduct = {
   aromaProfiles: Array<{ aromaProfileId: string; intensity: number }>;
   tags: Array<{ tagId: string }>;
   collections: Array<{ collectionId: string }>;
+  kitItems: Array<{ componentId: string; quantity: number }>;
 };
 
 /** Bani → "59,90" for editing. */
@@ -52,6 +53,7 @@ export function emptyProductForm(): ProductFormState {
     aromas: [],
     tagIds: [],
     collectionIds: [],
+    kitItems: [],
     attributes: {},
     seo: EMPTY_SEO,
   };
@@ -83,6 +85,7 @@ export function productToForm(p: LoadedProduct): ProductFormState {
     aromas: p.aromaProfiles.map((a) => ({ id: a.aromaProfileId, intensity: a.intensity })),
     tagIds: p.tags.map((t) => t.tagId),
     collectionIds: p.collections.map((c) => c.collectionId),
+    kitItems: p.kitItems.map((k) => ({ id: k.componentId, quantity: k.quantity })),
     attributes: Object.fromEntries(Object.entries(attrs).map(([k, v]) => [k, String(v)])),
     seo: seoDraftFrom(p.seo),
   };

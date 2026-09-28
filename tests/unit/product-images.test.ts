@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   composeFinal,
+  composeKit,
   encodeWebp,
+  kitLayout,
   placement,
   prepareInputs,
 } from "../../scripts/product-images/compose";
@@ -84,6 +86,11 @@ describe("PRODUCT_PHOTOS", () => {
       matchesFilename({ source: "lemon15ml-x.png", productName: "Lemon", quantity: null }),
     ).toBe(false);
     expect(outputFilename("Roam", null)).toBe("Roam_2000x2000.webp");
+    // Several leading words, run together — still only words from the filename.
+    const keychain = { source: "key-chain-grey-large-2454x1350px-eu.png", quantity: null };
+    expect(matchesFilename({ ...keychain, productName: "KeyChain" })).toBe(true);
+    expect(matchesFilename({ ...keychain, productName: "Chain" })).toBe(false);
+    expect(matchesFilename({ ...keychain, productName: "TravelCase" })).toBe(false);
   });
 
   it("gives every image its own source, output and product", () => {
@@ -123,6 +130,21 @@ describe("placement", () => {
     expect(LAYOUT.scale).toBeLessThanOrEqual(1);
     expect(placement(five).height).toBeLessThan(placement(fifteen).height);
     expect(placement(fifteen).height).toBe(Math.round(fifteen.height * LAYOUT.scale));
+  });
+
+  it("scales wide or differently framed products down to fit the crops, never up", () => {
+    // The 2454×1350 keychain photo and the 1720×983 group of roller bottles.
+    for (const [box, frame] of [
+      [{ left: 0, top: 0, width: 2454, height: 1300 }, 1350],
+      [{ left: 0, top: 0, width: 1720, height: 983 }, 983],
+    ] as const) {
+      const at = placement(box, frame);
+      expect(at.scale).toBeLessThanOrEqual(1);
+      expect(at.left).toBeGreaterThanOrEqual(CROP_SAFE.left);
+      expect(at.left + at.width).toBeLessThanOrEqual(CROP_SAFE.right);
+      expect(at.top).toBeGreaterThanOrEqual(CROP_SAFE.top);
+      expect(at.top + at.height).toBe(LAYOUT.baseline);
+    }
   });
 });
 
@@ -203,5 +225,41 @@ describe("compose", () => {
     expect(meta).toMatchObject({ format: "webp", width: CANVAS, height: CANVAS });
     expect(meta.exif).toBeUndefined();
     expect(meta.icc).toBeUndefined();
+  });
+});
+
+describe("kit photos", () => {
+  it("puts the tallest product in the middle of the row", () => {
+    const { placed, width } = kitLayout(
+      [
+        { width: 0.4, height: 1 },
+        { width: 1.3, height: 2.1 },
+        { width: 0.4, height: 1 },
+      ],
+      0.1,
+    );
+    expect(placed.map((p) => p.index)[1]).toBe(1);
+    expect(width).toBeCloseTo(0.4 + 1.3 + 0.4 + 0.2);
+  });
+
+  it("stands every product on the canvas, inside the crops, never enlarged", async () => {
+    const source = await syntheticSource();
+    const kit = await composeKit([
+      { source },
+      { source, relativeHeight: 2.1 },
+      { source },
+      { source },
+      { source },
+    ]);
+    const { data, info } = await sharp(kit).raw().toBuffer({ resolveWithObject: true });
+    expect([info.width, info.height]).toEqual([CANVAS, CANVAS]);
+    // Outside the crop-safe area there is only backdrop (no bottle-brown pixels).
+    const brown = (x: number, y: number) => {
+      const i = (y * info.width + x) * info.channels;
+      return data[i]! < 140 && data[i + 1]! < 100 && data[i + 2]! < 60;
+    };
+    for (let y = 0; y < CANVAS; y += 25)
+      for (const x of [Math.floor(CROP_SAFE.left) - 5, Math.ceil(CROP_SAFE.right) + 5])
+        expect(brown(x, y), `${x},${y}`).toBe(false);
   });
 });

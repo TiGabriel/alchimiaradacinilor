@@ -28,6 +28,8 @@ export type ProductFormOptions = {
   aromas: Option[];
   tags: Option[];
   collections: Option[];
+  /** Products that can go into a kit (every product that is not a kit). */
+  products: Option[];
 };
 
 export type ProductFormState = Omit<ProductFormInput, "stock" | "attributes" | "seo"> & {
@@ -106,6 +108,14 @@ export function ProductForm({
       set(key, e.target.value as never);
   const fid = (name: string) => `${uid}-${name}`;
   const typeFields = ATTRIBUTE_FIELDS[values.productType as ProductType] ?? [];
+
+  const kitItems = values.kitItems ?? [];
+  const setKitItem = (index: number, patch: Partial<(typeof kitItems)[number]>) =>
+    set(
+      "kitItems",
+      kitItems.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    );
+  const kitError = Object.entries(errors).find(([key]) => key.startsWith("kitItems"))?.[1];
 
   const toggleIn = (list: string[] | undefined, id: string) =>
     (list ?? []).includes(id) ? (list ?? []).filter((x) => x !== id) : [...(list ?? []), id];
@@ -367,6 +377,74 @@ export function ProductForm({
             ))}
           </div>
           {errors.attributes ? <p className="text-sm text-danger">{errors.attributes}</p> : null}
+        </AdminCard>
+      ) : null}
+
+      {values.productType === "KIT" ? (
+        <AdminCard title="Conținutul kitului">
+          <p className="-mt-2 text-sm text-ink-muted">
+            Produsele din kit apar pe pagina lui, la „Ce conține”, în ordinea de aici.
+          </p>
+          {kitItems.length ? (
+            <ul className="flex flex-col gap-2">
+              {kitItems.map((item, index) => (
+                <li key={index} className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label={`Produsul ${index + 1} din kit`}
+                    aria-invalid={errors[`kitItems.${index}.id`] ? true : undefined}
+                    value={item.id}
+                    onChange={(e) => setKitItem(index, { id: e.target.value })}
+                    className={cn(adminSelect, "min-w-0 flex-1")}
+                  >
+                    <option value="">Alege produsul</option>
+                    {options.products
+                      .filter((p) => p.id !== productId)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </select>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={99}
+                    aria-label={`Cantitate pentru produsul ${index + 1}`}
+                    aria-invalid={errors[`kitItems.${index}.quantity`] ? true : undefined}
+                    value={item.quantity}
+                    onChange={(e) => setKitItem(index, { quantity: Number(e.target.value) })}
+                    className="w-20"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      set(
+                        "kitItems",
+                        kitItems.filter((_, i) => i !== index),
+                      )
+                    }
+                  >
+                    Elimină
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-ink-muted">Kitul nu conține încă produse.</p>
+          )}
+          <div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => set("kitItems", [...kitItems, { id: "", quantity: 1 }])}
+            >
+              Adaugă produs
+            </Button>
+          </div>
+          {kitError ? <p className="text-sm text-danger">{kitError}</p> : null}
         </AdminCard>
       ) : null}
 

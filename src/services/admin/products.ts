@@ -87,6 +87,7 @@ export async function getAdminProduct(actor: Actor, id: string) {
       aromaProfiles: { select: { aromaProfileId: true, intensity: true } },
       tags: { select: { tagId: true } },
       collections: { select: { collectionId: true } },
+      kitItems: { orderBy: { position: "asc" }, select: { componentId: true, quantity: true } },
       images: {
         orderBy: { position: "asc" },
         select: {
@@ -104,7 +105,7 @@ export async function getAdminProduct(actor: Actor, id: string) {
 /** Options for the product form's selects. */
 export async function getProductFormOptions(actor: Actor) {
   assertCan(actor, "catalog:edit");
-  const [categories, brands, needs, aromas, tags, collections] = await Promise.all([
+  const [categories, brands, needs, aromas, tags, collections, products] = await Promise.all([
     db.category.findMany({
       orderBy: [{ parentId: { sort: "asc", nulls: "first" } }, { position: "asc" }],
       select: { id: true, name: true, parentId: true },
@@ -114,8 +115,14 @@ export async function getProductFormOptions(actor: Actor) {
     db.aromaProfile.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } }),
     db.tag.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     db.collection.findMany({ orderBy: { position: "asc" }, select: { id: true, name: true } }),
+    // Candidates for kit contents: any product that is not itself a kit.
+    db.product.findMany({
+      where: { productType: { not: "KIT" } },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
-  return { categories, brands, needs, aromas, tags, collections };
+  return { categories, brands, needs, aromas, tags, collections, products };
 }
 
 async function assertUnique(slug: string, sku: string, exceptId?: string) {
@@ -196,6 +203,20 @@ export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
     if (input.collectionIds.length)
       await tx.collectionProduct.createMany({
         data: input.collectionIds.map((collectionId) => ({ productId: product.id, collectionId })),
+      });
+    if (input.kitItems.some((k) => k.id === product.id))
+      throw new AdminError("Un kit nu se poate conține pe el însuși.", {
+        kitItems: "Un kit nu se poate conține pe el însuși.",
+      });
+    await tx.kitItem.deleteMany({ where: { kitId: product.id } });
+    if (input.kitItems.length)
+      await tx.kitItem.createMany({
+        data: input.kitItems.map((k, position) => ({
+          kitId: product.id,
+          componentId: k.id,
+          quantity: k.quantity,
+          position,
+        })),
       });
     return { id: product.id, slug: product.slug };
   });

@@ -35,6 +35,29 @@ describe("productFormSchema", () => {
     expect(productFormSchema.parse({ ...base, isDemo: true }).isDemo).toBe(true);
   });
 
+  it("keeps kit contents only for kits, in order, without duplicates", () => {
+    const a = "01900000-0000-7000-8000-00000000000a";
+    const b = "01900000-0000-7000-8000-00000000000b";
+    const items = [
+      { id: a, quantity: 1 },
+      { id: b, quantity: 2 },
+    ];
+    expect(
+      productFormSchema.parse({ ...base, productType: "KIT", kitItems: items }).kitItems,
+    ).toEqual(items);
+    // Another type drops them, so switching a kit to an oil clears its contents.
+    expect(productFormSchema.parse({ ...base, kitItems: items }).kitItems).toEqual([]);
+    expect(
+      errors({ ...base, productType: "KIT", kitItems: [items[0]!, { id: a, quantity: 3 }] }),
+    ).toHaveProperty("kitItems");
+    expect(
+      errors({ ...base, productType: "KIT", kitItems: [{ id: "", quantity: 1 }] }),
+    ).toHaveProperty("kitItems.0.id", "Alege produsul din listă.");
+    expect(
+      errors({ ...base, productType: "KIT", kitItems: [{ id: a, quantity: 0 }] }),
+    ).toHaveProperty("kitItems.0.quantity");
+  });
+
   it("normalises money, SKU and type-specific attributes", () => {
     const parsed = productFormSchema.parse(base);
     expect(parsed).toMatchObject({

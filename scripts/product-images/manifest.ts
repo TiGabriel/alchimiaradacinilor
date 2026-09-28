@@ -27,7 +27,7 @@ export const CANVAS = 2000;
  * phones keeps the middle 75% of the height).
  */
 export const LAYOUT = {
-  /** Height of the producer's image frame; other sizes are rejected. */
+  /** Height of the producer's usual image frame (a 15 ml bottle fills it). */
   sourceHeight: 1350,
   /** Scale from the producer's pixels to the canvas (never above 1). */
   scale: 0.9,
@@ -69,14 +69,18 @@ export function outputFilename(productName: string, quantity: string | null): st
 
 /**
  * The entry's name and quantity come from its filename. Products sold without
- * a quantity (diffusers) have none in the filename: then the name is the
- * filename's first word ("roam-diffuser-large-852x1350-eu.png" → "roam").
+ * a quantity (diffusers, accessories) have none in the filename: then the name
+ * is the filename's first word, or its first words run together when the name
+ * has several ("roam-diffuser-large-852x1350-eu.png" → "Roam";
+ * "key-chain-grey-large-2454x1350px-eu.png" → "KeyChain").
  */
 export function matchesFilename(photo: Pick<ProductPhoto, "source" | "productName" | "quantity">) {
   const name = photo.productName.toLowerCase();
   if (photo.quantity === null) {
-    const firstWord = photo.source.split(/[-_\s.]/)[0]!.toLowerCase();
-    return parseSourceFilename(photo.source) === null && firstWord === name;
+    if (parseSourceFilename(photo.source) !== null) return false;
+    const words = photo.source.toLowerCase().split(/[-_\s.]/);
+    const prefixes = words.map((_, i) => words.slice(0, i + 1).join(""));
+    return prefixes.includes(name.replace(/[^\p{L}]/gu, "")) && /^\p{L}/u.test(name);
   }
   const parsed = parseSourceFilename(photo.source);
   return parsed?.name.toLowerCase() === name && parsed.quantity === photo.quantity;
@@ -100,6 +104,11 @@ export type ProductPhoto = {
   alt: string;
   /** The environment around the product. Every prop has a reason to be there. */
   scene: string;
+  /**
+   * Real height relative to a 15 ml bottle, for kit photos where products stand
+   * together. Omit for oils: their photos already share the producer's scale.
+   */
+  relativeHeight?: number;
 };
 
 export const PRODUCT_PHOTOS: ProductPhoto[] = [
@@ -285,6 +294,8 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
     quantity: null,
     label: "dōTERRA Lumo™ Diffuser",
     productSlug: "difuzor-lumo",
+    // Measured: in doTERRA's official Lumo + Serenity photo the Lumo is 2.1× the bottle.
+    relativeHeight: 2.1,
     alt: "Difuzorul dōTERRA Lumo, cu bază din lemn de arțar, pe o comodă într-o cameră luminoasă",
     scene:
       "A pale oak sideboard in a calm, bright living room. A small stack of linen-bound books " +
@@ -297,10 +308,92 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
     quantity: null,
     label: "dōTERRA Roam™ Diffuser",
     productSlug: "difuzor-roam",
+    // Estimate: no official photo shows it beside a bottle; assumed about Lumo's height.
+    relativeHeight: 2.1,
     alt: "Difuzorul dōTERRA Roam, cu exterior din piatră naturală, pe un birou din lemn deschis",
     scene:
       "A light ash-wood desk by a window. A folded linen cloth behind on the left and a small " +
       "potted green plant on the right. Background: soft sage-grey wall. Fresh, even daylight.",
+  },
+  {
+    source: "amberrollers-large-1720x983-eu.png",
+    productName: "AmberRollers",
+    quantity: null,
+    label: "Amber Roller Bottles 10 ml – 6 pack",
+    productSlug: "sticlute-roll-on",
+    // Estimate: a group of 10 ml roller bottles, a little taller than a 15 ml bottle.
+    relativeHeight: 1.3,
+    alt: "Șase sticluțe roll-on de 10 ml din sticlă chihlimbarie, cu bilă din oțel și capace negre",
+    scene:
+      "A pale linen-covered worktable set for making blends. A few sprigs of lavender and a " +
+      "small glass beaker behind on the left, a folded cotton cloth on the right. Background: " +
+      "warm off-white plaster. Soft, even daylight.",
+  },
+  {
+    source: "key-chain-grey-large-2454x1350px-eu.png",
+    productName: "KeyChain",
+    quantity: null,
+    label: "Grey 8-vial keychain",
+    productSlug: "breloc-8-flacoane",
+    // Estimate: a pocket-sized case.
+    relativeHeight: 0.9,
+    alt: "Breloc gri dōTERRA cu fermoar, pentru 8 flacoane, cu șnur de prindere",
+    scene:
+      "A light oak entryway shelf. A folded linen scarf behind on the left, a small bunch of " +
+      "dried grasses in a stoneware jug on the right. Background: soft warm-grey wall. Fresh " +
+      "morning light.",
+  },
+  {
+    source: "wooden-box-large-1051x1350px-eu.png",
+    productName: "WoodenBox",
+    quantity: null,
+    label: "dōTERRA logo engraved wooden box",
+    productSlug: "cutie-lemn-doterra",
+    // Estimate: 7.6 cm tall closed (doTERRA's 6.5 × 6.5 × 3 in), shown with the lid open.
+    relativeHeight: 1.6,
+    alt: "Cutie din lemn deschis, cu sigla dōTERRA gravată și 25 de compartimente pentru flacoane",
+    scene:
+      "A warm walnut sideboard. A small stack of linen-bound books behind on the left and a " +
+      "sprig of eucalyptus in a clear glass on the right. Background: warm clay-toned plaster. " +
+      "Calm, warm light.",
+  },
+  {
+    source: "fractionated-coconut-oil-large-497x1350px-eu.png",
+    productName: "FractionatedCoconutOil",
+    quantity: null,
+    label: "Fractionated Coconut Oil — Cocos nucifera, 115 ml",
+    productSlug: "ulei-de-cocos-fractionat",
+    // Estimate: a 115 ml bottle, about twice as tall as a 15 ml one.
+    relativeHeight: 2,
+    alt: "Flacon de ulei de cocos fracționat dōTERRA de 115 ml, pe o placă de piatră deschisă",
+    scene:
+      "A pale travertine slab in a bright bathroom. Half a fresh coconut and a folded white " +
+      "cotton towel behind on the right, a small amber dropper bottle on the left. Background: " +
+      "soft off-white tiles, out of focus. Clean, soft daylight.",
+  },
+  {
+    source: "beginners-trio-large-1558x1350px-eu.png",
+    productName: "BeginnersTrio",
+    quantity: null,
+    label: "Beginner's Trio — Lavender, Lemon, Peppermint 15 ml",
+    productSlug: "kit-primii-pasi",
+    alt: "Trei flacoane dōTERRA de 15 ml: Levănțică, Lămâie și Mentă, unul lângă altul",
+    scene:
+      "A pale linen-covered table. A sprig of lavender on the left, a halved lemon in the middle " +
+      "behind, a few peppermint leaves on the right — one botanical for each oil. Background: " +
+      "warm cream plaster. Soft, bright daylight.",
+  },
+  {
+    source: "lumo-serenity-set-1290x1350px-eu.png",
+    productName: "LumoSerenitySet",
+    quantity: null,
+    label: "Lumo™ Diffuser with 15 ml dōTERRA Serenity™",
+    productSlug: "kit-ritual-de-seara",
+    alt: "Difuzorul dōTERRA Lumo alături de un flacon dōTERRA Serenity de 15 ml",
+    scene:
+      "A walnut bedside table in the evening. A small stack of books and a folded wool throw " +
+      "behind on the left, a few lavender sprigs on the right. Background: deep warm taupe wall. " +
+      "Low, warm evening light.",
   },
 ];
 
