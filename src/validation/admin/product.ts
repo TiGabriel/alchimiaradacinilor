@@ -64,6 +64,8 @@ export const productFormSchema = z
     stock: z.coerce.number().int("Stocul este un număr întreg.").min(0).max(1_000_000),
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
+    /** Placeholder product: shows the "Demo" badge and notice in the shop. */
+    isDemo: z.boolean().default(false),
     needs: z
       .array(z.object({ id: z.uuid(), relevance: z.number().int().min(1).max(3) }))
       .max(20)

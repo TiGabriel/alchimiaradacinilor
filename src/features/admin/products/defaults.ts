@@ -18,6 +18,7 @@ type LoadedProduct = {
   stock: number;
   featured: boolean;
   active: boolean;
+  isDemo: boolean;
   attributes: unknown;
   seo: Parameters<typeof seoDraftFrom>[0];
   needs: Array<{ needId: string; relevance: number }>;
@@ -46,6 +47,7 @@ export function emptyProductForm(): ProductFormState {
     stock: "0",
     featured: false,
     active: true,
+    isDemo: false,
     needs: [],
     aromas: [],
     tagIds: [],
@@ -76,6 +78,7 @@ export function productToForm(p: LoadedProduct): ProductFormState {
     stock: String(p.stock),
     featured: p.featured,
     active: p.active,
+    isDemo: p.isDemo,
     needs: p.needs.map((n) => ({ id: n.needId, relevance: n.relevance })),
     aromas: p.aromaProfiles.map((a) => ({ id: a.aromaProfileId, intensity: a.intensity })),
     tagIds: p.tags.map((t) => t.tagId),

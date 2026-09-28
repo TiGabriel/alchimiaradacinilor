@@ -160,6 +160,7 @@ export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
       stock: input.stock,
       featured: input.featured,
       active: input.active,
+      isDemo: input.isDemo,
       attributes: input.attributes as Prisma.InputJsonValue,
       seoId,
     };

@@ -30,6 +30,11 @@ const errors = (input: ProductFormInput) => {
 };
 
 describe("productFormSchema", () => {
+  it("treats a product as real unless it is marked as a demo", () => {
+    expect(productFormSchema.parse(base).isDemo).toBe(false);
+    expect(productFormSchema.parse({ ...base, isDemo: true }).isDemo).toBe(true);
+  });
+
   it("normalises money, SKU and type-specific attributes", () => {
     const parsed = productFormSchema.parse(base);
     expect(parsed).toMatchObject({

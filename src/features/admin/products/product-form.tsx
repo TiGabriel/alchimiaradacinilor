@@ -517,6 +517,12 @@ export function ProductForm({
             onCheckedChange={(v) => set("featured", v === true)}
             label="Recomandat — apare pe prima pagină"
           />
+          <Checkbox
+            id={fid("isDemo")}
+            checked={values.isDemo ?? false}
+            onCheckedChange={(v) => set("isDemo", v === true)}
+            label="Produs demonstrativ — afișează eticheta „Demo” în magazin"
+          />
         </div>
       </AdminCard>
 
