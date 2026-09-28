@@ -1,7 +1,8 @@
 /**
  * Idempotent seed: safe to run repeatedly (`pnpm db:seed`).
  * Taxonomy is upserted by slug; demo products are upserted and their
- * relations rebuilt on every run.
+ * relations rebuilt on every run — except products an admin has turned into
+ * real ones (isDemo = false), which are left untouched.
  */
 import "dotenv/config";
 
@@ -317,10 +318,21 @@ async function main() {
     }),
   );
 
-  // Pass 1: products themselves.
+  // Pass 1: products themselves. A product that an admin turned into a real one
+  // (isDemo = false) keeps its data: the seed never overwrites the live catalogue.
   const productIds = new Map<string, string>();
+  const realProducts = new Set<string>();
   const now = Date.now();
   for (const p of withDemo ? demoProducts : []) {
+    const existing = await db.product.findUnique({
+      where: { slug: p.slug },
+      select: { id: true, isDemo: true },
+    });
+    if (existing && !existing.isDemo) {
+      productIds.set(p.slug, existing.id);
+      realProducts.add(p.slug);
+      continue;
+    }
     const data = {
       name: p.name,
       sku: p.sku,
@@ -349,6 +361,7 @@ async function main() {
 
   // Pass 2: relations (rebuilt from scratch for demo products).
   for (const p of withDemo ? demoProducts : []) {
+    if (realProducts.has(p.slug)) continue;
     const productId = requireId(productIds, p.slug, "product");
     await db.$transaction([
       db.productTag.deleteMany({ where: { productId } }),

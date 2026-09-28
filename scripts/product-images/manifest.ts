@@ -217,7 +217,7 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
     productName: "Abode",
     quantity: "15ml",
     label: "abōde — Refreshing Blend",
-    productSlug: "amestec-casa-proaspata",
+    productSlug: "abode",
     alt: "Flacon abōde 15 ml pe un raft de lemn deschis, lângă lenjerie proaspătă",
     scene:
       "A pale oak shelf in a bright, tidy home. A neatly folded stack of fresh white linen " +
@@ -230,7 +230,7 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
     productName: "Air-X",
     quantity: "15ml",
     label: "Air-X — Essential Oil Blend",
-    productSlug: "amestec-dimineata-senina",
+    productSlug: "air-x",
     alt: "Flacon Air-X 15 ml pe piatră deschisă, în lumina dimineții",
     scene:
       "A pale limestone ledge by a window in early morning. A small branch of fresh green " +
@@ -242,7 +242,7 @@ export const PRODUCT_PHOTOS: ProductPhoto[] = [
     productName: "Serenity",
     quantity: "15ml",
     label: "Serenity — Restful Blend",
-    productSlug: "amestec-liniste-de-seara",
+    productSlug: "serenity",
     alt: "Flacon Serenity 15 ml pe lemn cald, cu lavandă, mușețel și o păstaie de vanilie",
     scene:
       "A warm walnut surface in the evening. Botanicals from the blend: a few lavender sprigs " +
