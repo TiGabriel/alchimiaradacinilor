@@ -18,11 +18,18 @@ export const getCategoryTree = cache(async (): Promise<CategoryNode[]> => {
       description: true,
       parentId: true,
       position: true,
+      image: { select: { url: true } },
+      seo: { select: { ogImage: { select: { url: true } } } },
       _count: { select: { products: { where: { active: true } } } },
     },
   });
   return buildCategoryTree(
-    rows.map(({ _count, ...row }) => ({ ...row, productCount: _count.products })),
+    rows.map(({ _count, image, seo, ...row }) => ({
+      ...row,
+      // The editor uploads the photo as the category's social image; use it for the tiles too.
+      image: image?.url ?? seo?.ogImage?.url ?? null,
+      productCount: _count.products,
+    })),
   );
 });
 

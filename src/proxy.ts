@@ -34,10 +34,13 @@ export function proxy(request: NextRequest) {
   const imageOrigin = originOf(
     process.env.STORAGE_DRIVER === "s3" ? process.env.S3_PUBLIC_URL : null,
   );
+  // The campaign preview (an iframe with the email as srcdoc) inherits this policy, and a
+  // designed email loads its images from wherever its author hosted them (Brevo, …).
+  const emailPreview = under(request.nextUrl.pathname, "/admin/newsletter/campanii");
   const csp = buildCsp({
     nonce,
     dev: process.env.NODE_ENV === "development",
-    imageOrigins: imageOrigin ? [imageOrigin] : [],
+    imageOrigins: [...(imageOrigin ? [imageOrigin] : []), ...(emailPreview ? ["https:"] : [])],
     upgradeInsecureRequests: (process.env.APP_URL ?? "").startsWith("https://"),
   });
 

@@ -3,8 +3,8 @@
  * caller passes the credentials and, in tests, a fake `fetch`.
  *
  * The site's database stays the source of truth for consent. Brevo only
- * receives confirmed subscribers (one list) and withdrawals; campaigns are
- * written and sent from the Brevo dashboard.
+ * receives confirmed subscribers (one list) and withdrawals; designed campaigns
+ * are sent to that list through `brevo-campaigns.ts`.
  */
 import { createHash, timingSafeEqual } from "node:crypto";
 

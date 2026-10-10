@@ -83,8 +83,8 @@ export default async function NewsletterAdminPage({
       {marketingProvider() ? (
         <p className="rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
           Abonații confirmați sunt sincronizați automat cu lista Brevo, iar dezabonările din Brevo
-          revin aici. Pentru campanii cu design și statistici, folosește editorul din Brevo; nu
-          trimite aceeași campanie din ambele locuri.
+          revin aici. Campaniile cu design se trimit prin Brevo din pagina campaniei, cu statistici
+          din Brevo. Nu trimite aceeași campanie și din editorul Brevo.
         </p>
       ) : null}
       <AdminCard title="Campanii">
@@ -99,10 +99,15 @@ export default async function NewsletterAdminPage({
                   {c.subject}
                 </Link>
                 <span className="text-ink-muted">
-                  {campaignStatus[c.status]}
-                  {c.sentAt
-                    ? ` · ${date.format(c.sentAt)} · ${c.deliveredCount}/${c.recipientCount} livrate`
-                    : ""}
+                  {c.status === "SENT" && c.brevoCampaignId !== null
+                    ? `Trimisă prin Brevo · ${date.format(c.sentAt!)}`
+                    : `${campaignStatus[c.status]}${
+                        c.sentAt
+                          ? ` · ${date.format(c.sentAt)} · ${c.deliveredCount}/${c.recipientCount} livrate`
+                          : c.html
+                            ? " · cu design"
+                            : ""
+                      }`}
                 </span>
               </li>
             ))}

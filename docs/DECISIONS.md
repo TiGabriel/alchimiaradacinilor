@@ -554,7 +554,7 @@ and withdrawals (removed from the list and blocklisted). A Brevo-side blocklisti
 right after a fresh opt-in on the site, never by reconciliation (`pnpm newsletter:sync`). Brevo's
 unsubscribes, complaints and hard bounces come back through an authenticated webhook. Sync failures
 never affect the visitor; they are logged and repaired by the reconcile script. The admin's own
-campaign sender is kept for small lists; Brevo is the place for larger campaigns.
+campaign sender is kept for small text campaigns; designed campaigns go through Brevo (D-084).
 
 ### D-083 · Contact form mail is sent from the shop's domain, replied to the visitor
 
@@ -562,3 +562,16 @@ Contact-form notifications go to the address in Admin → Setări → Contact (a
 new setting), from `EMAIL_FROM_CONTACT` (or `EMAIL_FROM`) on the verified domain, with the visitor's
 address as Reply-To. Messages are not stored: email delivery is honest (`isDelivered`) and the form
 tells the visitor when sending fails, so a database copy would add personal data without a need.
+
+### D-084 · Designed campaigns are sent by Brevo, once
+
+Designed newsletters are written as HTML for Brevo and sent from the admin through the Brevo API to
+the synced list, so Brevo handles unsubscribe links, the online version, suppressions and statistics;
+the site's plain sender stays for text campaigns and refuses designed ones. A send is claimed
+atomically (DRAFT → SENDING) and the Brevo campaign id is stored as soon as Brevo creates it: a
+retry updates and reuses that campaign, and first asks Brevo for its status, so a send whose answer
+was lost is recorded as sent instead of going out twice. Success is shown only after Brevo answers
+the send with 204. The segment filters do not apply to Brevo sends (the whole list receives them).
+The preview is an iframe with the HTML as `srcdoc` and an empty `sandbox` (no scripts, no
+navigation); on the campaign pages only, the CSP allows HTTPS images so the email's hosted images
+show.

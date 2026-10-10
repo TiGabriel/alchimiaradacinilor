@@ -18,7 +18,7 @@ export default async function NewCampaignPage() {
         back={{ href: "/admin/newsletter", label: "Newsletter" }}
       />
       <CampaignForm
-        initial={{ subject: "", preheader: "", heading: "", body: "", segment: {} }}
+        initial={{ subject: "", preheader: "", heading: "", body: "", html: "", segment: {} }}
         editable
         emailEnabled={emailConfigured()}
         {...options}

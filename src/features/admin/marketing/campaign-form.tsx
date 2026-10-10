@@ -24,6 +24,8 @@ export type CampaignDraft = {
   preheader: string;
   heading: string;
   body: string;
+  /** Designed HTML for Brevo; empty for a plain campaign. */
+  html: string;
   segment: Segment;
 };
 
@@ -76,7 +78,7 @@ export function CampaignForm({
     start(async () => {
       const segment = { ...v.segment, confirmedSince: v.segment.confirmedSince || undefined };
       const result = await saveCampaignAction(
-        { ...v, preheader: v.preheader || undefined, segment },
+        { ...v, preheader: v.preheader || undefined, html: v.html || undefined, segment },
         campaignId,
       );
       if (!result.ok) {
@@ -89,6 +91,13 @@ export function CampaignForm({
       if (!campaignId) router.push(`/admin/newsletter/campanii/${result.data.id}`);
       else router.refresh();
     });
+  };
+
+  const loadHtml = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    void file.text().then((html) => setV((current) => ({ ...current, html })));
   };
 
   const send = () => {
@@ -150,8 +159,12 @@ export function CampaignForm({
           <Field
             id={`${uid}-body`}
             label="Text"
-            required
-            hint="Paragrafele se separă printr-un rând liber. Linkul de dezabonare se adaugă automat."
+            required={!v.html}
+            hint={
+              v.html
+                ? "Opțional pentru campaniile cu design (Brevo trimite HTML-ul de mai jos)."
+                : "Paragrafele se separă printr-un rând liber. Linkul de dezabonare se adaugă automat."
+            }
             error={errors.body}
           >
             {(p) => (
@@ -163,6 +176,44 @@ export function CampaignForm({
               />
             )}
           </Field>
+        </AdminCard>
+        <AdminCard title="Design (HTML pentru Brevo)">
+          <p className="-mt-2 text-sm text-ink-muted">
+            Codul HTML al emailului, cu etichetele Brevo păstrate: {"{{ unsubscribe }}"}{" "}
+            (obligatoriu), {"{{ mirror }}"}, {"{{ contact.FIRSTNAME }}"}. Brevo le completează la
+            trimitere.
+          </p>
+          <Field
+            id={`${uid}-html`}
+            label="HTML"
+            hint={
+              v.html
+                ? `${Math.round(v.html.length / 1024)} KB · previzualizarea se actualizează după salvare.`
+                : "Lipește codul sau încarcă un fișier .html."
+            }
+            error={errors.html}
+          >
+            {(p) => (
+              <Textarea
+                {...p}
+                value={v.html}
+                onChange={(e) => setV({ ...v, html: e.target.value })}
+                spellCheck={false}
+                className="min-h-40 font-mono text-xs"
+              />
+            )}
+          </Field>
+          {editable ? (
+            <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full border border-line px-4 py-2 text-sm font-semibold focus-within:ring-2 focus-within:ring-forest hover:bg-paper-deep">
+              <input
+                type="file"
+                accept=".html,.htm,text/html"
+                onChange={loadHtml}
+                className="sr-only"
+              />
+              Încarcă fișier .html
+            </label>
+          ) : null}
         </AdminCard>
         <AdminCard title="Destinatari">
           <p className="-mt-2 text-sm text-ink-muted">
@@ -238,7 +289,7 @@ export function CampaignForm({
             Salvează ciorna
           </Button>
         ) : null}
-        {campaignId && editable ? (
+        {campaignId && editable && !initial.html ? (
           <Button
             type="button"
             onClick={send}
@@ -249,7 +300,11 @@ export function CampaignForm({
           </Button>
         ) : null}
       </div>
-      {!emailEnabled ? (
+      {initial.html ? (
+        <p className="text-sm text-ink-muted">
+          Campaniile cu design se trimit prin Brevo, din secțiunea de mai sus.
+        </p>
+      ) : !emailEnabled ? (
         <p className="text-sm text-warning">
           Trimiterea este dezactivată: nu este configurat un furnizor de email (EMAIL_PROVIDER).
         </p>

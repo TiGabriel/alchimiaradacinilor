@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { ImagePlaceholder, type PlaceholderKind } from "@/components/media/image-placeholder";
@@ -6,7 +7,7 @@ import { Stagger, StaggerItem } from "@/components/motion";
 import { pluralRo } from "@/lib/plural";
 import { categoryHref, type CategoryNode } from "@/services/catalog/category-tree";
 
-/** Placeholder art per known top-level category slug (until categories have images). */
+/** Placeholder art per known top-level category slug, for categories without a photo. */
 const categoryArt: Record<string, PlaceholderKind> = {
   "uleiuri-individuale": "bottle",
   amestecuri: "bottle",
@@ -25,7 +26,17 @@ export function CategoryTiles({ categories }: { categories: CategoryNode[] }) {
             className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-xl sm:aspect-[5/4]"
           >
             <div className="absolute inset-0 transition-transform duration-700 ease-(--ease-botanical) group-hover:scale-[1.04] motion-reduce:transition-none">
-              <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
+              {category.image ? (
+                <Image
+                  src={category.image}
+                  alt=""
+                  fill
+                  sizes="(min-width: 768px) 33vw, 50vw"
+                  className="object-cover"
+                />
+              ) : (
+                <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
+              )}
             </div>
             <div className="absolute inset-0 bg-gradient-to-t from-forest-deep/80 via-forest-deep/15 to-transparent" />
             <div className="relative flex items-end justify-between gap-2 p-4 md:p-6">
@@ -57,8 +68,12 @@ export function CategoryDirectory({ categories }: { categories: CategoryNode[] }
           className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-6"
         >
           <div className="flex items-start gap-4">
-            <div className="size-16 shrink-0 overflow-hidden rounded-lg">
-              <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
+            <div className="relative size-16 shrink-0 overflow-hidden rounded-lg">
+              {category.image ? (
+                <Image src={category.image} alt="" fill sizes="64px" className="object-cover" />
+              ) : (
+                <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
+              )}
             </div>
             <div className="flex flex-col gap-1">
               <Link

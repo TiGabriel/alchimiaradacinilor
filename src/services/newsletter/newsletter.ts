@@ -215,6 +215,10 @@ export async function sendCampaign(campaignId: string) {
     );
   const campaign = await db.newsletterCampaign.findUnique({ where: { id: campaignId } });
   if (!campaign) throw new CampaignError("Campania nu există.");
+  if (campaign.html)
+    throw new CampaignError(
+      "Campaniile cu design se trimit prin Brevo, ca designul să rămână intact.",
+    );
   const claimed = await db.newsletterCampaign.updateMany({
     where: { id: campaignId, status: "DRAFT" },
     data: { status: "SENDING" },

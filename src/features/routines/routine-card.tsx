@@ -51,11 +51,6 @@ export function RoutineCard({
           <Badge variant="neutral" size="sm" className="bg-surface/90">
             <Icon aria-hidden /> {timeOfDayLabels[routine.timeOfDay]}
           </Badge>
-          {routine.isDemo ? (
-            <Badge variant="demo" size="sm">
-              Demo
-            </Badge>
-          ) : null}
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-2 p-5">

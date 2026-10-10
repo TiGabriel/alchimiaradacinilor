@@ -269,6 +269,9 @@ export function TaxonomyEditor({
             {withSeo ? (
               <fieldset className="flex flex-col gap-3 border-t border-line pt-4">
                 <legend className="pb-2 text-sm font-semibold">SEO și rețele sociale</legend>
+                <p className="-mt-1 text-sm text-ink-muted">
+                  Imaginea pentru rețele sociale apare și pe cardul categoriei din magazin.
+                </p>
                 <SeoFields
                   value={seo}
                   onChange={setSeo}

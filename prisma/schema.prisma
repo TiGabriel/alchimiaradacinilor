@@ -1340,22 +1340,26 @@ enum CampaignStatus {
 
 /// Newsletter campaign (sent only with a configured provider, to ACTIVE subscribers with consent).
 model NewsletterCampaign {
-  id             String         @id @default(uuid(7))
-  subject        String
-  preheader      String?
-  heading        String
+  id              String         @id @default(uuid(7))
+  subject         String
+  preheader       String?
+  heading         String
   /// Plain paragraphs separated by blank lines (rendered with the shared email layout).
-  body           String
+  body            String
+  /// Designed HTML sent through Brevo, with Brevo's own tags ({{ unsubscribe }}, {{ mirror }}…).
+  html            String?
   /// Segment filter, validated by `campaignSegmentSchema`.
-  segment        Json           @default("{}")
-  status         CampaignStatus @default(DRAFT)
-  recipientCount Int            @default(0)
-  deliveredCount Int            @default(0)
-  failedCount    Int            @default(0)
-  createdById    String?
-  sentAt         DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  segment         Json           @default("{}")
+  status          CampaignStatus @default(DRAFT)
+  recipientCount  Int            @default(0)
+  deliveredCount  Int            @default(0)
+  failedCount     Int            @default(0)
+  createdById     String?
+  /// Id of the campaign created in Brevo, kept from the first attempt so a retry never creates a second one.
+  brevoCampaignId Int?           @unique
+  sentAt          DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
 

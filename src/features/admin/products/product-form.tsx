@@ -599,7 +599,7 @@ export function ProductForm({
             id={fid("isDemo")}
             checked={values.isDemo ?? false}
             onCheckedChange={(v) => set("isDemo", v === true)}
-            label="Produs demonstrativ — afișează eticheta „Demo” în magazin"
+            label="Produs demonstrativ"
           />
         </div>
       </AdminCard>

@@ -4,7 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { adminModerateReview } from "@/services/admin/moderation";
-import { adminSendCampaign, previewAudience, saveCampaign } from "@/services/admin/newsletter";
+import {
+  adminSendCampaign,
+  adminSendCampaignViaBrevo,
+  previewAudience,
+  saveCampaign,
+} from "@/services/admin/newsletter";
 import { campaignSegmentSchema } from "@/validation/newsletter";
 import { moderationSchema } from "@/validation/review";
 
@@ -43,5 +48,15 @@ export async function sendCampaignAction(id: string) {
     return { delivered: sent.deliveredCount, failed: sent.failedCount };
   });
   if (result.ok) revalidatePath("/admin/newsletter");
+  return result;
+}
+
+export async function sendCampaignViaBrevoAction(id: string) {
+  const result = await adminAction(
+    "users:manage",
+    async (actor) => adminSendCampaignViaBrevo(actor, z.uuid().parse(id)),
+    "Brevo a acceptat campania și o trimite acum.",
+  );
+  if (result.ok) revalidatePath("/admin/newsletter", "layout");
   return result;
 }

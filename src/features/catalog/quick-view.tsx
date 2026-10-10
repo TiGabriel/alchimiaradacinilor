@@ -62,11 +62,6 @@ export function QuickView({ product, open, onOpenChange }: QuickViewProps) {
               >
                 {stockLabel(product.stock)}
               </Badge>
-              {product.isDemo ? (
-                <Badge variant="demo" size="sm">
-                  Produs demonstrativ
-                </Badge>
-              ) : null}
             </div>
             <div className="mt-auto flex flex-col gap-3 pt-2">
               <div className="flex gap-3">

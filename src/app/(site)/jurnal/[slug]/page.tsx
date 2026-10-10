@@ -6,7 +6,6 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { SmartImage } from "@/components/media/smart-image";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/features/auth/session";
 import { ProductCard } from "@/features/catalog/product-card";
 import { ArticleCard, articleDate } from "@/features/journal/article-card";
@@ -149,11 +148,6 @@ export default async function JournalSlugPage(props: Props) {
             >
               {article.category.name}
             </Link>
-          ) : null}
-          {article.isDemo ? (
-            <Badge variant="demo" size="sm">
-              Demo
-            </Badge>
           ) : null}
         </p>
         <h1 className="text-display-lg">{article.title}</h1>

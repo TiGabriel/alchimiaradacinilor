@@ -11,6 +11,11 @@ import {
 } from "@/validation/newsletter";
 
 import { assertCan, type Actor } from "../auth/permissions";
+import {
+  brevoCampaignReport,
+  brevoReadiness,
+  sendCampaignViaBrevo,
+} from "../newsletter/brevo-send";
 import { CampaignError, countSegment, sendCampaign } from "../newsletter/newsletter";
 
 import { AdminError } from "./errors";
@@ -146,4 +151,26 @@ export async function adminSendCampaign(actor: Actor, id: string) {
     if (error instanceof CampaignError) throw new AdminError(error.message);
     throw error;
   }
+}
+
+/** Whether the campaign can be sent through Brevo now, and to how many contacts. */
+export async function adminBrevoReadiness(actor: Actor) {
+  assertCan(actor, "users:manage");
+  return brevoReadiness();
+}
+
+export async function adminSendCampaignViaBrevo(actor: Actor, id: string) {
+  assertCan(actor, "users:manage");
+  try {
+    return await sendCampaignViaBrevo(id);
+  } catch (error) {
+    if (error instanceof CampaignError) throw new AdminError(error.message);
+    throw error;
+  }
+}
+
+/** Live Brevo statistics of a campaign sent through Brevo. */
+export async function adminBrevoCampaignReport(actor: Actor, brevoCampaignId: number) {
+  assertCan(actor, "users:manage");
+  return brevoCampaignReport(brevoCampaignId);
 }

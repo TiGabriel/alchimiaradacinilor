@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { ImagePlaceholder } from "@/components/media/image-placeholder";
 import { SmartImage } from "@/components/media/smart-image";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { ArticleCardData } from "@/services/journal/journal";
 
@@ -58,11 +57,6 @@ export function ArticleCard({
             />
           )}
         </div>
-        {article.isDemo ? (
-          <Badge variant="demo" size="sm" className="absolute top-3 left-3">
-            Demo
-          </Badge>
-        ) : null}
       </div>
       <div className="flex flex-col gap-2">
         <p className="flex flex-wrap items-center gap-2 text-xs font-bold tracking-[0.12em] text-clay uppercase">

@@ -239,7 +239,6 @@ export function StyleguideDemos() {
           <Badge variant="success">În stoc</Badge>
           <Badge variant="warning">Stoc limitat</Badge>
           <Badge variant="danger">Stoc epuizat</Badge>
-          <Badge variant="demo">Demo</Badge>
           <Badge variant="sage" size="sm">
             <LeafIcon aria-hidden /> Mic
           </Badge>

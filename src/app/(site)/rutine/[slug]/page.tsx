@@ -82,11 +82,6 @@ export default async function RoutinePage(props: Props) {
         <Reveal className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-2">
             <p className="text-eyebrow text-clay">Rutină</p>
-            {routine.isDemo ? (
-              <Badge variant="demo" size="sm">
-                Demo
-              </Badge>
-            ) : null}
           </div>
           <h1 className="text-display-lg">{routine.title}</h1>
           <p className="text-lg text-ink-muted">{routine.summary}</p>

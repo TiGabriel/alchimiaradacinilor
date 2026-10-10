@@ -21,13 +21,24 @@
  * --kit <Name> --items <a,b,…> puts the listed products (manifest names) in one
  * studio shot, side by side at their real relative sizes, as
  * OUTPUT_DIR/studio/<Name>_2000x2000.webp — the photo for a kit.
+ *
+ * --category <Name> --items <a,b,…> is the same group framed for the category
+ * tiles (higher, clear of the name at the bottom), as
+ * OUTPUT_DIR/categories/<Name>_2000x2000.webp.
  */
 import "dotenv/config";
 
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { composeFinal, composeKit, composeStudio, encodeWebp, prepareInputs } from "./compose";
+import {
+  CATEGORY_FRAME,
+  composeFinal,
+  composeKit,
+  composeStudio,
+  encodeWebp,
+  prepareInputs,
+} from "./compose";
 import {
   buildPrompt,
   CANVAS,
@@ -67,10 +78,10 @@ const argValue = (argv: string[], flag: string) => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 
-/** One studio photo with every listed product of a kit. */
-async function generateKit(name: string, list: string) {
+/** One studio photo with every listed product of a kit (or category tile). */
+async function generateKit(name: string, list: string, kind: "kit" | "category" = "kit") {
   if (!/^[A-Za-z][A-Za-z0-9-]*$/.test(name))
-    throw new Error("--kit: use letters, digits and hyphens.");
+    throw new Error(`--${kind}: use letters, digits and hyphens.`);
   const wanted = list
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -86,12 +97,14 @@ async function generateKit(name: string, list: string) {
       relativeHeight: p.relativeHeight,
     })),
   );
-  const webp = await encodeWebp(await composeKit(items));
-  const dir = path.join(OUTPUT_DIR, "studio");
+  const webp = await encodeWebp(
+    await composeKit(items, kind === "category" ? CATEGORY_FRAME : undefined),
+  );
+  const dir = path.join(OUTPUT_DIR, kind === "category" ? "categories" : "studio");
   const output = path.join(dir, `${name}_${CANVAS}x${CANVAS}.webp`);
   await mkdir(dir, { recursive: true });
   await writeFile(output, webp);
-  console.log(`kit       ${output} (${photos.map((p) => p.productName).join(", ")})`);
+  console.log(`${kind.padEnd(9)} ${output} (${photos.map((p) => p.productName).join(", ")})`);
 }
 
 const exists = (file: string) =>
@@ -149,6 +162,8 @@ async function main() {
 
   const kit = argValue(argv, "--kit");
   if (kit) return generateKit(kit, argValue(argv, "--items") ?? "");
+  const category = argValue(argv, "--category");
+  if (category) return generateKit(category, argValue(argv, "--items") ?? "", "category");
 
   const photos = PRODUCT_PHOTOS.filter(
     (p) => !options.only || options.only.has(p.productName.toLowerCase()),

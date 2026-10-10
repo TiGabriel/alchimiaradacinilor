@@ -5,6 +5,8 @@ export type CategoryNode = {
   name: string;
   slug: string;
   description: string | null;
+  /** Photo URL for the category tiles, if one was uploaded. */
+  image?: string | null;
   /** Active products in this category and its descendants. */
   productCount: number;
   children: CategoryNode[];
@@ -15,6 +17,7 @@ type FlatCategory = {
   name: string;
   slug: string;
   description: string | null;
+  image?: string | null;
   parentId: string | null;
   position: number;
   productCount: number;
@@ -46,6 +49,7 @@ export function buildCategoryTree(rows: FlatCategory[]): CategoryNode[] {
       name: node.name,
       slug: node.slug,
       description: node.description,
+      image: node.image,
       productCount: total,
       children,
     };

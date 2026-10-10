@@ -440,3 +440,18 @@ needs content or credentials, next steps).
 - Migration `20261010120000_order_payment_reference` (two nullable order columns).
 - Tests: NETOPIA request building, IPN verification (real RSA-signed tokens) and order state
   transitions; Brevo client, webhook parsing and authentication; contact sender; env parsing.
+
+## Designed campaigns through Brevo
+
+- Campaigns can hold designed HTML (Brevo tags kept: `{{ unsubscribe }}` required, `{{ mirror }}`,
+  `{{ contact.FIRSTNAME }}`), pasted or loaded from an `.html` file; the campaign page shows a
+  sandboxed preview with sample values.
+- "Trimite prin Brevo": creates the Brevo campaign for the synced list and sends it now, after a
+  confirmation with the list's recipient count; readiness check (key, sender, list) on the page;
+  sent campaigns show the date, the Brevo campaign id and live Brevo statistics (delivered, opens,
+  clicks, unsubscribes). Designed campaigns are never sent by the site's own plain sender.
+- New env: `BREVO_SENDER_EMAIL`, optional `BREVO_SENDER_NAME`. Migration
+  `20261010160000_campaign_design_brevo` (`html`, `brevoCampaignId`).
+- Tests: Brevo campaigns client (requests, 204-only success, errors, stats), HTML tag check and
+  preview, campaign schema; integration: send, double-send and concurrent clicks, refused send and
+  retry reusing the Brevo campaign, lost answer recorded instead of resent.

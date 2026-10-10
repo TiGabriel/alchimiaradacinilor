@@ -3,12 +3,12 @@ import { discountPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { ProductCardData } from "@/services/catalog/product-types";
 
-/** Badges stacked on a product image: discount, new, sold out, demo. */
+/** Badges stacked on a product image: discount, new, sold out. */
 export function ProductBadges({
   product,
   className,
 }: {
-  product: Pick<ProductCardData, "price" | "compareAtPrice" | "isNew" | "stock" | "isDemo">;
+  product: Pick<ProductCardData, "price" | "compareAtPrice" | "isNew" | "stock">;
   className?: string;
 }) {
   const discount = discountPercent(product.price, product.compareAtPrice);
@@ -27,11 +27,6 @@ export function ProductBadges({
       {product.isNew ? (
         <Badge variant="forest" size="sm">
           Nou
-        </Badge>
-      ) : null}
-      {product.isDemo ? (
-        <Badge variant="demo" size="sm" title="Produs demonstrativ">
-          Demo
         </Badge>
       ) : null}
     </div>

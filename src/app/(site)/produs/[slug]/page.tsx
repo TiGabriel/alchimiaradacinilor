@@ -249,11 +249,6 @@ export default async function ProductPage(props: Props) {
             >
               <PackageCheck aria-hidden /> {stockLabel(product.stock)}
             </Badge>
-            {product.isDemo ? (
-              <Badge variant="demo" title="Datele acestui produs sunt demonstrative">
-                Produs demonstrativ
-              </Badge>
-            ) : null}
           </div>
 
           <ProductPurchase product={product} />

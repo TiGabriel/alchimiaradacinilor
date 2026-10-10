@@ -226,12 +226,43 @@ export function kitLayout(items: Array<{ width: number; height: number }>, gap: 
   return { placed, width: x - gap, height: Math.max(...items.map((i) => i.height)) };
 }
 
+/** Where a group of products stands in the frame, and the box it must fit. */
+export type GroupFrame = {
+  baseline: number;
+  maxWidth: number;
+  maxHeight: number;
+  /** Raise a group shorter than `maxHeight` so it sits in the middle of the box. */
+  centred?: boolean;
+};
+
+/** Product photos and kits: the shared baseline, inside every crop the site applies. */
+const PRODUCT_FRAME: GroupFrame = {
+  baseline: LAYOUT.baseline,
+  maxWidth: MAX_WIDTH,
+  maxHeight: MAX_HEIGHT,
+};
+
+/**
+ * Category tiles (4:5 on phones, 5:4 above): the name, count and a dark
+ * gradient cover the bottom third, so the group stands higher and keeps
+ * inside the middle of both crops.
+ */
+export const CATEGORY_FRAME: GroupFrame = {
+  baseline: 1260,
+  maxWidth: 1400,
+  maxHeight: 900,
+  centred: true,
+};
+
 /**
  * Every product of a kit in one studio shot: the original cut-outs side by
  * side on one baseline, each at its real size relative to the others, the
- * whole group scaled (never enlarged) to fit the site's crops.
+ * whole group scaled (never enlarged) to fit `frame`.
  */
-export async function composeKit(items: KitItem[]): Promise<Buffer> {
+export async function composeKit(
+  items: KitItem[],
+  frame: GroupFrame = PRODUCT_FRAME,
+): Promise<Buffer> {
   if (!items.length) throw new Error("A kit photo needs at least one product.");
   const measured = await Promise.all(
     items.map(async (item) => {
@@ -272,16 +303,18 @@ export async function composeKit(items: KitItem[]): Promise<Buffer> {
   const height = Math.max(...rows.map((r) => r.height + r.lift));
   // Pixels per bottle unit: fit the crops, and never enlarge any cut-out.
   const unit = Math.min(
-    MAX_WIDTH / width,
-    MAX_HEIGHT / height,
+    frame.maxWidth / width,
+    frame.maxHeight / height,
     ...measured.map((m) => m.box.height / m.relativeHeight),
   );
+
+  const raise = frame.centred ? Math.round((frame.maxHeight - height * unit) / 2) : 0;
 
   // Back row first, so the front row is drawn over it.
   const layers: OverlayOptions[] = [];
   for (const row of rows) {
     const left0 = (CANVAS - row.width * unit) / 2;
-    const baseline = LAYOUT.baseline - Math.round(row.lift * unit);
+    const baseline = frame.baseline - raise - Math.round(row.lift * unit);
     const shadows: OverlayOptions[] = [];
     const products: OverlayOptions[] = [];
     for (const p of row.placed) {

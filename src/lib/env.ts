@@ -34,6 +34,10 @@ const serverEnvSchema = z.object({
   /** Brevo (email marketing): confirmed newsletter subscribers are mirrored to one list. */
   BREVO_API_KEY: unsetIfEmpty(z.string()),
   BREVO_LIST_ID: unsetIfEmpty(z.coerce.number().int().positive()),
+  /** Sender of the campaigns sent through Brevo; must be a verified sender in Brevo. */
+  BREVO_SENDER_EMAIL: unsetIfEmpty(z.email()),
+  /** Sender name shown in the inbox; defaults to the shop name from the settings. */
+  BREVO_SENDER_NAME: unsetIfEmpty(z.string().max(70)),
   /** Shared secret Brevo sends with its webhook (unsubscribes, bounces, complaints). */
   BREVO_WEBHOOK_SECRET: unsetIfEmpty(z.string().min(24)),
   /** NETOPIA Payments (card). No default: card payments stay off until this is set explicitly. */

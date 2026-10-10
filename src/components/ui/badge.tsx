@@ -17,7 +17,6 @@ export const badgeVariants = cva(
         success: "bg-success-soft text-success",
         warning: "bg-warning-soft text-warning",
         danger: "bg-danger-soft text-danger",
-        demo: "border border-dashed border-line-strong bg-surface/80 text-ink-muted",
       },
       size: {
         sm: "px-2 py-0.5 text-[0.6875rem] tracking-wide",
