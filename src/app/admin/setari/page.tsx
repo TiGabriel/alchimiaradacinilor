@@ -13,6 +13,7 @@ import {
 import { AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
 import { db } from "@/lib/db";
+import { netopiaConfig } from "@/services/payments/netopia-service";
 import { getSettings } from "@/services/settings";
 
 export const metadata: Metadata = { title: "Setări" };
@@ -65,7 +66,7 @@ export default async function SettingsPage() {
         <ShippingForm initial={s.shipping} />
       </div>
       <div id="plata" className="scroll-mt-6">
-        <PaymentForm initial={s.payment} />
+        <PaymentForm initial={s.payment} netopia={netopiaConfig()?.environment ?? null} />
       </div>
       <div id="email-seo" className="scroll-mt-6">
         <EmailSeoForm email={s.email} seo={s.seo} />

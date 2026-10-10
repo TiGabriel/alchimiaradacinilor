@@ -3,6 +3,7 @@ import "server-only";
 import type { ConsentPurpose } from "@/generated/prisma/enums";
 import type { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
+import { syncSubscriber } from "@/services/newsletter/marketing-sync";
 import { getSetting } from "@/services/settings";
 
 import { latestConsents } from "./latest";
@@ -77,7 +78,7 @@ export async function getNewsletterState(userId: string): Promise<NewsletterStat
  * A verified account's email counts as confirmed (no second opt-in email).
  */
 export async function setNewsletterConsent(userId: string, granted: boolean, meta: ConsentMeta) {
-  await db.$transaction(async (tx) => {
+  const email = await db.$transaction(async (tx) => {
     const user = await tx.user.findUniqueOrThrow({
       where: { id: userId },
       select: { email: true, emailVerifiedAt: true },
@@ -107,7 +108,9 @@ export async function setNewsletterConsent(userId: string, granted: boolean, met
       meta,
       tx,
     );
+    return user.email;
   });
+  await syncSubscriber(email, { freshConsent: granted });
 }
 
 export async function setPersonalizationConsent(

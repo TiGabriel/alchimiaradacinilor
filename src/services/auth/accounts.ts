@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { recordConsent, type ConsentMeta } from "@/services/consent/consent";
+import { syncSubscriber } from "@/services/newsletter/marketing-sync";
 import type { RegisterInput } from "@/validation/auth";
 
 import { hashPassword, verifyAgainstDummy, verifyPassword } from "./password";
@@ -131,18 +132,20 @@ export function createEmailVerificationToken(userId: string) {
 export async function verifyEmail(token: string) {
   const userId = await consumeToken("email-verification", token);
   const now = new Date();
-  return db.$transaction(async (tx) => {
+  const { user, activated } = await db.$transaction(async (tx) => {
     const user = await tx.user.update({
       where: { id: userId },
       data: { emailVerifiedAt: now },
       select: { id: true, email: true, firstName: true },
     });
-    await tx.newsletterSubscriber.updateMany({
+    const { count } = await tx.newsletterSubscriber.updateMany({
       where: { userId, status: "PENDING" },
       data: { status: "ACTIVE", confirmedAt: now },
     });
-    return user;
+    return { user, activated: count > 0 };
   });
+  if (activated) await syncSubscriber(user.email, { freshConsent: true });
+  return user;
 }
 
 /** Returns a reset token for a known email, or null (callers must not reveal which). */

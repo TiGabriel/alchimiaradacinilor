@@ -9,7 +9,8 @@ import type { CheckoutInput } from "@/validation/checkout";
 
 import { toCartLines, type CartLineData } from "../cart/cart";
 import { buildQuote, type Quote } from "../checkout/quote";
-import { providerFor, type PaymentStart } from "../payments/methods";
+import type { PaymentStart } from "../payments/methods";
+import { providerFor } from "../payments/registry";
 
 import { sendOrderConfirmation } from "./notifications";
 import { formatOrderNumber } from "./status";
@@ -296,7 +297,19 @@ export async function placeOrder(userId: string, input: CheckoutInput): Promise<
     { timeout: 20_000 },
   );
 
-  const payment = await provider.start(order, settings.payment);
+  let payment: PaymentStart;
+  try {
+    payment = await provider.start(order, settings.payment);
+  } catch (error) {
+    // The order is already stored and its stock reserved: never lose it because the
+    // processor is unreachable. The customer can retry the payment from the order page.
+    if (!provider.online) throw error;
+    console.error(`[orders] payment start failed for ${order.number}`, error);
+    payment = {
+      kind: "retry",
+      message: "Plata cu cardul nu a putut fi inițiată. Poți încerca din nou de mai jos.",
+    };
+  }
   // Emails never block or fail the order; they are only sent when a provider is configured.
   await sendOrderConfirmation(order.id, payment).catch((error) =>
     console.error("[orders] confirmation email failed", error),

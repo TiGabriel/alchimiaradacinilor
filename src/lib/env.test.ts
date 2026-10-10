@@ -18,6 +18,24 @@ describe("parseServerEnv", () => {
     expect(env.STORAGE_DRIVER).toBe("netlify");
   });
 
+  it("treats empty integration variables as unset", () => {
+    const env = parseServerEnv({
+      DATABASE_URL: "postgresql://u:p@localhost:5432/db",
+      BREVO_LIST_ID: "",
+      BREVO_WEBHOOK_SECRET: "",
+      NETOPIA_ENV: "",
+      NETOPIA_PUBLIC_KEY: "",
+    });
+    expect(env.BREVO_LIST_ID).toBeUndefined();
+    expect(env.NETOPIA_ENV).toBeUndefined();
+    expect(
+      parseServerEnv({ DATABASE_URL: env.DATABASE_URL, BREVO_LIST_ID: "12" }).BREVO_LIST_ID,
+    ).toBe(12);
+    expect(() => parseServerEnv({ DATABASE_URL: env.DATABASE_URL, NETOPIA_ENV: "prod" })).toThrow(
+      /NETOPIA_ENV/,
+    );
+  });
+
   it("requires AUTH_SECRET in production", () => {
     expect(() =>
       parseServerEnv({

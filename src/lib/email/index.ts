@@ -50,17 +50,24 @@ export function withDisplayName(from: string, name: string): string {
   return safe ? `${safe} <${address}>` : from;
 }
 
-export async function sendEmail(message: EmailMessage): Promise<SendResult> {
-  const resolution = resolveEmailProvider(env());
+/** Sender address for a message: EMAIL_FROM, or EMAIL_FROM_CONTACT for contact-form mail. */
+export function senderAddress(config: ServerEnv, fallback: string, sender?: "contact"): string {
+  return (sender === "contact" && config.EMAIL_FROM_CONTACT?.trim()) || fallback;
+}
+
+export async function sendEmail({ sender, ...message }: EmailMessage): Promise<SendResult> {
+  const config = env();
+  const resolution = resolveEmailProvider(config);
   if ("disabled" in resolution) {
     console.error(
       `[email] Sending disabled: ${resolution.disabled} (to: ${message.to}, subject: ${message.subject})`,
     );
     return { status: "disabled", reason: resolution.disabled };
   }
+  const from = senderAddress(config, resolution.from, sender);
   const result = await resolution.provider.send({
     ...message,
-    from: message.fromName ? withDisplayName(resolution.from, message.fromName) : resolution.from,
+    from: message.fromName ? withDisplayName(from, message.fromName) : from,
   });
   if (result.status === "failed")
     console.error(`[email] ${resolution.provider.name} failed:`, result.error);

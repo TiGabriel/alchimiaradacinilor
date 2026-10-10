@@ -425,3 +425,18 @@ needs content or credentials, next steps).
 - README rewritten (install, env, database, seed, first admin, storage, email, payments, Vercel +
   Postgres + S3 deployment, DNS for alchimiaradacinilor.ro at hostgate.ro); `.env.example`
   completed and commented.
+
+## External services
+
+- **Email:** contact-form notifications can use a dedicated sender (`EMAIL_FROM_CONTACT`); the
+  existing Resend/SMTP drivers, verification flow and server-side "verified email before ordering"
+  check were audited and kept.
+- **Newsletter → Brevo:** confirmed subscribers and withdrawals are mirrored to a Brevo list;
+  Brevo unsubscribes, complaints and hard bounces return through `/api/newsletter/brevo`;
+  `pnpm newsletter:sync` reconciles (dry run by default). Off until `BREVO_*` is set.
+- **Card payments → NETOPIA (API v2):** card method in the existing checkout, payment start on the
+  hosted page, signed IPN at `/api/plati/netopia/ipn`, return route, retry button on the order page,
+  admin toggle and status. Off until `NETOPIA_*` is set and the setting is ticked.
+- Migration `20261010120000_order_payment_reference` (two nullable order columns).
+- Tests: NETOPIA request building, IPN verification (real RSA-signed tokens) and order state
+  transitions; Brevo client, webhook parsing and authentication; contact sender; env parsing.

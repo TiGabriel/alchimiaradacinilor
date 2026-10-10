@@ -105,6 +105,9 @@ at start-up by `src/lib/env.ts`.
 | `AUTH_SECRET`                                                                                        | yes in production       | ≥ 32 random characters; signs unsubscribe links, salts IP pseudonyms             |
 | `EMAIL_PROVIDER`, `EMAIL_FROM`                                                                       | for email               | `console` \| `resend` \| `smtp`, and the sender address                          |
 | `RESEND_API_KEY` or `SMTP_*`                                                                         | with that provider      | Provider credentials                                                             |
+| `EMAIL_FROM_CONTACT`                                                                                 | —                       | Sender for contact-form notifications (defaults to `EMAIL_FROM`)                 |
+| `BREVO_API_KEY`, `BREVO_LIST_ID`, `BREVO_WEBHOOK_SECRET`                                             | for Brevo               | Mirror confirmed newsletter subscribers to a Brevo list                          |
+| `NETOPIA_ENV`, `NETOPIA_API_KEY`, `NETOPIA_POS_SIGNATURE`, `NETOPIA_PUBLIC_KEY`                      | for card payments       | NETOPIA Payments (`sandbox` or `live`); card stays off until all are set         |
 | `STORAGE_DRIVER`                                                                                     | —                       | `local` (default) or `s3`                                                        |
 | `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL` | with `s3`               | Bucket and its public URL                                                        |
 | `DATABASE_URL_TEST`                                                                                  | for integration tests   | A separate database (it is truncated by the tests)                               |
@@ -164,20 +167,38 @@ updates, newsletter confirmation and campaigns (with RFC 8058 one-click unsubscr
 - **SMTP:** `EMAIL_PROVIDER=smtp` with `SMTP_HOST`, `SMTP_PORT` (587 STARTTLS or 465 TLS),
   `SMTP_USER`, `SMTP_PASSWORD` — e.g. the mailbox provided by your hosting.
 - `EMAIL_FROM` must be an address on a domain the provider has verified, e.g.
-  `salut@alchimiaradacinilor.ro`. The display name and reply-to address are set in
-  **Admin → Setări → Email**.
+  `noreply@alchimiaradacinilor.ro`. The display name and reply-to address are set in
+  **Admin → Setări → Email**. Verifying a sending domain does **not** create a mailbox: set the
+  reply-to to an address someone reads, or customers' replies are lost.
+- **Contact form:** messages go to the email in **Admin → Setări → Contact**, sent from
+  `EMAIL_FROM_CONTACT` (e.g. `contact@alchimiaradacinilor.ro`, same verified domain) or
+  `EMAIL_FROM`, with the visitor's address as Reply-To. They are not stored in the database.
+
+### Newsletter marketing (Brevo)
+
+Subscriptions, double opt-in, consent records and unsubscribes stay in the site's database. With
+`BREVO_API_KEY` and `BREVO_LIST_ID` set, every confirmed subscriber is added to that Brevo list and
+every withdrawal removes and blocklists the contact there; campaigns are designed and sent from
+Brevo. Brevo's own unsubscribes, spam complaints and hard bounces come back through a marketing
+webhook to `https://<domain>/api/newsletter/brevo` (header `X-Webhook-Secret:
+<BREVO_WEBHOOK_SECRET>`; events _unsubscribed_, _spam_, _hard bounce_). Create the contact
+attributes `SURSA_ABONARE` (text) and `DATA_ABONARE` (date) in Brevo to receive the subscription
+source and date. Existing subscribers: `pnpm newsletter:sync` (dry run), then
+`pnpm newsletter:sync --apply`. Brevo sends nothing by itself here: do not enable a Brevo welcome
+or double opt-in automation, the site already sends the confirmation email.
 
 If no provider is configured in production, the site says emails cannot be sent instead of
 pretending, and newsletter campaigns are disabled.
 
 ## Payments
 
-The shop launches with **cash on delivery** and **bank transfer** (offered only after the IBAN and
-account holder are filled in under **Admin → Setări → Plată**). Card payments are not simulated:
-the provider interface is ready and [`docs/PAYMENTS.md`](docs/PAYMENTS.md) explains how to add
-Stripe or Netopia (keys, redirect to the hosted payment page, webhook marking the order paid).
-Totals are always recomputed on the server; the client only sends the total it displayed, to
-detect price changes.
+**Cash on delivery** and **bank transfer** (offered only after the IBAN and account holder are
+filled in under **Admin → Setări → Plată**), plus **card through NETOPIA Payments**, offered only
+when the `NETOPIA_*` variables are set and **Card bancar** is ticked. Card payments are never
+simulated: an order is marked paid only by NETOPIA's signed notification.
+[`docs/PAYMENTS.md`](docs/PAYMENTS.md) describes the integration and the activation steps
+(sandbox, then live). Totals are always recomputed on the server; the client only sends the total
+it displayed, to detect price changes.
 
 ## Production deployment (Vercel + Postgres + S3)
 
@@ -360,6 +381,7 @@ first.
 | `pnpm db:reset`         | Drop, re-migrate and re-seed (development)                    |
 | `pnpm db:studio`        | Prisma Studio                                                 |
 | `pnpm admin:create`     | Create or promote an administrator                            |
+| `pnpm newsletter:sync`  | Mirror subscribers to Brevo (dry run; `--apply` to push)      |
 | `pnpm images:products`  | Product photography from the real product images (see below)  |
 
 Integration tests apply the migrations to `DATABASE_URL_TEST` themselves before running and

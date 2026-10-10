@@ -17,6 +17,7 @@ import { requirePermission } from "@/features/auth/session";
 import { SubscriberStatus } from "@/generated/prisma/enums";
 import { emailConfigured } from "@/lib/email";
 import { listCampaigns, listSubscribers } from "@/services/admin/newsletter";
+import { marketingProvider } from "@/services/newsletter/marketing-sync";
 
 export const metadata: Metadata = { title: "Newsletter" };
 
@@ -77,6 +78,13 @@ export default async function NewsletterAdminPage({
         <p className="rounded-lg border border-warning/40 bg-warning-soft p-4 text-sm">
           Nu este configurat un furnizor de email: confirmările de abonare și campaniile nu pot fi
           trimise.
+        </p>
+      ) : null}
+      {marketingProvider() ? (
+        <p className="rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
+          Abonații confirmați sunt sincronizați automat cu lista Brevo, iar dezabonările din Brevo
+          revin aici. Pentru campanii cu design și statistici, folosește editorul din Brevo; nu
+          trimite aceeași campanie din ambele locuri.
         </p>
       ) : null}
       <AdminCard title="Campanii">

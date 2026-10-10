@@ -531,3 +531,34 @@ cannot drift even when the model repaints the masked area. Every image shares on
 and photography direction (`scripts/product-images`), and the product stays inside the crops the
 site applies to square images (4:5 cards, 4:3 quick view). Finished images go through the normal
 admin upload, so no second image system exists.
+
+### D-081 · Card payments through NETOPIA's hosted page, confirmed only by the IPN
+
+Card payments use NETOPIA Payments API v2 with its hosted card page: the start request carries no
+card data, so the shop never handles card numbers or CVVs. The order is created first (stock
+reserved, payment `UNPAID`), then a payment attempt is opened with the stored total; every attempt
+has its own NETOPIA order id (`<number>_<random>`). The order is marked paid only by a signed IPN
+(RSA JWT, issuer, POS audience, SHA-512 of the raw body) whose amount and currency equal the stored
+total; the customer's return is only a redirect to the order page. Status changes only move forward
+and are idempotent, so a duplicate or late notification cannot undo a payment. The processor's
+transaction id is stored on the order (`paymentProvider`, `paymentReference` — the only schema
+change). The method is offered only when the `NETOPIA_*` variables are set **and** the admin setting
+is on; `NETOPIA_ENV` has no default, and sandbox mode is labelled as a test at checkout and in the
+order history.
+
+### D-082 · Newsletter consent stays in the site's database; Brevo mirrors it
+
+The existing double opt-in, consent records and signed unsubscribe links remain the source of truth.
+Brevo (EU-based, campaign editor, suppression lists) receives only confirmed subscribers, one list,
+and withdrawals (removed from the list and blocklisted). A Brevo-side blocklisting is lifted only
+right after a fresh opt-in on the site, never by reconciliation (`pnpm newsletter:sync`). Brevo's
+unsubscribes, complaints and hard bounces come back through an authenticated webhook. Sync failures
+never affect the visitor; they are logged and repaired by the reconcile script. The admin's own
+campaign sender is kept for small lists; Brevo is the place for larger campaigns.
+
+### D-083 · Contact form mail is sent from the shop's domain, replied to the visitor
+
+Contact-form notifications go to the address in Admin → Setări → Contact (already editable, so no
+new setting), from `EMAIL_FROM_CONTACT` (or `EMAIL_FROM`) on the verified domain, with the visitor's
+address as Reply-To. Messages are not stored: email delivery is honest (`isDelivered`) and the form
+tells the visitor when sending fails, so a database copy would add personal data without a need.

@@ -1,7 +1,7 @@
 /**
  * Payment methods — a small provider interface with the two offline methods the
- * shop starts with. Card payments are added by implementing `PaymentProvider`
- * for Stripe or Netopia (see docs/PAYMENTS.md); nothing is ever simulated.
+ * shop starts with, and a factory for the card method (NETOPIA, wired up in
+ * `registry.ts`). Nothing is ever simulated (see docs/PAYMENTS.md).
  * Pure and unit-tested.
  */
 import type { PaymentMethod } from "@/generated/prisma/enums";
@@ -17,14 +17,22 @@ export type PaymentStart =
   /** Nothing to do online; the customer sees these instructions. */
   | { kind: "offline"; instructions: string[] }
   /** Hosted payment page (card providers). */
-  | { kind: "redirect"; url: string };
+  | { kind: "redirect"; url: string }
+  /** The processor could not be reached; the order exists and the customer can retry from it. */
+  | { kind: "retry"; message: string };
 
 export interface PaymentProvider {
   readonly method: PaymentMethod;
+  /**
+   * Online providers open a transaction with a processor in `start`, so it runs
+   * once per payment attempt. Offline providers only describe what to do, and
+   * `start` may be called again to show the instructions.
+   */
+  readonly online?: boolean;
   isAvailable(settings: PaymentSettings): boolean;
   option(settings: PaymentSettings): PaymentOption;
   start(
-    order: { number: string; total: number; currency: string },
+    order: { id: string; number: string; total: number; currency: string },
     settings: PaymentSettings,
   ): Promise<PaymentStart> | PaymentStart;
 }
@@ -72,13 +80,43 @@ export const bankTransferProvider: PaymentProvider = {
   },
 };
 
-/** Registered providers, in display order. Add card providers here. */
-export const paymentProviders: PaymentProvider[] = [cashOnDeliveryProvider, bankTransferProvider];
-
-export function providerFor(method: PaymentMethod): PaymentProvider | null {
-  return paymentProviders.find((p) => p.method === method) ?? null;
+/**
+ * Card payments through a processor's hosted page. Offered only when the
+ * setting is on **and** the processor is fully configured (`ready`). In test
+ * mode (sandbox credentials) the label says so, so nobody mistakes it for a
+ * real payment.
+ */
+export function createCardProvider(deps: {
+  ready: boolean;
+  testMode: boolean;
+  start: (order: { id: string }) => Promise<PaymentStart>;
+}): PaymentProvider {
+  return {
+    method: "CARD",
+    online: true,
+    isAvailable: (s) => s.card.enabled && deps.ready,
+    option: (s) => ({
+      method: "CARD",
+      label: deps.testMode ? `${s.card.label} (mediu de test)` : s.card.label,
+      description: s.card.description,
+    }),
+    start: (order) => deps.start(order),
+  };
 }
 
-export function availablePaymentOptions(settings: PaymentSettings): PaymentOption[] {
-  return paymentProviders.filter((p) => p.isAvailable(settings)).map((p) => p.option(settings));
+/** The offline providers, in display order. The server registry (`registry.ts`) adds the card one. */
+export const paymentProviders: PaymentProvider[] = [cashOnDeliveryProvider, bankTransferProvider];
+
+export function providerFor(
+  method: PaymentMethod,
+  providers: PaymentProvider[] = paymentProviders,
+): PaymentProvider | null {
+  return providers.find((p) => p.method === method) ?? null;
+}
+
+export function availablePaymentOptions(
+  settings: PaymentSettings,
+  providers: PaymentProvider[] = paymentProviders,
+): PaymentOption[] {
+  return providers.filter((p) => p.isAvailable(settings)).map((p) => p.option(settings));
 }

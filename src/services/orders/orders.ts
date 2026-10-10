@@ -4,7 +4,7 @@ import type { OrderStatus, PaymentStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 import { getSetting } from "@/services/settings";
 
-import { providerFor } from "../payments/methods";
+import { providerFor } from "../payments/registry";
 
 import { sendOrderStatusEmail } from "./notifications";
 import { canTransition, ORDER_NUMBER_PATTERN, restocksOn } from "./status";
@@ -56,19 +56,21 @@ export async function getUserOrder(userId: string, number: string) {
   });
   if (!order) return null;
 
-  // Payment instructions stay available until the order is paid or closed.
+  // Payment instructions stay available until the order is paid or closed. Online
+  // providers have none: calling their `start` would open a new transaction.
   let paymentInstructions: string[] = [];
+  let canRetryCard = false;
   const provider = providerFor(order.paymentMethod);
-  if (
-    provider &&
-    order.paymentStatus === "UNPAID" &&
-    !["CANCELLED", "REFUNDED"].includes(order.status)
-  ) {
+  const open = !["CANCELLED", "REFUNDED"].includes(order.status);
+  if (provider && !provider.online && order.paymentStatus === "UNPAID" && open) {
     const start = await provider.start(order, await getSetting("payment"));
     if (start.kind === "offline") paymentInstructions = start.instructions;
   }
+  if (provider?.online && ["UNPAID", "FAILED"].includes(order.paymentStatus) && open)
+    canRetryCard = provider.isAvailable(await getSetting("payment"));
   return {
     ...order,
+    canRetryCard,
     shippingAddress: order.addresses.find((a) => a.type === "SHIPPING") ?? null,
     billingAddress: order.addresses.find((a) => a.type === "BILLING") ?? null,
     paymentInstructions,

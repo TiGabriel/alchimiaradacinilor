@@ -12,7 +12,7 @@ import { CheckoutFlow } from "@/features/checkout/checkout-flow";
 import { listAddresses } from "@/services/account/addresses";
 import { loadCartView } from "@/services/cart/cart";
 import { activeShippingMethods } from "@/services/checkout/pricing";
-import { availablePaymentOptions } from "@/services/payments/methods";
+import { availablePaymentOptions } from "@/services/payments/registry";
 import { getSettings } from "@/services/settings";
 
 export const metadata: Metadata = {

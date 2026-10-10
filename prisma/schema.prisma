@@ -1101,6 +1101,10 @@ model Order {
   privacyPolicyVersion String
   placedAt             DateTime      @default(now())
   paidAt               DateTime?
+  /// Online processor for card orders ("netopia"); null for offline methods.
+  paymentProvider      String?
+  /// The processor's transaction id (NETOPIA ntpID) — for reconciliation and refunds.
+  paymentReference     String?
   shippedAt            DateTime?
   cancelledAt          DateTime?
   createdAt            DateTime      @default(now())

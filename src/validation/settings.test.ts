@@ -69,4 +69,12 @@ describe("site settings registry", () => {
     };
     expect(parseSetting("brand", value)).toEqual(value);
   });
+
+  it("keeps stored payment settings saved before card payments existed", () => {
+    const { card: _card, ...legacy } = settingDefaults.payment;
+    const stored = { ...legacy, cashOnDelivery: { ...legacy.cashOnDelivery, label: "Ramburs" } };
+    const parsed = parseSetting("payment", stored);
+    expect(parsed.cashOnDelivery.label).toBe("Ramburs");
+    expect(parsed.card.enabled).toBe(false);
+  });
 });

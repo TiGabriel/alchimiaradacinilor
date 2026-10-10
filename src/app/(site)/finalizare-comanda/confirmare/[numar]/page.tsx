@@ -16,8 +16,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function ConfirmationPage({ params }: { params: Promise<{ numar: string }> }) {
-  const { numar } = await params;
+export default async function ConfirmationPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ numar: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const [{ numar }, { plata }] = await Promise.all([params, searchParams]);
   const { user } = await requireUser(`/finalizare-comanda/confirmare/${numar}`);
   const order = await getUserOrder(user.id, numar);
   if (!order) notFound();
@@ -53,7 +59,7 @@ export default async function ConfirmationPage({ params }: { params: Promise<{ n
           </Button>
         </div>
       </header>
-      <OrderDetail order={order} />
+      <OrderDetail order={order} cardPaymentNotStarted={plata === "neinitiata"} />
     </div>
   );
 }

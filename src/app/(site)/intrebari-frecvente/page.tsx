@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/lib/money";
-import { availablePaymentOptions } from "@/services/payments/methods";
+import { availablePaymentOptions } from "@/services/payments/registry";
 import { pageMetadata } from "@/services/seo";
 import { getSettings } from "@/services/settings";
 
@@ -33,6 +33,9 @@ export default async function FaqPage() {
   const { shipping, payment } = await getSettings();
   const methods = shipping.methods.filter((m) => m.active);
   const payments = availablePaymentOptions(payment);
+  const noCard = payments.some((p) => p.method === "CARD")
+    ? ""
+    : "Plata cu cardul nu este disponibilă momentan.";
   const shippingText = methods
     .map((m) => `${m.name}: ${m.price > 0 ? formatMoney(m.price) : "gratuit"}`)
     .join("; ");
@@ -156,7 +159,7 @@ export default async function FaqPage() {
         {
           q: "Cum pot plăti?",
           text: payments.length
-            ? `${payments.map((p) => p.label).join(", ")}. Plata cu cardul nu este disponibilă momentan.`
+            ? `${payments.map((p) => p.label).join(", ")}. ${noCard}`.trim()
             : "Metodele de plată sunt afișate la finalizarea comenzii.",
           a: (
             <>
@@ -168,7 +171,7 @@ export default async function FaqPage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-2">Plata cu cardul nu este disponibilă momentan.</p>
+              {noCard ? <p className="mt-2">{noCard}</p> : null}
             </>
           ),
         },

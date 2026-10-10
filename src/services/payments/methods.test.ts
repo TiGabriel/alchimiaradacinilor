@@ -6,6 +6,8 @@ import {
   availablePaymentOptions,
   bankTransferProvider,
   bankTransferReady,
+  createCardProvider,
+  paymentProviders,
   providerFor,
 } from "./methods";
 
@@ -43,7 +45,7 @@ describe("payment methods", () => {
 
   it("gives bank transfer instructions with the order number as reference", async () => {
     const start = await bankTransferProvider.start(
-      { number: "AR-2026-000007", total: 12345, currency: "RON" },
+      { id: "o1", number: "AR-2026-000007", total: 12345, currency: "RON" },
       withBank,
     );
     expect(start.kind).toBe("offline");
@@ -51,5 +53,31 @@ describe("payment methods", () => {
     expect(text).toContain("RO00EXEM0000000000000000");
     expect(text).toContain("AR-2026-000007");
     expect(text).toContain("123,45");
+  });
+
+  describe("card provider", () => {
+    const start = async () => ({ kind: "redirect" as const, url: "https://pay.example/x" });
+    const withCard = { ...defaults, card: { ...defaults.card, enabled: true } };
+
+    it("is off by default (setting) and without credentials", () => {
+      expect(defaults.card.enabled).toBe(false);
+      const ready = createCardProvider({ ready: true, testMode: false, start });
+      const notReady = createCardProvider({ ready: false, testMode: false, start });
+      expect(availablePaymentOptions(defaults, [...paymentProviders, ready])).toHaveLength(1);
+      expect(availablePaymentOptions(withCard, [...paymentProviders, notReady])).toHaveLength(1);
+    });
+
+    it("is offered next to cash on delivery once enabled and configured", () => {
+      const card = createCardProvider({ ready: true, testMode: false, start });
+      expect(
+        availablePaymentOptions(withCard, [...paymentProviders, card]).map((o) => o.method),
+      ).toEqual(["CASH_ON_DELIVERY", "CARD"]);
+      expect(card.online).toBe(true);
+    });
+
+    it("labels sandbox payments as a test environment", () => {
+      const card = createCardProvider({ ready: true, testMode: true, start });
+      expect(card.option(withCard).label).toContain("mediu de test");
+    });
   });
 });

@@ -496,12 +496,20 @@ export function ShippingForm({ initial }: { initial: SettingValue<"shipping"> })
 
 // ── Payment ────────────────────────────────────────────────────────────────
 
-export function PaymentForm({ initial }: { initial: SettingValue<"payment"> }) {
+export function PaymentForm({
+  initial,
+  netopia,
+}: {
+  initial: SettingValue<"payment">;
+  /** NETOPIA environment configured on the server, or null when credentials are missing. */
+  netopia: "sandbox" | "live" | null;
+}) {
   const uid = useId();
   const [v, setV] = useState(initial);
   const { errors, pending, save } = useSave("payment");
   const cod = v.cashOnDelivery;
   const bank = v.bankTransfer;
+  const card = v.card;
   return (
     <AdminCard title="Plată">
       <form
@@ -643,9 +651,46 @@ export function PaymentForm({ initial }: { initial: SettingValue<"payment"> }) {
             </Field>
           </div>
         </fieldset>
-        <p className="text-sm text-ink-muted">
-          Plata cu cardul necesită integrarea unui procesator (vezi docs/PAYMENTS.md).
-        </p>
+        <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
+          <legend className="px-1 text-sm font-semibold">Card bancar (NETOPIA Payments)</legend>
+          <p className="text-sm text-ink-muted">
+            {netopia === "live"
+              ? "NETOPIA este configurat în modul live: plățile sunt reale."
+              : netopia === "sandbox"
+                ? "NETOPIA este configurat în modul de test (sandbox): plățile nu sunt reale, iar la checkout metoda apare marcată „mediu de test”."
+                : "NETOPIA nu este configurat pe server (cheile lipsesc), deci metoda nu apare la checkout chiar dacă este bifată."}
+          </p>
+          <Checkbox
+            id={`${uid}-card`}
+            checked={card.enabled}
+            onCheckedChange={(c) => setV({ ...v, card: { ...card, enabled: c === true } })}
+            label="Activă (apare la checkout doar cu NETOPIA configurat)"
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <Field id={`${uid}-card-l`} label="Denumire" error={errors["card.label"]}>
+              {(p) => (
+                <Input
+                  {...p}
+                  value={card.label}
+                  onChange={(e) => setV({ ...v, card: { ...card, label: e.target.value } })}
+                />
+              )}
+            </Field>
+            <Field
+              id={`${uid}-card-d`}
+              label="Text pentru client"
+              error={errors["card.description"]}
+            >
+              {(p) => (
+                <Input
+                  {...p}
+                  value={card.description}
+                  onChange={(e) => setV({ ...v, card: { ...card, description: e.target.value } })}
+                />
+              )}
+            </Field>
+          </div>
+        </fieldset>
         <SaveRow pending={pending} />
       </form>
     </AdminCard>

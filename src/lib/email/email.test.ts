@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseServerEnv } from "../env";
 
-import { resolveEmailProvider } from "./index";
+import { resolveEmailProvider, senderAddress } from "./index";
 import {
   contactMessageEmail,
   passwordResetEmail,
@@ -49,6 +49,17 @@ describe("resolveEmailProvider", () => {
     expect(
       "disabled" in resolveEmailProvider(parseServerEnv({ ...base, EMAIL_PROVIDER: "smtp" })),
     ).toBe(true);
+  });
+});
+
+describe("senderAddress", () => {
+  it("sends contact-form mail from EMAIL_FROM_CONTACT when set, else from EMAIL_FROM", () => {
+    const from = "Alchimia Rădăcinilor <noreply@example.ro>";
+    const contact = "Alchimia Rădăcinilor <contact@example.ro>";
+    const withContact = parseServerEnv({ ...base, EMAIL_FROM_CONTACT: contact });
+    expect(senderAddress(withContact, from, "contact")).toBe(contact);
+    expect(senderAddress(withContact, from)).toBe(from);
+    expect(senderAddress(parseServerEnv(base), from, "contact")).toBe(from);
   });
 });
 

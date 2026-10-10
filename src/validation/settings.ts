@@ -86,8 +86,8 @@ export const settingSchemas = {
       ),
   ),
   /**
-   * Offline payment methods. Card payments need a provider integration
-   * (see docs/PAYMENTS.md) and are never simulated.
+   * Payment methods. Card payments go through NETOPIA (see docs/PAYMENTS.md),
+   * are offered only once its credentials are configured, and are never simulated.
    */
   payment: z.object({
     cashOnDelivery: z.object({
@@ -106,6 +106,18 @@ export const settingSchemas = {
       /** Days the order is held while waiting for the transfer. */
       paymentTermDays: z.number().int().min(1).max(30),
     }),
+    /** Card through NETOPIA's hosted page. Values stored before this existed get the default. */
+    card: z
+      .object({
+        enabled: z.boolean(),
+        label: z.string().min(1).max(60),
+        description: z.string().max(240),
+      })
+      .default({
+        enabled: false,
+        label: "Card bancar",
+        description: "Plătești online, în siguranță, pe pagina securizată NETOPIA Payments.",
+      }),
   }),
   /** Defaults for pages without their own SEO fields. */
   seo: z.object({
@@ -210,6 +222,11 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
       iban: null,
       bankName: null,
       paymentTermDays: 5,
+    },
+    card: {
+      enabled: false,
+      label: "Card bancar",
+      description: "Plătești online, în siguranță, pe pagina securizată NETOPIA Payments.",
     },
   },
   tax: {

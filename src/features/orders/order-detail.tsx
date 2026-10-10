@@ -1,8 +1,19 @@
-import { Check, CircleDot, Landmark, MapPin, Package, Receipt, Wallet, X } from "lucide-react";
+import {
+  Check,
+  CircleDot,
+  CreditCard,
+  Landmark,
+  MapPin,
+  Package,
+  Receipt,
+  Wallet,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 
 import { SmartImage } from "@/components/media/smart-image";
 import { Badge } from "@/components/ui/badge";
+import { RetryCardPayment } from "@/features/checkout/retry-card-payment";
 import { formatMoney } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { formatAddressLines } from "@/services/orders/format";
@@ -99,7 +110,55 @@ function AddressBlock({
   );
 }
 
-export function OrderDetail({ order }: { order: UserOrder }) {
+/**
+ * Card orders: the status comes only from NETOPIA's signed notification, never
+ * from the customer's return to the site, so an unpaid order may simply still
+ * be waiting for it.
+ */
+function CardPaymentPanel({ order, notStarted }: { order: UserOrder; notStarted: boolean }) {
+  const text =
+    order.paymentStatus === "PAID"
+      ? "Plata cu cardul a fost confirmată. Mulțumim!"
+      : order.paymentStatus === "FAILED"
+        ? "Plata cu cardul nu a fost finalizată, iar suma nu a fost încasată."
+        : order.paymentStatus === "UNPAID" && notStarted
+          ? "Comanda a fost înregistrată, dar pagina de plată NETOPIA nu a putut fi deschisă. Nu s-a încasat nimic."
+          : order.paymentStatus === "UNPAID"
+            ? "Așteptăm confirmarea plății de la NETOPIA Payments. Dacă ai finalizat plata, confirmarea apare aici în câteva minute — nu o relua."
+            : null;
+  if (!text) return null;
+  return (
+    <section
+      aria-labelledby="plata-card"
+      className="flex flex-col gap-3 rounded-xl border border-forest/25 bg-forest-soft/40 p-5 md:p-6"
+    >
+      <h2 id="plata-card" className="flex items-center gap-2 font-semibold">
+        <CreditCard aria-hidden className="size-5 text-forest" />{" "}
+        {paymentMethodLabels[order.paymentMethod]}
+      </h2>
+      <p className="text-sm">{text}</p>
+      {order.canRetryCard ? (
+        <>
+          {order.paymentStatus === "UNPAID" && !notStarted ? (
+            <p className="text-sm text-ink-muted">
+              Ai închis pagina de plată înainte de final? Poți relua plata.
+            </p>
+          ) : null}
+          <RetryCardPayment number={order.number} />
+        </>
+      ) : null}
+    </section>
+  );
+}
+
+export function OrderDetail({
+  order,
+  cardPaymentNotStarted = false,
+}: {
+  order: UserOrder;
+  /** Checkout could not open NETOPIA's page (from the confirmation redirect; display only). */
+  cardPaymentNotStarted?: boolean;
+}) {
   const money = (v: number) => formatMoney(v, order.currency);
   const sameBilling =
     order.billingAddress &&
@@ -145,6 +204,10 @@ export function OrderDetail({ order }: { order: UserOrder }) {
             ))}
           </ul>
         </section>
+      ) : null}
+
+      {order.paymentMethod === "CARD" ? (
+        <CardPaymentPanel order={order} notStarted={cardPaymentNotStarted} />
       ) : null}
 
       <section aria-labelledby="produse" className="flex flex-col gap-4">

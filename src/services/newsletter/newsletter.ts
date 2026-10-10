@@ -10,6 +10,7 @@ import { campaignSegmentSchema } from "@/validation/newsletter";
 import { generateToken, hashToken } from "../auth/tokens";
 import { recordConsent, type ConsentMeta } from "../consent/consent";
 
+import { syncSubscriber } from "./marketing-sync";
 import { segmentWhere } from "./segment";
 import { oneClickUnsubscribeUrl, unsubscribeUrl, verifyUnsubscribeSignature } from "./tokens";
 
@@ -108,6 +109,7 @@ export async function confirmSubscription(
       tx,
     );
   });
+  await syncSubscriber(subscriber.email, { freshConsent: true });
   return "confirmed";
 }
 
@@ -144,7 +146,46 @@ export async function unsubscribeWithSignature(
       tx,
     );
   });
+  await syncSubscriber(subscriber.email);
   return "unsubscribed";
+}
+
+/**
+ * Applies a suppression reported by the marketing provider's webhook
+ * (unsubscribe link in a campaign, spam complaint, hard bounce). Idempotent.
+ * Unsubscribes and complaints are consent withdrawals and are recorded as
+ * such; a hard bounce only stops sending to an address that no longer exists.
+ */
+export async function suppressSubscriber(
+  email: string,
+  reason: "unsubscribe" | "spam" | "hard_bounce",
+): Promise<"suppressed" | "already" | "unknown"> {
+  const subscriber = await db.newsletterSubscriber.findUnique({ where: { email } });
+  if (!subscriber) return "unknown";
+  if (subscriber.status === "UNSUBSCRIBED") return "already";
+  await db.$transaction(async (tx) => {
+    await tx.newsletterSubscriber.update({
+      where: { id: subscriber.id },
+      data: {
+        status: "UNSUBSCRIBED",
+        unsubscribedAt: new Date(),
+        confirmTokenHash: null,
+        confirmTokenExpiresAt: null,
+      },
+    });
+    if (reason !== "hard_bounce")
+      await recordConsent(
+        {
+          userId: subscriber.userId,
+          subscriberId: subscriber.id,
+          purpose: "NEWSLETTER",
+          granted: false,
+        },
+        { source: `brevo/${reason}` },
+        tx,
+      );
+  });
+  return "suppressed";
 }
 
 export function subscriberUnsubscribeLinks(subscriberId: string) {

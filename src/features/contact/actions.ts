@@ -40,7 +40,13 @@ export async function sendContactMessageAction(
     siteName: brand.siteName,
     siteUrl: env().APP_URL,
   });
-  const result = await sendEmail({ to: contact.email, replyTo: parsed.data.email, ...email });
+  // Sent from our verified domain; Reply-To lets the shop answer the visitor directly.
+  const result = await sendEmail({
+    to: contact.email,
+    replyTo: parsed.data.email,
+    sender: "contact",
+    ...email,
+  });
 
   if (!isDelivered(result)) {
     return {

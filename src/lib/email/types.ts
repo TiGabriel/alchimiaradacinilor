@@ -6,6 +6,8 @@ export type EmailMessage = {
   replyTo?: string;
   /** Display name for the sender; the address always comes from EMAIL_FROM. */
   fromName?: string;
+  /** "contact" sends from EMAIL_FROM_CONTACT when it is set (contact-form notifications). */
+  sender?: "contact";
   /** Extra headers, e.g. List-Unsubscribe for newsletters. */
   headers?: Record<string, string>;
 };
