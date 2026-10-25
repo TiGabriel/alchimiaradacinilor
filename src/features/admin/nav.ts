@@ -10,13 +10,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [{ href: "/admin", label: "Panou", permission: "admin:access", icon: "layout" }],
   },
   {
-    title: "Vânzări",
-    items: [
-      { href: "/admin/comenzi", label: "Comenzi", permission: "orders:manage", icon: "receipt" },
-      { href: "/admin/clienti", label: "Clienți", permission: "users:manage", icon: "users" },
-    ],
-  },
-  {
     title: "Conținut",
     items: [
       { href: "/admin/rutine", label: "Rutine", permission: "content:edit", icon: "moon" },
@@ -26,9 +19,9 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
-    title: "Marketing",
+    title: "Comunitate",
     items: [
-      { href: "/admin/cupoane", label: "Cupoane", permission: "orders:manage", icon: "ticket" },
+      { href: "/admin/clienti", label: "Clienți", permission: "users:manage", icon: "users" },
       { href: "/admin/newsletter", label: "Newsletter", permission: "users:manage", icon: "mail" },
     ],
   },

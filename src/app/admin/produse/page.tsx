@@ -17,24 +17,40 @@ import {
 import { requirePermission } from "@/features/auth/session";
 import { ProductType } from "@/generated/prisma/enums";
 import { formatMoney } from "@/lib/money";
-import { LOW_STOCK, listAdminProducts, type ProductListFilter } from "@/services/admin/products";
+import { listAdminProducts, type ProductListFilter } from "@/services/admin/products";
 import { productTypeLabels } from "@/validation/product";
 
 export const metadata: Metadata = { title: "Produse" };
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const one = (v: string | string[] | undefined) => (typeof v === "string" ? v : undefined);
-const statuses = ["active", "inactive", "low-stock", "out-of-stock"] as const;
+const statuses = ["active", "inactive"] as const;
+const linkFilters = ["fara", "nefunctional"] as const;
+
+function LinkStatus({
+  url,
+  status,
+}: {
+  url: string | null;
+  status: "UNCHECKED" | "OK" | "BROKEN";
+}) {
+  if (!url) return <StatusDot tone="warn">Fără link</StatusDot>;
+  if (status === "BROKEN") return <StatusDot tone="danger">Nefuncțional</StatusDot>;
+  if (status === "OK") return <StatusDot tone="ok">Verificat</StatusDot>;
+  return <StatusDot tone="off">Netestat</StatusDot>;
+}
 
 export default async function AdminProductsPage({ searchParams }: { searchParams: SearchParams }) {
   const { user } = await requirePermission("catalog:edit");
   const sp = await searchParams;
   const status = statuses.find((s) => s === one(sp.status));
   const type = Object.values(ProductType).find((t) => t === one(sp.type));
+  const link = linkFilters.find((l) => l === one(sp.link));
   const filter: ProductListFilter = {
     q: one(sp.q)?.trim().slice(0, 80) || undefined,
     status,
     type,
+    link,
     page: Number(one(sp.page)) || 1,
   };
   const { products, total, page, pageCount } = await listAdminProducts(
@@ -46,6 +62,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
     if (filter.q) params.set("q", filter.q);
     if (status) params.set("status", status);
     if (type) params.set("type", type);
+    if (link) params.set("link", link);
     params.set("page", String(p));
     return `/admin/produse?${params}`;
   };
@@ -70,8 +87,6 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             <option value="">Toate</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
-            <option value="low-stock">Stoc redus (≤ {LOW_STOCK})</option>
-            <option value="out-of-stock">Fără stoc</option>
           </select>
         </label>
         <label className="flex flex-col gap-1 text-xs font-semibold text-ink-muted">
@@ -85,6 +100,14 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             ))}
           </select>
         </label>
+        <label className="flex flex-col gap-1 text-xs font-semibold text-ink-muted">
+          Link doTERRA
+          <select name="link" defaultValue={link ?? ""} className={adminSelect}>
+            <option value="">Toate</option>
+            <option value="fara">Fără link</option>
+            <option value="nefunctional">Nefuncțional</option>
+          </select>
+        </label>
       </AdminSearchForm>
       <AdminTable caption="Lista produselor">
         <thead className="border-b border-line bg-paper-deep/50">
@@ -92,8 +115,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
             <th className={th}>Produs</th>
             <th className={th}>SKU</th>
             <th className={th}>Categorie</th>
-            <th className={`${th} text-right`}>Preț</th>
-            <th className={`${th} text-right`}>Stoc</th>
+            <th className={`${th} text-right`}>Preț doTERRA</th>
+            <th className={th}>Link doTERRA</th>
             <th className={th}>Stare</th>
           </tr>
         </thead>
@@ -129,14 +152,8 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
               <td className={`${td} font-mono text-xs`}>{p.sku}</td>
               <td className={td}>{p.category.name}</td>
               <td className={`${td} text-right tabular-nums`}>{formatMoney(p.price)}</td>
-              <td className={`${td} text-right tabular-nums`}>
-                <span
-                  className={
-                    p.stock <= 0 ? "text-danger" : p.stock <= LOW_STOCK ? "text-warning" : undefined
-                  }
-                >
-                  {p.stock}
-                </span>
+              <td className={td}>
+                <LinkStatus url={p.referralUrl} status={p.linkStatus} />
               </td>
               <td className={td}>
                 <StatusDot tone={p.active ? "ok" : "off"}>

@@ -7,7 +7,6 @@ const p = (id: string, o: Partial<SimilarityProfile> = {}): SimilarityProfile =>
   tags: [],
   needs: [],
   aromas: [],
-  inStock: true,
   ...o,
 });
 
@@ -24,7 +23,6 @@ const blend = p("blend", {
 });
 const lemon = p("lemon", { needs: ["energie"], aromas: ["citric"], categoryId: "citrice" });
 const box = p("box", { tags: ["cadou"], categoryId: "accesorii" });
-const soldOut = p("sold-out", { needs: ["seara", "relaxare"], aromas: ["floral"], inStock: false });
 
 describe("similarityScore", () => {
   it("weights needs over aromas over tags", () => {
@@ -39,8 +37,8 @@ describe("similarityScore", () => {
 });
 
 describe("rankSimilar", () => {
-  it("ranks by score, skipping unrelated, out-of-stock and excluded items", () => {
-    expect(rankSimilar([lavender], [lemon, box, blend, soldOut, lavender], { limit: 4 })).toEqual([
+  it("ranks by score, skipping unrelated and excluded items", () => {
+    expect(rankSimilar([lavender], [lemon, box, blend, lavender], { limit: 4 })).toEqual([
       "blend",
       "box",
     ]);
@@ -49,7 +47,7 @@ describe("rankSimilar", () => {
     ]);
   });
 
-  it("sums scores across several sources (e.g. a whole cart)", () => {
+  it("sums scores across several sources (e.g. a whole routine)", () => {
     const orange = p("orange", { needs: ["energie"], tags: ["cadou"] });
     expect(rankSimilar([lemon, box], [orange, blend], { limit: 1 })).toEqual(["orange"]);
   });

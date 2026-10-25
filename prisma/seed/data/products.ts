@@ -1,7 +1,7 @@
 /**
  * DEMO PRODUCTS — placeholders only.
  *
- * Names, prices and stock are invented for development. No official
+ * Names and prices are invented for development. No official
  * specifications (volumes, compositions, certifications, usage claims) are
  * given: those must come from the producer's official documentation before
  * launch. Copy avoids any medical or therapeutic claim.
@@ -19,8 +19,6 @@ export type DemoProduct = {
   shortDescription: string;
   description: string;
   price: number;
-  compareAtPrice?: number;
-  stock: number;
   featured?: boolean;
   tags?: string[];
   needs?: Array<[slug: string, relevance: number]>;
@@ -59,7 +57,6 @@ export const demoProducts: DemoProduct[] = [
       "Un punct de plecare natural pentru cei care descoperă uleiurile esențiale." +
       demoNote,
     price: 4900,
-    stock: 24,
     featured: true,
     tags: ["popular", "pentru-difuzor"],
     needs: [
@@ -88,8 +85,6 @@ export const demoProducts: DemoProduct[] = [
       "Potrivită pentru momentele în care îți dorești o atmosferă aerisită." +
       demoNote,
     price: 5400,
-    compareAtPrice: 5900,
-    stock: 18,
     featured: true,
     tags: ["popular"],
     needs: [
@@ -117,7 +112,6 @@ export const demoProducts: DemoProduct[] = [
       "Un clasic al ritualurilor de seară." +
       demoNote,
     price: 5900,
-    stock: 3,
     featured: true,
     tags: ["popular", "idee-de-cadou"],
     needs: [
@@ -146,7 +140,6 @@ export const demoProducts: DemoProduct[] = [
       "Completează frumos o rutină de îngrijire și atmosfera unei case aerisite." +
       demoNote,
     price: 4900,
-    stock: 0,
     tags: [],
     needs: [
       ["ingrijire-personala", 3],
@@ -174,7 +167,6 @@ export const demoProducts: DemoProduct[] = [
       "Aduce căldură în casă și se împrietenește ușor cu aproape orice alt ulei." +
       demoNote,
     price: 3900,
-    stock: 40,
     featured: true,
     tags: ["popular", "pentru-difuzor", "nou"],
     needs: [
@@ -203,7 +195,6 @@ export const demoProducts: DemoProduct[] = [
       "Un amestec gândit pentru finalul zilei, cu note florale moi și o bază lemnoasă caldă." +
       demoNote,
     price: 7900,
-    stock: 12,
     tags: ["pentru-difuzor"],
     needs: [
       ["seara", 3],
@@ -228,7 +219,6 @@ export const demoProducts: DemoProduct[] = [
     description:
       "Un amestec luminos pentru începutul zilei, cu citrice și o adiere mentolată." + demoNote,
     price: 7900,
-    stock: 9,
     tags: ["nou"],
     needs: [
       ["energie", 3],
@@ -253,8 +243,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Amestec demonstrativ cu note verzi și citrice.",
     description: "Un amestec curat și verde, pentru o casă care miroase a aer proaspăt." + demoNote,
     price: 6900,
-    compareAtPrice: 7900,
-    stock: 15,
     tags: ["pentru-difuzor"],
     needs: [
       ["casa", 3],
@@ -282,8 +270,6 @@ export const demoProducts: DemoProduct[] = [
       "Un kit care adună cinci arome esențiale într-o singură cutie — un început blând pentru cine descoperă uleiurile." +
       demoNote,
     price: 21900,
-    compareAtPrice: 25500,
-    stock: 7,
     featured: true,
     tags: ["idee-de-cadou", "popular"],
     needs: [
@@ -317,7 +303,6 @@ export const demoProducts: DemoProduct[] = [
       "Un set care pune laolaltă aromele florale și un difuzor, pentru serile liniștite." +
       demoNote,
     price: 27900,
-    stock: 4,
     tags: ["idee-de-cadou", "editie-limitata"],
     needs: [
       ["seara", 3],
@@ -347,7 +332,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Difuzor demonstrativ cu aspect de piatră.",
     description: "Un difuzor cu forme simple, inspirate de pietrele de râu." + demoNote,
     price: 18900,
-    stock: 6,
     featured: true,
     tags: ["idee-de-cadou"],
     needs: [
@@ -367,8 +351,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Difuzor demonstrativ cu aspect de lemn.",
     description: "Un difuzor cald, cu aspect de lemn, pentru livingul tău." + demoNote,
     price: 22900,
-    compareAtPrice: 25900,
-    stock: 2,
     tags: ["nou"],
     needs: [["casa", 2]],
     related: ["amestec-casa-proaspata"],
@@ -386,7 +368,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Set demonstrativ de flacoane pentru amestecuri proprii.",
     description: "Flacoane goale pentru a-ți pregăti propriile amestecuri." + demoNote,
     price: 3900,
-    stock: 30,
     tags: [],
     needs: [["ingrijire-personala", 1]],
     related: ["lavender"],
@@ -402,7 +383,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Husă demonstrativă pentru a-ți lua uleiurile la drum.",
     description: "O husă compactă în care uleiurile tale călătoresc în siguranță." + demoNote,
     price: 5900,
-    stock: 11,
     tags: ["format-de-calatorie", "idee-de-cadou"],
     related: ["set-flacoane-roll-on"],
     daysAgo: 28,
@@ -417,7 +397,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Cutie demonstrativă pentru a-ți organiza colecția.",
     description: "O cutie simplă pentru a-ți ține uleiurile la adăpost de lumină." + demoNote,
     price: 8900,
-    stock: 5,
     tags: ["idee-de-cadou"],
     daysAgo: 70,
   },
@@ -433,7 +412,6 @@ export const demoProducts: DemoProduct[] = [
     shortDescription: "Ulei purtător demonstrativ, fără parfum.",
     description: "Un ulei neutru, fără aromă, pentru rutina ta de îngrijire." + demoNote,
     price: 3400,
-    stock: 20,
     tags: [],
     needs: [
       ["ingrijire-personala", 3],

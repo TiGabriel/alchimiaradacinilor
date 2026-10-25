@@ -29,7 +29,7 @@ const position: FieldSpec = {
   type: "number",
   hint: "Mai mic = mai sus.",
 };
-const active: FieldSpec = { key: "active", label: "Activ (vizibil în magazin)", type: "checkbox" };
+const active: FieldSpec = { key: "active", label: "Activ (vizibil pe site)", type: "checkbox" };
 
 export const TAXONOMY_CONFIG: Record<
   TaxonomyKind,

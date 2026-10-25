@@ -21,7 +21,6 @@ export type Criteria = {
   /** Personal context — pass only when the customer consented to personalisation. */
   context?: {
     wishlistIds?: readonly string[];
-    purchasedIds?: readonly string[];
     routineProductIds?: readonly string[];
     viewedIds?: readonly string[];
   };
@@ -50,8 +49,8 @@ export type Profile = {
 export type ProductCandidate = Profile & {
   id: string;
   name: string;
+  /** Price on the doTERRA site (bani). */
   price: number;
-  stock: number;
   active: boolean;
   featured: boolean;
   rating: number | null;
@@ -130,16 +129,15 @@ function compareProducts(a: Ranked<ProductCandidate>, b: Ranked<ProductCandidate
     Number(b.item.featured) - Number(a.item.featured) ||
     (b.item.rating ?? -1) - (a.item.rating ?? -1) ||
     b.item.reviewCount - a.item.reviewCount ||
-    b.item.stock - a.item.stock ||
     a.item.name.localeCompare(b.item.name, "ro") ||
     a.item.id.localeCompare(b.item.id)
   );
 }
 
 /**
- * Ranks products. Excluded: inactive, out of stock, explicitly excluded,
- * already purchased, and anything without a positive match on the
- * customer's choices. Ties: featured → rating → review count → stock → name.
+ * Ranks products. Excluded: inactive, explicitly excluded, and anything
+ * without a positive match on the customer's choices.
+ * Ties: featured → rating → review count → name.
  */
 export function rankProducts(
   criteria: Criteria,
@@ -148,15 +146,12 @@ export function rankProducts(
   options: { limit?: number } = {},
 ): Array<Ranked<ProductCandidate>> {
   const signals = mergeSignals(criteria.signals);
-  const exclude = new Set([
-    ...(criteria.excludeIds ?? []),
-    ...(criteria.context?.purchasedIds ?? []),
-  ]);
+  const exclude = new Set(criteria.excludeIds ?? []);
   const ctx = criteria.context;
 
   const ranked: Array<Ranked<ProductCandidate>> = [];
   for (const product of candidates) {
-    if (!product.active || product.stock <= 0 || exclude.has(product.id)) continue;
+    if (!product.active || exclude.has(product.id)) continue;
     const contributions = scoreProfile(product, signals, weights);
     if (!contributions.some((c) => c.points > 0)) continue;
 

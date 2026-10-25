@@ -41,10 +41,13 @@ describe("homepage data", () => {
     ]);
   });
 
-  it("builds the personal row from the latest quiz, skipping sold-out products", async () => {
+  it("builds the personal row from the latest quiz, skipping inactive products", async () => {
     const user = await makeUser();
-    const inStock = await makeProduct({ slug: "in-stock" });
-    const soldOut = await makeProduct({ slug: "sold-out", stock: 0 });
+    const active = await makeProduct({ slug: "active" });
+    const soldOut = await db.product.update({
+      where: { id: (await makeProduct({ slug: "retired" })).id },
+      data: { active: false },
+    });
     const quiz = await db.quiz.create({ data: { slug: "q", title: "Quiz" } });
     expect(await getPersonalRow(user.id)).toBeNull();
 
@@ -61,7 +64,7 @@ describe("homepage data", () => {
               reason: "Recomandat pentru că ai ales: Seară.",
             },
             {
-              productId: inStock.id,
+              productId: active.id,
               score: 800,
               rank: 2,
               reason: "Recomandat pentru că ai ales: Floral.",
@@ -73,7 +76,7 @@ describe("homepage data", () => {
     const row = await getPersonalRow(user.id);
     expect(row?.source).toBe("quiz");
     expect(row?.items.map((i) => [i.product.slug, i.reason])).toEqual([
-      ["in-stock", "Recomandat pentru că ai ales: Floral."],
+      ["active", "Recomandat pentru că ai ales: Floral."],
     ]);
   });
 });

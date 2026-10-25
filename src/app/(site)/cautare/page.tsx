@@ -40,7 +40,7 @@ export default async function SearchPage(props: Props) {
         <h1 className="text-display-lg">{q ? <>Rezultate pentru „{q}”</> : "Ce cauți astăzi?"}</h1>
         <form action="/cautare" role="search" className="flex max-w-xl items-center gap-2">
           <label htmlFor="cautare-q" className="sr-only">
-            Caută în magazin
+            Caută pe site
           </label>
           <div className="relative flex-1">
             <Search

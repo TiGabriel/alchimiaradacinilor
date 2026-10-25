@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AdminCard, AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
-import { OrderStatusBadge } from "@/features/orders/order-detail";
-import { formatMoney } from "@/lib/money";
 import { getCustomer } from "@/services/admin/customers";
-import { formatAddressLines } from "@/services/orders/format";
 
 export const metadata: Metadata = { title: "Client" };
 
@@ -48,10 +44,10 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ["Comenzi", String(c.orders.length)],
-          ["Total cheltuit", formatMoney(c.totalSpent)],
           ["Favorite", String(c.wishlistCount)],
           ["Rutine salvate", String(c._count.savedRoutines)],
+          ["Rezultate quiz", String(c._count.quizResults)],
+          ["Recenzii", String(c.reviews.length)],
         ].map(([label, value]) => (
           <div
             key={label}
@@ -100,60 +96,22 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
           )}
         </AdminCard>
       </div>
-      <AdminCard title="Comenzi">
-        {c.orders.length ? (
-          <ul className="flex flex-col divide-y divide-line text-sm">
-            {c.orders.map((o) => (
-              <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                <Link href={`/admin/comenzi/${o.id}`} className="font-semibold hover:text-forest">
-                  {o.number}
-                </Link>
-                <span className="text-ink-muted">{date.format(o.placedAt)}</span>
-                <OrderStatusBadge status={o.status} />
-                <span className="font-semibold tabular-nums">{formatMoney(o.total)}</span>
+      <AdminCard title="Recenzii">
+        {c.reviews.length ? (
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {c.reviews.map((r) => (
+              <li key={r.id} className="flex justify-between gap-3">
+                <span>
+                  {r.product.name} · {r.rating}★
+                </span>
+                <span className="text-ink-muted">{reviewStatus[r.status]}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-ink-muted">Nicio comandă.</p>
+          <p className="text-sm text-ink-muted">Nicio recenzie.</p>
         )}
       </AdminCard>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <AdminCard title="Adrese">
-          {c.addresses.length ? (
-            <ul className="grid gap-4 sm:grid-cols-2">
-              {c.addresses.map((a) => (
-                <li key={a.id} className="text-sm leading-relaxed">
-                  {a.label ? <span className="block font-semibold">{a.label}</span> : null}
-                  {formatAddressLines(a).map((line) => (
-                    <span key={line} className="block">
-                      {line}
-                    </span>
-                  ))}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-ink-muted">Nicio adresă salvată.</p>
-          )}
-        </AdminCard>
-        <AdminCard title="Recenzii">
-          {c.reviews.length ? (
-            <ul className="flex flex-col gap-1.5 text-sm">
-              {c.reviews.map((r) => (
-                <li key={r.id} className="flex justify-between gap-3">
-                  <span>
-                    {r.product.name} · {r.rating}★
-                  </span>
-                  <span className="text-ink-muted">{reviewStatus[r.status]}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-ink-muted">Nicio recenzie.</p>
-          )}
-        </AdminCard>
-      </div>
     </>
   );
 }

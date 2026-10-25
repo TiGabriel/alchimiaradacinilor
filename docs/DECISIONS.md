@@ -575,3 +575,63 @@ the send with 204. The segment filters do not apply to Brevo sends (the whole li
 The preview is an iframe with the HTML as `srcdoc` and an empty `sandbox` (no scripts, no
 navigation); on the campaign pages only, the CSP allows HTTPS images so the email's hosted images
 show.
+
+### D-085 · The commerce tables are archived, not dropped
+
+Selling stopped (the owner can no longer sell directly). The 12 commerce tables and their enum types
+move to a `legacy_commerce` Postgres schema with `ALTER TABLE … SET SCHEMA`, after a backup logged
+in `docs/PROGRESS.md`. Prisma models only `public`, so the app cannot read or write them, while
+existing orders stay available as a legal record. Dropping them is a separate, later decision.
+
+### D-086 · Old shop URLs answer 301, payment callbacks 410
+
+The site is live and indexed, so every removed page redirects with `statusCode: 301` (not
+`permanent`, which sends 308) to its nearest replacement; `/cum-cumpar` explains where products
+are bought now. Payment-provider callbacks answer 410 Gone: a redirect would hide a misconfigured
+caller.
+
+### D-087 · Reviews need a confirmed email, not a purchase
+
+Purchases now happen on the doTERRA site, so the site cannot see them. Any signed-in member with a
+confirmed email can write one review per product; moderation is unchanged. The "Cumpărare
+verificată" badge stays tied to `reviews.orderItemId` until a doTERRA-order check is designed
+(PIVOT_PLAN § 4.6).
+
+### D-088 · Prices are the doTERRA price, shown as information
+
+`Product.price` holds the price a visitor sees on the doTERRA site, without markup; compare-at
+prices, stock and VAT settings are gone. The product page labels it "Preț pe site-ul doTERRA" and
+the terms say the valid price is the one doTERRA shows at order time.
+
+### D-089 · Outbound clicks go through a counting redirect
+
+Buttons link to `/spre-doterra/[slug]?sursa=…`, not straight to doTERRA. The route adds 1 to a
+per-product, per-day, per-source counter and redirects with 302 (no cache), so the owner sees which
+products and which places on the site send visitors to doTERRA. It stores no personal data and sets
+no cookie, so it needs no consent; HEAD, prefetches, bots and bursts from one IP (in-memory limit)
+are not counted. The saved link is checked again against the allowed domains at click time, so a
+bad value in the database can never turn the site into an open redirect.
+
+### D-090 · A failed link test is information for the admin only
+
+doTERRA may block or slow down server requests, so a "Nefuncțional" result can be wrong. The public
+button shows whenever a product has a link; the status only drives the admin list, the filter and
+the dashboard. Unclear answers (timeouts, other status codes, redirects outside doTERRA) leave the
+status unchanged and ask the admin to check by hand.
+
+### D-091 · The referral disclosure is a site setting
+
+The short and long disclosure texts live in the `affiliate` setting, not in code, so the owner (or
+a lawyer) can change the wording without a deploy. Client components that cannot read settings show
+a short "Link de recomandare · Ce înseamnă" note that links to `/cum-cumpar#recomandare`.
+
+### D-092 · Products with a doTERRA link come first
+
+The owner wants the products that can actually be bought (those with a referral link) to be as
+visible as possible. `linkedFirst` (`services/catalog/product-types.ts`) is a stable partition:
+linked products first, the existing order kept inside each group. The catalogue applies it before
+every sort and before pagination (so "Preț crescător" sorts within each group), `getProductCards`
+applies it to every list built from ids, and ranked lists that map cards back by id (quiz results,
+recommendations) apply it themselves. Ritual steps are a sequence and the home "esențiale" are
+curated by hand, so both keep their order. The home page has its own "Disponibile pe doTERRA"
+section right under the hero.

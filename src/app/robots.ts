@@ -8,17 +8,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // Private, transactional or per-visitor pages (they also carry `noindex`).
+        // Private or per-visitor pages (they also carry `noindex`).
         disallow: [
           "/admin",
           "/api/",
           "/cautare",
           "/cont",
-          "/cos",
           "/favorite",
-          "/finalizare-comanda",
           "/newsletter/",
           "/quiz/rezultat/",
+          "/spre-doterra/",
           "/styleguide",
         ],
       },

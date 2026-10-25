@@ -1,4 +1,4 @@
-import { ArrowRight, ClipboardList, Heart, Mail, Moon, Sparkles } from "lucide-react";
+import { ArrowRight, Heart, Mail, Moon, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AccountCard } from "@/features/account/section";
 import { requireUser } from "@/features/auth/session";
-import { formatMoney } from "@/lib/money";
-import { pluralRo } from "@/lib/plural";
 import { getAccountOverview } from "@/services/account/overview";
 import { productHref } from "@/services/catalog/product-types";
 
@@ -36,12 +34,6 @@ function Empty({
   );
 }
 
-const dateFormat = new Intl.DateTimeFormat("ro-RO", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
-
 export default async function AccountOverviewPage(props: PageProps<"/cont">) {
   const { user } = await requireUser("/cont");
   const overview = await getAccountOverview(user.id);
@@ -52,7 +44,9 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
       <header className="flex flex-col gap-2">
         <p className="text-eyebrow text-clay">Contul meu</p>
         <h1 className="text-display-lg">Salut, {user.firstName}</h1>
-        <p className="text-ink-muted">Aici găsești comenzile, favoritele și recomandările tale.</p>
+        <p className="text-ink-muted">
+          Aici găsești favoritele, ritualurile salvate și recomandările tale.
+        </p>
       </header>
 
       {params["bun-venit"] ? (
@@ -68,36 +62,6 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
       ) : null}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <AccountCard
-          title="Comanda recentă"
-          action={
-            overview.recentOrder ? (
-              <Link href="/cont/comenzi" className="text-sm font-semibold text-forest">
-                Toate comenzile
-              </Link>
-            ) : undefined
-          }
-        >
-          {overview.recentOrder ? (
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex flex-col">
-                <span className="font-semibold">Comanda {overview.recentOrder.number}</span>
-                <span className="text-sm text-ink-muted">
-                  {dateFormat.format(overview.recentOrder.placedAt)} ·{" "}
-                  {pluralRo(overview.recentOrder._count.items, "produs", "produse")}
-                </span>
-              </div>
-              <span className="font-semibold">{formatMoney(overview.recentOrder.total)}</span>
-            </div>
-          ) : (
-            <Empty
-              icon={ClipboardList}
-              text="Nu ai plasat încă nicio comandă."
-              cta={{ href: "/produse", label: "Descoperă produsele" }}
-            />
-          )}
-        </AccountCard>
-
         <AccountCard
           title="Produse salvate"
           action={

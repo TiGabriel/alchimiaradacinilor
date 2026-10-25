@@ -25,7 +25,7 @@ export type SubscriberFilter = {
   q?: string;
   source?: string;
   interest?: string;
-  customersOnly?: boolean;
+  membersOnly?: boolean;
 };
 
 function subscriberWhere(f: SubscriberFilter): Prisma.NewsletterSubscriberWhereInput {
@@ -34,9 +34,7 @@ function subscriberWhere(f: SubscriberFilter): Prisma.NewsletterSubscriberWhereI
     ...(f.q ? { email: { contains: f.q, mode: "insensitive" } } : {}),
     ...(f.source ? { source: f.source } : {}),
     ...(f.interest ? { interests: { has: f.interest } } : {}),
-    ...(f.customersOnly
-      ? { user: { orders: { some: { status: { notIn: ["CANCELLED", "REFUNDED"] } } } } }
-      : {}),
+    ...(f.membersOnly ? { userId: { not: null } } : {}),
   };
 }
 

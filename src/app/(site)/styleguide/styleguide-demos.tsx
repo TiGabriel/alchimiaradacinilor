@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Heart, Leaf as LeafIcon, ShoppingBag, Truck, Zap } from "lucide-react";
+import { ArrowRight, Bookmark, Heart, Leaf as LeafIcon, Moon, Sunrise } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -55,7 +55,6 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { Price } from "@/components/ui/price";
-import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { RadioCards } from "@/components/ui/radio-cards";
 import { RatingStars } from "@/components/ui/rating-stars";
 import { Select } from "@/components/ui/select";
@@ -108,8 +107,7 @@ const variants = [
 ] as const;
 
 export function StyleguideDemos() {
-  const [quantity, setQuantity] = useState(2);
-  const [shipping, setShipping] = useState("curier");
+  const [moment, setMoment] = useState("dimineata");
   const [sort, setSort] = useState("recomandate");
   const [agree, setAgree] = useState<boolean | "indeterminate">(false);
 
@@ -130,8 +128,8 @@ export function StyleguideDemos() {
           <Button size="icon" variant="outline" aria-label="Favorite">
             <Heart aria-hidden />
           </Button>
-          <Button size="icon-sm" variant="ghost" aria-label="Coș">
-            <ShoppingBag aria-hidden />
+          <Button size="icon-sm" variant="ghost" aria-label="Salvează">
+            <Bookmark aria-hidden />
           </Button>
         </Row>
         <Row label="Stări">
@@ -153,7 +151,7 @@ export function StyleguideDemos() {
 
       <Section id="formulare" title="Formulare">
         <div className="grid max-w-3xl gap-6 md:grid-cols-2">
-          <Field id="sg-name" label="Nume" hint="Așa cum apare pe factură." required>
+          <Field id="sg-name" label="Nume" hint="Așa cum vrei să apară la recenzii." required>
             {(p) => <Input {...p} placeholder="Ana Popescu" />}
           </Field>
           <Field id="sg-email" label="Email" error="Introdu o adresă de email validă.">
@@ -196,29 +194,29 @@ export function StyleguideDemos() {
           <div className="md:col-span-2">
             <p className="mb-3 text-sm font-semibold">Carduri radio</p>
             <RadioCards
-              aria-label="Metodă de livrare"
-              value={shipping}
-              onValueChange={setShipping}
+              aria-label="Momentul zilei"
+              value={moment}
+              onValueChange={setMoment}
               columns={2}
               options={[
                 {
-                  value: "curier",
-                  title: "Curier rapid",
-                  description: "1–2 zile lucrătoare",
-                  icon: <Truck aria-hidden className="size-5" />,
-                  aside: "19,99 RON",
+                  value: "dimineata",
+                  title: "Dimineață",
+                  description: "Arome luminoase, citrice",
+                  icon: <Sunrise aria-hidden className="size-5" />,
+                  aside: "3 ritualuri",
                 },
                 {
-                  value: "express",
-                  title: "Express",
-                  description: "În aceeași zi (București)",
-                  icon: <Zap aria-hidden className="size-5" />,
-                  aside: "34,99 RON",
+                  value: "seara",
+                  title: "Seară",
+                  description: "Arome calde, florale",
+                  icon: <Moon aria-hidden className="size-5" />,
+                  aside: "5 ritualuri",
                 },
                 {
-                  value: "ridicare",
-                  title: "Ridicare personală",
-                  description: "Indisponibil",
+                  value: "noapte",
+                  title: "Noapte",
+                  description: "În curând",
                   disabled: true,
                 },
               ]}
@@ -232,13 +230,13 @@ export function StyleguideDemos() {
           <Badge>Neutru</Badge>
           <Badge variant="forest">Nou</Badge>
           <Badge variant="sage">Popular</Badge>
-          <Badge variant="clay">−15%</Badge>
-          <Badge variant="clay-soft">Ofertă</Badge>
+          <Badge variant="clay">Recenzie</Badge>
+          <Badge variant="clay-soft">Ritual</Badge>
           <Badge variant="ochre">Ediție limitată</Badge>
           <Badge variant="outline">Contur</Badge>
-          <Badge variant="success">În stoc</Badge>
-          <Badge variant="warning">Stoc limitat</Badge>
-          <Badge variant="danger">Stoc epuizat</Badge>
+          <Badge variant="success">Publicată</Badge>
+          <Badge variant="warning">În moderare</Badge>
+          <Badge variant="danger">Respinsă</Badge>
           <Badge variant="sage" size="sm">
             <LeafIcon aria-hidden /> Mic
           </Badge>
@@ -307,14 +305,14 @@ export function StyleguideDemos() {
               <Button variant="outline">Sertar dreapta</Button>
             </DrawerTrigger>
             <DrawerContent
-              title="Coșul tău"
+              title="Favoritele tale"
               description="Exemplu de sertar lateral."
-              footer={<Button block>Finalizează comanda</Button>}
+              footer={<Button block>Vezi toate favoritele</Button>}
             >
               <EmptyState
                 size="sm"
-                title="Coșul este gol"
-                description="Adaugă produse pentru a le vedea aici."
+                title="Nu ai încă favorite"
+                description="Salvează produse pentru a le vedea aici."
               />
             </DrawerContent>
           </Drawer>
@@ -328,7 +326,7 @@ export function StyleguideDemos() {
           </Drawer>
           <Button
             variant="secondary"
-            onClick={() => toast({ title: "Produs adăugat în coș", variant: "success" })}
+            onClick={() => toast({ title: "Produs salvat la favorite", variant: "success" })}
           >
             Toast succes
           </Button>
@@ -384,14 +382,16 @@ export function StyleguideDemos() {
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="b">
-              <AccordionTrigger>Cât durează livrarea?</AccordionTrigger>
-              <AccordionContent>Detaliile vor fi publicate înainte de lansare.</AccordionContent>
+              <AccordionTrigger>De unde cumpăr produsele?</AccordionTrigger>
+              <AccordionContent>
+                De pe site-ul oficial doTERRA, la prețul afișat acolo.
+              </AccordionContent>
             </AccordionItem>
           </Accordion>
         </div>
       </Section>
 
-      <Section id="comert" title="Elemente de comerț">
+      <Section id="produs" title="Elemente de produs">
         <Row label="Rating">
           <RatingStars value={4.6} count={128} showValue />
           <RatingStars value={3.2} size="lg" />
@@ -400,15 +400,8 @@ export function StyleguideDemos() {
         </Row>
         <Row label="Preț">
           <Price price={4900} />
-          <Price price={5400} compareAtPrice={5900} />
-          <Price price={21900} compareAtPrice={25500} size="xl" />
-          <Price price={6900} compareAtPrice={7900} size="sm" showDiscountBadge={false} />
-        </Row>
-        <Row label="Cantitate">
-          <QuantitySelector value={quantity} onChange={setQuantity} max={5} />
-          <QuantitySelector value={1} onChange={() => {}} size="sm" />
-          <QuantitySelector value={1} onChange={() => {}} disabled />
-          <span className="text-sm text-ink-muted">Valoare: {quantity} (stoc maxim 5)</span>
+          <Price price={21900} size="xl" />
+          <Price price={6900} size="sm" />
         </Row>
       </Section>
 

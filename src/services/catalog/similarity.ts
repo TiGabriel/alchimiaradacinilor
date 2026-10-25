@@ -1,6 +1,6 @@
 /**
  * Gentle "goes well with" scoring from shared taxonomy — pure and tested.
- * Used for related products (product page) and cart suggestions.
+ * Used for related products (product page).
  */
 
 export type SimilarityProfile = {
@@ -9,7 +9,6 @@ export type SimilarityProfile = {
   needs: string[];
   aromas: string[];
   categoryId?: string;
-  inStock?: boolean;
 };
 
 const WEIGHTS = { needs: 3, aromas: 2, tags: 1, sameCategory: 1 } as const;
@@ -32,7 +31,7 @@ export function similarityScore(a: SimilarityProfile, b: SimilarityProfile): num
 /**
  * Ranks candidates against one or more source profiles (scores are summed).
  * Excludes the sources and anything in `exclude`, drops zero scores and
- * out-of-stock items, and breaks ties by id for stable output.
+ * breaks ties by id for stable output.
  */
 export function rankSimilar(
   sources: SimilarityProfile[],
@@ -41,7 +40,7 @@ export function rankSimilar(
 ): string[] {
   const skip = new Set([...sources.map((s) => s.id), ...exclude]);
   return candidates
-    .filter((c) => !skip.has(c.id) && c.inStock !== false)
+    .filter((c) => !skip.has(c.id))
     .map((c) => ({ id: c.id, score: sources.reduce((sum, s) => sum + similarityScore(s, c), 0) }))
     .filter((c) => c.score > 0)
     .sort((a, b) => b.score - a.score || a.id.localeCompare(b.id))

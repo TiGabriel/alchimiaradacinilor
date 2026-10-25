@@ -3,7 +3,7 @@ import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { getProductCards } from "@/services/catalog/products";
-import type { ProductCardData } from "@/services/catalog/product-types";
+import { linkedFirst, type ProductCardData } from "@/services/catalog/product-types";
 import { productTypeLabels } from "@/validation/product";
 
 import { criteriaFromAnswers, type AnswerConfig } from "../recommendation/engine";
@@ -185,11 +185,14 @@ async function toResultView(result: {
     createdAt: result.createdAt,
     saved: result.userId !== null,
     answers: result.answers.map((a) => a.answer.text),
-    // Products deactivated since the quiz simply drop out.
-    items: result.products.flatMap((p) => {
-      const product = byId.get(p.productId);
-      return product ? [{ product, reason: p.reason, rank: p.rank }] : [];
-    }),
+    // Products deactivated since the quiz simply drop out; those with a doTERRA link lead.
+    items: linkedFirst(
+      result.products.flatMap((p) => {
+        const product = byId.get(p.productId);
+        return product ? [{ product, reason: p.reason, rank: p.rank }] : [];
+      }),
+      (item) => item.product.hasDoterraLink,
+    ),
   };
 }
 

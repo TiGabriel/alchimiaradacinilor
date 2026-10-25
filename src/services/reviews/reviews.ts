@@ -15,12 +15,9 @@ type Tx = Prisma.TransactionClient;
 export class ReviewError extends Error {}
 
 export async function getReviewEligibility(userId: string | null, productId: string) {
-  if (!userId) return reviewEligibility({ signedIn: false, purchases: [], existing: null });
-  const [items, existing] = await Promise.all([
-    db.orderItem.findMany({
-      where: { productId, order: { userId } },
-      select: { id: true, order: { select: { status: true, placedAt: true } } },
-    }),
+  if (!userId) return reviewEligibility({ signedIn: false, emailVerified: false, existing: null });
+  const [user, existing] = await Promise.all([
+    db.user.findUnique({ where: { id: userId }, select: { emailVerifiedAt: true } }),
     db.review.findUnique({
       where: { productId_userId: { productId, userId } },
       select: { status: true, rejectionReason: true },
@@ -28,18 +25,14 @@ export async function getReviewEligibility(userId: string | null, productId: str
   ]);
   return reviewEligibility({
     signedIn: true,
-    purchases: items.map((i) => ({
-      orderItemId: i.id,
-      orderStatus: i.order.status,
-      placedAt: i.order.placedAt,
-    })),
+    emailVerified: Boolean(user?.emailVerifiedAt),
     existing,
   });
 }
 
 /**
- * Creates (or rewrites a rejected) review as PENDING. Only verified purchases:
- * eligibility is re-checked here, never trusted from the form.
+ * Creates (or rewrites a rejected) review as PENDING. Eligibility is re-checked here, never
+ * trusted from the form.
  */
 export async function submitReview(userId: string, input: ReviewInput, image?: Blob | null) {
   const eligibility = await getReviewEligibility(userId, input.productId);
@@ -72,7 +65,6 @@ export async function submitReview(userId: string, input: ReviewInput, image?: B
       rating: input.rating,
       title: input.title ?? null,
       body: input.body,
-      orderItemId: eligibility.orderItemId,
       status: "PENDING" as const,
       imageId: media?.id ?? null,
       moderatedAt: null,

@@ -56,7 +56,7 @@ export function LegalDocument({
               <p>
                 Document în lucru. Structura și informațiile despre funcționarea site-ului sunt
                 reale; secțiunile marcate „De completat” vor fi redactate și verificate de un avocat
-                înainte de lansarea magazinului.
+                înainte de publicarea lor finală.
               </p>
             </div>
             {intro ? <div className="text-lg text-ink-muted">{intro}</div> : null}

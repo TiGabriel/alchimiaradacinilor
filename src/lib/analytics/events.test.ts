@@ -6,10 +6,10 @@ import { analyticsPayloadSchema } from "./schema";
 describe("analytics events", () => {
   it("accepts only known events with small flat properties", () => {
     const ok = analyticsPayloadSchema.safeParse({
-      name: "add_to_cart",
+      name: "wishlist_add",
       anonymousId: "analytics_1234",
       path: "/produs/lavender",
-      props: { productId: "p1", quantity: 2 },
+      props: { productId: "p1", position: 2 },
     });
     expect(ok.success).toBe(true);
     expect(

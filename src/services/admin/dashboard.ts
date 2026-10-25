@@ -1,115 +1,81 @@
 import "server-only";
 
-import type { OrderStatus } from "@/generated/prisma/enums";
 import { db } from "@/lib/db";
 
 import { assertCan, can, type Actor } from "../auth/permissions";
 
-import { fillDays, funnel, percentChange } from "./metrics";
-import { LOW_STOCK } from "./products";
+import { fillDays, percentChange, rate, shopDay } from "./metrics";
 
 const DAYS = 30;
-const CLOSED: OrderStatus[] = ["CANCELLED", "REFUNDED"];
+
+/** Where a "Cumpără de pe doTERRA" button was clicked (see services/affiliate/links). */
+const sourceLabels: Record<string, string> = {
+  produs: "Pagina produsului",
+  acasa: "Prima pagină",
+  previzualizare: "Previzualizare rapidă",
+  quiz: "Rezultatul quizului",
+  ritual: "Ritualuri",
+  favorite: "Favorite",
+  jurnal: "Jurnal",
+  newsletter: "Newsletter",
+  altul: "Altă sursă",
+};
 
 export async function getDashboard(actor: Actor) {
   assertCan(actor, "admin:access");
-  const sales = can(actor.roles, "orders:manage");
   const catalog = can(actor.roles, "catalog:edit");
   const people = can(actor.roles, "users:manage");
   const content = can(actor.roles, "content:edit");
   const now = new Date();
   const since = new Date(now.getTime() - DAYS * 86_400_000);
   const before = new Date(since.getTime() - DAYS * 86_400_000);
+  // Outbound clicks are counted per calendar day (a DATE column), so compare whole days.
+  const asDay = (date: Date) => new Date(`${shopDay(date)}T00:00:00Z`);
+  const sinceDay = asDay(since);
+  const beforeDay = asDay(before);
 
   const [
-    daily,
-    current,
-    previous,
-    statusCounts,
-    top,
+    dailySignups,
+    newMembers,
+    previousMembers,
     events,
-    lowStock,
     pendingReviews,
     subscribers,
-    newCustomers,
-    recent,
+    newSubscribers,
     products,
     activeProducts,
     users,
-    ordersAllTime,
-    salesAllTime,
     quizResults,
+    articles,
     recentUsers,
+    clicks,
+    previousClicks,
+    clicksByProduct,
+    clicksBySource,
+    withoutLink,
   ] = await Promise.all([
-    sales
-      ? db.$queryRaw<Array<{ day: string; revenue: bigint; orders: bigint }>>`
-            SELECT to_char(("placedAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Bucharest', 'YYYY-MM-DD') AS day,
-                   SUM(total)::bigint AS revenue, COUNT(*)::bigint AS orders
-            FROM orders
-            WHERE "placedAt" >= ${since} AND status NOT IN ('CANCELLED', 'REFUNDED')
-            GROUP BY 1`
-      : Promise.resolve([]),
-    sales
-      ? db.order.aggregate({
-          where: { placedAt: { gte: since }, status: { notIn: CLOSED } },
-          _sum: { total: true },
-          _count: true,
-        })
-      : null,
-    sales
-      ? db.order.aggregate({
-          where: { placedAt: { gte: before, lt: since }, status: { notIn: CLOSED } },
-          _sum: { total: true },
-          _count: true,
-        })
-      : null,
-    sales ? db.order.groupBy({ by: ["status"], _count: true }) : Promise.resolve([]),
-    sales
-      ? db.orderItem.groupBy({
-          by: ["productName"],
-          where: { order: { placedAt: { gte: since }, status: { notIn: CLOSED } } },
-          _sum: { quantity: true },
-          orderBy: { _sum: { quantity: "desc" } },
-          take: 5,
-        })
-      : Promise.resolve([]),
+    db.$queryRaw<Array<{ day: string; count: bigint }>>`
+      SELECT to_char(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE 'Europe/Bucharest', 'YYYY-MM-DD') AS day,
+             COUNT(*)::bigint AS count
+      FROM users
+      WHERE "createdAt" >= ${since}
+      GROUP BY 1`,
+    db.user.count({ where: { createdAt: { gte: since } } }),
+    db.user.count({ where: { createdAt: { gte: before, lt: since } } }),
     db.analyticsEvent.groupBy({
       by: ["name"],
       where: { createdAt: { gte: since } },
       _count: true,
     }),
-    db.product.findMany({
-      where: { active: true, stock: { lte: LOW_STOCK } },
-      orderBy: { stock: "asc" },
-      take: 6,
-      select: { id: true, name: true, stock: true },
-    }),
     db.review.count({ where: { status: "PENDING" } }),
     db.newsletterSubscriber.count({ where: { status: "ACTIVE" } }),
-    db.user.count({ where: { createdAt: { gte: since } } }),
-    sales
-      ? db.order.findMany({
-          orderBy: { placedAt: "desc" },
-          take: 6,
-          select: {
-            id: true,
-            number: true,
-            total: true,
-            status: true,
-            placedAt: true,
-            email: true,
-          },
-        })
-      : Promise.resolve([]),
+    db.newsletterSubscriber.count({ where: { status: "ACTIVE", confirmedAt: { gte: since } } }),
     // All-time totals, each only for the roles allowed to see that area.
     catalog ? db.product.count() : null,
     catalog ? db.product.count({ where: { active: true } }) : null,
     people ? db.user.count() : null,
-    sales ? db.order.count() : null,
-    sales
-      ? db.order.aggregate({ where: { status: { notIn: CLOSED } }, _sum: { total: true } })
-      : null,
     content ? db.quizResult.count() : null,
+    content ? db.article.count({ where: { status: "PUBLISHED" } }) : null,
     people
       ? db.user.findMany({
           orderBy: { createdAt: "desc" },
@@ -117,59 +83,75 @@ export async function getDashboard(actor: Actor) {
           select: { id: true, firstName: true, lastName: true, email: true, createdAt: true },
         })
       : Promise.resolve([]),
+    db.outboundClickDaily.aggregate({ where: { day: { gte: sinceDay } }, _sum: { count: true } }),
+    db.outboundClickDaily.aggregate({
+      where: { day: { gte: beforeDay, lt: sinceDay } },
+      _sum: { count: true },
+    }),
+    db.outboundClickDaily.groupBy({
+      by: ["productId"],
+      where: { day: { gte: sinceDay } },
+      _sum: { count: true },
+      orderBy: { _sum: { count: "desc" } },
+      take: 8,
+    }),
+    db.outboundClickDaily.groupBy({
+      by: ["source"],
+      where: { day: { gte: sinceDay } },
+      _sum: { count: true },
+      orderBy: { _sum: { count: "desc" } },
+    }),
+    catalog ? db.product.count({ where: { active: true, referralUrl: null } }) : null,
   ]);
 
-  const revenue = current?._sum.total ?? 0;
-  const orders = current?._count ?? 0;
+  const clickedProducts = await db.product.findMany({
+    where: { id: { in: clicksByProduct.map((c) => c.productId) } },
+    select: { id: true, name: true },
+  });
+  const productName = (id: string) =>
+    clickedProducts.find((p) => p.id === id)?.name ?? "Produs șters";
+
   const eventCount = (name: string) => events.find((e) => e.name === name)?._count ?? 0;
+  const quizStarted = eventCount("quiz_started");
+  const quizCompleted = eventCount("quiz_completed");
 
   return {
-    sales,
     days: DAYS,
-    series: fillDays(
-      daily.map((d) => ({ day: d.day, revenue: Number(d.revenue), orders: Number(d.orders) })),
+    signups: fillDays(
+      dailySignups.map((d) => ({ day: d.day, count: Number(d.count) })),
       DAYS,
       now,
     ),
     kpis: {
-      revenue,
-      revenueChange: percentChange(revenue, previous?._sum.total ?? 0),
-      orders,
-      ordersChange: percentChange(orders, previous?._count ?? 0),
-      averageOrder: orders ? Math.round(revenue / orders) : 0,
-      newCustomers,
+      newMembers,
+      newMembersChange: percentChange(newMembers, previousMembers),
       subscribers,
+      newSubscribers,
       pendingReviews,
     },
-    statusCounts: Object.fromEntries(statusCounts.map((s) => [s.status, s._count])) as Partial<
-      Record<OrderStatus, number>
-    >,
-    topProducts: top.map((t) => ({ name: t.productName, quantity: t._sum.quantity ?? 0 })),
-    funnel: funnel([
-      { name: "product_view", label: "Vizualizări produs", count: eventCount("product_view") },
-      { name: "add_to_cart", label: "Adăugări în coș", count: eventCount("add_to_cart") },
-      {
-        name: "checkout_started",
-        label: "Checkout început",
-        count: eventCount("checkout_started"),
-      },
-      {
-        name: "order_completed",
-        label: "Comenzi finalizate",
-        count: eventCount("order_completed"),
-      },
-    ]),
-    lowStock,
-    recent,
-    /** All-time figures; null where the role may not see that area. */
-    totals: {
-      products,
-      activeProducts,
-      users,
-      orders: ordersAllTime,
-      revenue: salesAllTime ? (salesAllTime._sum.total ?? 0) : null,
-      quizResults,
+    activity: [
+      { label: "Vizualizări produs", count: eventCount("product_view"), rate: null },
+      { label: "Căutări", count: eventCount("search"), rate: null },
+      { label: "Produse salvate la favorite", count: eventCount("wishlist_add"), rate: null },
+      { label: "Quiz început", count: quizStarted, rate: null },
+      { label: "Quiz terminat", count: quizCompleted, rate: rate(quizCompleted, quizStarted) },
+    ],
+    outbound: {
+      clicks: clicks._sum.count ?? 0,
+      change: percentChange(clicks._sum.count ?? 0, previousClicks._sum.count ?? 0),
+      topProducts: clicksByProduct.map((c) => ({
+        label: productName(c.productId),
+        value: c._sum.count ?? 0,
+      })),
+      bySource: clicksBySource.map((c) => ({
+        label: sourceLabels[c.source] ?? c.source,
+        value: c._sum.count ?? 0,
+      })),
+      /** Active products still showing "Link în curând"; null when the role may not see the catalog. */
+      withoutLink,
     },
+    /** All-time figures; null where the role may not see that area. */
+    totals: { products, activeProducts, users, quizResults, articles },
     recentUsers,
   };
 }

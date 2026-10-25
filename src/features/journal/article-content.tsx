@@ -57,7 +57,7 @@ export async function ArticleContent({ content }: { content: string }) {
                   {p.name}
                 </Link>
                 <span className="line-clamp-1 text-sm text-ink-muted">{p.shortDescription}</span>
-                <Price price={p.price} compareAtPrice={p.compareAtPrice} size="sm" />
+                <Price price={p.price} size="sm" />
               </div>
             </aside>
           );

@@ -46,7 +46,7 @@ export function welcomeEmail(
           items: [
             "Salvează produsele preferate și regăsește-le oricând.",
             "Fă quiz-ul aromatic pentru recomandări potrivite ție.",
-            "Urmărește comenzile și adresele dintr-un singur loc.",
+            "Păstrează ritualurile care îți plac și scrie recenzii despre produse.",
           ],
         },
         { type: "button", label: "Descoperă produsele", href: p.shopUrl },

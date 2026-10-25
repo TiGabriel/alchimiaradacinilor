@@ -78,23 +78,10 @@ export function EssentialsSection({ items }: { items: Array<Essential<ProductCar
                     </Link>
                   </h3>
                   <p className="text-sm text-ink-inverse/75 md:text-base">{note}</p>
-                  <Price
-                    price={product.price}
-                    compareAtPrice={product.compareAtPrice}
-                    size="sm"
-                    showDiscountBadge={false}
-                    tone="inverse"
-                    className="sm:hidden"
-                  />
+                  <Price price={product.price} size="sm" tone="inverse" className="sm:hidden" />
                 </div>
                 <div className="hidden items-center gap-4 sm:flex">
-                  <Price
-                    price={product.price}
-                    compareAtPrice={product.compareAtPrice}
-                    size="sm"
-                    showDiscountBadge={false}
-                    tone="inverse"
-                  />
+                  <Price price={product.price} size="sm" tone="inverse" />
                   <ArrowRight
                     aria-hidden
                     className="size-5 text-ink-inverse/60 transition-transform group-hover:translate-x-1 motion-reduce:transition-none"

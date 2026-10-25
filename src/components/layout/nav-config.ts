@@ -38,7 +38,6 @@ export const primaryLinks = {
 export const accountLinks = {
   account: { label: "Contul meu", href: "/cont" },
   wishlist: { label: "Favorite", href: "/favorite" },
-  cart: { label: "Coș", href: "/cos" },
   search: { label: "Caută", href: "/cautare" },
 } satisfies Record<string, NavLink>;
 
@@ -46,13 +45,12 @@ export const legalLinks: NavLink[] = [
   { label: "Termeni și condiții", href: "/termeni-si-conditii" },
   { label: "Politica de confidențialitate", href: "/politica-de-confidentialitate" },
   { label: "Politica de cookies", href: "/politica-cookies" },
-  { label: "Politica de retur", href: "/politica-de-retur" },
 ];
 
 export const helpLinks: NavLink[] = [
   { label: "Contact", href: "/contact" },
   { label: "Întrebări frecvente", href: "/intrebari-frecvente" },
-  { label: "Livrare și retur", href: "/livrare-si-retur" },
+  { label: "Cum cumpăr", href: "/cum-cumpar" },
 ];
 
 /**

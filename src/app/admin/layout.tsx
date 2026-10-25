@@ -45,7 +45,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </div>
           <div className="flex items-center gap-4 text-sm">
             <Link href="/" className="text-ink-muted hover:text-ink max-sm:hidden">
-              Vezi magazinul
+              Vezi site-ul
             </Link>
             <span className="text-ink-muted max-md:hidden">{user.email}</span>
             <Link

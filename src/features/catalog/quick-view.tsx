@@ -2,22 +2,15 @@
 
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 import { ProductImage } from "@/components/media/product-image";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Price } from "@/components/ui/price";
-import { QuantitySelector } from "@/components/ui/quantity-selector";
 import { RatingStars } from "@/components/ui/rating-stars";
-import { AddToCartButton } from "@/features/cart/add-to-cart-button";
-import {
-  productHref,
-  stockLabel,
-  stockStatus,
-  type ProductCardData,
-} from "@/services/catalog/product-types";
+import { productHref, type ProductCardData } from "@/services/catalog/product-types";
+
+import { DoterraButton } from "./doterra-button";
 
 type QuickViewProps = {
   product: ProductCardData;
@@ -26,9 +19,6 @@ type QuickViewProps = {
 };
 
 export function QuickView({ product, open, onOpenChange }: QuickViewProps) {
-  const [quantity, setQuantity] = useState(1);
-  const status = stockStatus(product.stock);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent size="lg" className="p-0 sm:p-0">
@@ -51,34 +41,14 @@ export function QuickView({ product, open, onOpenChange }: QuickViewProps) {
             {product.rating != null ? (
               <RatingStars value={product.rating} count={product.reviewCount} showValue />
             ) : null}
-            <Price price={product.price} compareAtPrice={product.compareAtPrice} size="lg" />
-            <DialogDescription>{product.shortDescription}</DialogDescription>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge
-                variant={
-                  status === "in-stock" ? "success" : status === "low-stock" ? "warning" : "danger"
-                }
-                size="sm"
-              >
-                {stockLabel(product.stock)}
-              </Badge>
+            <div className="flex flex-col gap-0.5">
+              <Price price={product.price} size="lg" />
+              <span className="text-xs text-ink-muted">Preț pe site-ul doTERRA</span>
             </div>
+            <DialogDescription>{product.shortDescription}</DialogDescription>
             <div className="mt-auto flex flex-col gap-3 pt-2">
-              <div className="flex gap-3">
-                <QuantitySelector
-                  value={quantity}
-                  onChange={setQuantity}
-                  max={Math.max(1, product.stock)}
-                  disabled={product.stock <= 0}
-                />
-                <AddToCartButton
-                  product={product}
-                  quantity={quantity}
-                  className="flex-1"
-                  onAdded={() => onOpenChange(false)}
-                />
-              </div>
-              <Button asChild variant="link" className="self-start">
+              <DoterraButton product={product} source="previzualizare" block note />
+              <Button asChild variant="outline" block>
                 <Link href={productHref(product)} onClick={() => onOpenChange(false)}>
                   Vezi detalii <ArrowRight aria-hidden />
                 </Link>

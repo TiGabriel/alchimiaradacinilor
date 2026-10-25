@@ -34,7 +34,7 @@ export default async function RoutineAdminPage({ params }: { params: Promise<{ i
           routine.active ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/rutine/${routine.slug}`} target="_blank">
-                Vezi în magazin <ExternalLink aria-hidden />
+                Vezi pe site <ExternalLink aria-hidden />
               </Link>
             </Button>
           ) : null

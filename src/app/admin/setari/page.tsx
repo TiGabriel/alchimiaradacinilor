@@ -1,19 +1,17 @@
 import type { Metadata } from "next";
 
 import {
+  AffiliateForm,
   BrandForm,
   ContactForm,
   EmailSeoForm,
   HomepageForm,
-  LegalTaxForm,
-  PaymentForm,
+  LegalForm,
   RecommendationForm,
-  ShippingForm,
 } from "@/features/admin/settings/settings-forms";
 import { AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
 import { db } from "@/lib/db";
-import { netopiaConfig } from "@/services/payments/netopia-service";
 import { getSettings } from "@/services/settings";
 
 export const metadata: Metadata = { title: "Setări" };
@@ -21,12 +19,11 @@ export const metadata: Metadata = { title: "Setări" };
 const sections = [
   ["brand", "Brand"],
   ["contact", "Contact"],
-  ["livrare", "Livrare"],
-  ["plata", "Plată"],
   ["email-seo", "Email și SEO"],
   ["prima-pagina", "Prima pagină"],
-  ["legal", "Legal și TVA"],
+  ["legal", "Date legale"],
   ["recomandari", "Recomandări"],
+  ["linkuri", "Linkuri doTERRA"],
 ] as const;
 
 export default async function SettingsPage() {
@@ -43,7 +40,7 @@ export default async function SettingsPage() {
     <>
       <AdminPageHeader
         title="Setări"
-        description="Fiecare secțiune se salvează separat și se aplică imediat în magazin."
+        description="Fiecare secțiune se salvează separat și se aplică imediat pe site."
       />
       <nav aria-label="Secțiuni setări" className="flex flex-wrap gap-2">
         {sections.map(([id, label]) => (
@@ -62,12 +59,6 @@ export default async function SettingsPage() {
       <div id="contact" className="scroll-mt-6">
         <ContactForm contact={s.contact} social={s.social} />
       </div>
-      <div id="livrare" className="scroll-mt-6">
-        <ShippingForm initial={s.shipping} />
-      </div>
-      <div id="plata" className="scroll-mt-6">
-        <PaymentForm initial={s.payment} netopia={netopiaConfig()?.environment ?? null} />
-      </div>
       <div id="email-seo" className="scroll-mt-6">
         <EmailSeoForm email={s.email} seo={s.seo} />
       </div>
@@ -75,10 +66,13 @@ export default async function SettingsPage() {
         <HomepageForm initial={s.homepage} products={products} />
       </div>
       <div id="legal" className="scroll-mt-6">
-        <LegalTaxForm legal={s.legal} tax={s.tax} />
+        <LegalForm legal={s.legal} />
       </div>
       <div id="recomandari" className="scroll-mt-6">
         <RecommendationForm initial={s.recommendation} />
+      </div>
+      <div id="linkuri" className="scroll-mt-6">
+        <AffiliateForm initial={s.affiliate} />
       </div>
     </>
   );

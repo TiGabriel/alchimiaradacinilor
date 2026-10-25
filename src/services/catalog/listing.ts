@@ -13,8 +13,9 @@ export type ListingRow = {
   price: number;
   rating: number | null;
   reviewCount: number;
-  stock: number;
   featured: boolean;
+  /** Has a doTERRA referral link: listed before products that show "Link în curând". */
+  hasLink: boolean;
   createdAt: Date;
   brand: string | null;
   /** Slug of the product's own category and (if any) its parent. */
@@ -49,7 +50,6 @@ export type CatalogFilters = {
   pretMax: number | null;
   /** Minimum average rating (1–5). */
   rating: number | null;
-  inStock: boolean;
   sort: SortKey;
   page: number;
 };
@@ -63,7 +63,6 @@ export const EMPTY_FILTERS: CatalogFilters = {
   pretMin: null,
   pretMax: null,
   rating: null,
-  inStock: false,
   sort: DEFAULT_SORT,
   page: 1,
 };
@@ -115,7 +114,6 @@ export function parseCatalogParams(params: RawParams): CatalogFilters {
   }
   const rating = intParam(readParam(params, "rating"), 1, 5);
   if (rating != null) filters.rating = rating;
-  filters.inStock = readParam(params, "stoc") === "1";
   const sort = readParam(params, "sortare");
   if (SORT_OPTIONS.some((o) => o.value === sort)) filters.sort = sort as SortKey;
   const page = intParam(readParam(params, "pagina"), 1, 10_000);
@@ -132,7 +130,6 @@ export function serializeCatalogParams(filters: CatalogFilters): string {
   if (filters.pretMin != null) params.set("pret_min", String(filters.pretMin));
   if (filters.pretMax != null) params.set("pret_max", String(filters.pretMax));
   if (filters.rating != null) params.set("rating", String(filters.rating));
-  if (filters.inStock) params.set("stoc", "1");
   if (filters.sort !== DEFAULT_SORT) params.set("sortare", filters.sort);
   if (filters.page > 1) params.set("pagina", String(filters.page));
   return params.toString();
@@ -142,14 +139,13 @@ export function countActiveFilters(filters: CatalogFilters): number {
   return (
     MULTI_FACETS.reduce((n, f) => n + filters[f].length, 0) +
     (filters.pretMin != null || filters.pretMax != null ? 1 : 0) +
-    (filters.rating != null ? 1 : 0) +
-    (filters.inStock ? 1 : 0)
+    (filters.rating != null ? 1 : 0)
   );
 }
 
 // ── Filtering ───────────────────────────────────────────────────────────────
 
-type FacetKey = MultiFacet | "pret" | "rating" | "stoc";
+type FacetKey = MultiFacet | "pret" | "rating";
 
 /** OR within a facet, AND across facets. `except` skips one facet (for disjunctive counts). */
 export function matchesFilters(
@@ -168,7 +164,6 @@ export function matchesFilters(
   }
   if (except !== "rating" && filters.rating != null && (row.rating ?? 0) < filters.rating)
     return false;
-  if (except !== "stoc" && filters.inStock && row.stock <= 0) return false;
   return true;
 }
 
@@ -177,20 +172,21 @@ export function matchesFilters(
 const byNewest = (a: ListingRow, b: ListingRow) => b.createdAt.getTime() - a.createdAt.getTime();
 const byRating = (a: ListingRow, b: ListingRow) =>
   (b.rating ?? -1) - (a.rating ?? -1) || b.reviewCount - a.reviewCount;
-const inStockFirst = (a: ListingRow, b: ListingRow) => Number(b.stock > 0) - Number(a.stock > 0);
 
-/** Deterministic: ties fall back to newest, then id. Out-of-stock items sink in "recomandate". */
+/**
+ * Products with a doTERRA link always come first (D-092); the chosen sort applies within each
+ * group. Deterministic: ties fall back to newest, then id.
+ */
 export function sortRows(rows: ListingRow[], sort: SortKey): ListingRow[] {
   const tie = (a: ListingRow, b: ListingRow) => byNewest(a, b) || a.id.localeCompare(b.id);
   const compare: Record<SortKey, (a: ListingRow, b: ListingRow) => number> = {
-    recomandate: (a, b) =>
-      inStockFirst(a, b) || Number(b.featured) - Number(a.featured) || byRating(a, b) || tie(a, b),
+    recomandate: (a, b) => Number(b.featured) - Number(a.featured) || byRating(a, b) || tie(a, b),
     noi: (a, b) => tie(a, b),
     "pret-crescator": (a, b) => a.price - b.price || tie(a, b),
     "pret-descrescator": (a, b) => b.price - a.price || tie(a, b),
     rating: (a, b) => byRating(a, b) || tie(a, b),
   };
-  return [...rows].sort(compare[sort]);
+  return [...rows].sort((a, b) => Number(b.hasLink) - Number(a.hasLink) || compare[sort](a, b));
 }
 
 // ── Facets ──────────────────────────────────────────────────────────────────
@@ -205,7 +201,6 @@ export type FacetLabels = Record<
 export type Facets = Record<MultiFacet, FacetOption[]> & {
   price: { min: number; max: number } | null;
   rating: FacetOption[];
-  inStockCount: number;
 };
 
 /**
@@ -259,9 +254,7 @@ export function computeFacets(
     }))
     .filter((o) => o.count > 0 || String(filters.rating) === o.value);
 
-  const inStockCount = rows.filter((r) => matchesFilters(r, filters, "stoc") && r.stock > 0).length;
-
-  return { ...multi, price, rating, inStockCount };
+  return { ...multi, price, rating };
 }
 
 // ── Putting it together ─────────────────────────────────────────────────────

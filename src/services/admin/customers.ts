@@ -37,21 +37,10 @@ export async function listCustomers(actor: Actor, filter: { q?: string; page?: n
         lastLoginAt: true,
         roles: { select: { role: { select: { key: true } } } },
         subscriber: { select: { status: true } },
-        _count: { select: { orders: true } },
+        _count: { select: { savedRoutines: true, reviews: true } },
       },
     }),
   ]);
-  const spent = users.length
-    ? await db.order.groupBy({
-        by: ["userId"],
-        where: {
-          userId: { in: users.map((u) => u.id) },
-          status: { notIn: ["CANCELLED", "REFUNDED"] },
-        },
-        _sum: { total: true },
-      })
-    : [];
-  const spentBy = new Map(spent.map((s) => [s.userId, s._sum.total ?? 0]));
   return {
     total,
     page,
@@ -59,7 +48,6 @@ export async function listCustomers(actor: Actor, filter: { q?: string; page?: n
     customers: users.map((u) => ({
       ...u,
       roles: u.roles.map((r) => r.role.key),
-      totalSpent: spentBy.get(u.id) ?? 0,
     })),
   };
 }
@@ -78,11 +66,6 @@ export async function getCustomer(actor: Actor, id: string) {
       emailVerifiedAt: true,
       lastLoginAt: true,
       roles: { select: { role: { select: { key: true, name: true } } } },
-      addresses: { orderBy: { createdAt: "asc" } },
-      orders: {
-        orderBy: { placedAt: "desc" },
-        select: { id: true, number: true, placedAt: true, status: true, total: true },
-      },
       reviews: {
         orderBy: { createdAt: "desc" },
         select: { id: true, rating: true, status: true, product: { select: { name: true } } },
@@ -102,8 +85,5 @@ export async function getCustomer(actor: Actor, id: string) {
     roles: user.roles.map((r) => r.role),
     latestConsents: [...latestConsents(user.consents).values()],
     wishlistCount,
-    totalSpent: user.orders
-      .filter((o) => o.status !== "CANCELLED" && o.status !== "REFUNDED")
-      .reduce((s, o) => s + o.total, 0),
   };
 }

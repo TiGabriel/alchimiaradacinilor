@@ -12,8 +12,9 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Markdown } from "@/components/ui/markdown";
 import { getCurrentUser } from "@/features/auth/session";
+import { DoterraButton } from "@/features/catalog/doterra-button";
 import { ProductCard } from "@/features/catalog/product-card";
-import { AddRoutineToCartButton, SaveRoutineButton } from "@/features/routines/routine-actions";
+import { SaveRoutineButton } from "@/features/routines/routine-actions";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { productHref } from "@/services/catalog/product-types";
 import { pageMetadata } from "@/services/seo";
@@ -93,7 +94,6 @@ export default async function RoutinePage(props: Props) {
             ))}
           </ul>
           <div className="flex flex-wrap gap-3 pt-2">
-            <AddRoutineToCartButton routineId={routine.id} />
             <SaveRoutineButton routineId={routine.id} initiallySaved={saved} />
           </div>
         </Reveal>
@@ -196,6 +196,7 @@ export default async function RoutinePage(props: Props) {
             {routine.productItems.map(({ product, optional, note }) => (
               <li key={product.id} className="flex flex-col gap-2">
                 <ProductCard product={product} sizes="(min-width: 1024px) 15vw, 45vw" />
+                <DoterraButton product={product} source="ritual" size="sm" block />
                 {optional ? (
                   <Badge variant="outline" size="sm" className="self-start">
                     Opțional
@@ -205,9 +206,6 @@ export default async function RoutinePage(props: Props) {
               </li>
             ))}
           </ul>
-          <p className="text-xs text-ink-muted">
-            Butonul adaugă câte o bucată din fiecare produs în stoc. Poți modifica apoi coșul.
-          </p>
           {routine.articles.length ? (
             <div className="flex flex-col gap-3 border-t border-line pt-5">
               <h2 className="text-xl">Din jurnal</h2>

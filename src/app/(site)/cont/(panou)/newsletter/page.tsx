@@ -85,8 +85,8 @@ export default async function NewsletterPage() {
         }
       >
         <p className="text-ink-muted">
-          Cu acordul tău, recomandările din site țin cont de favoritele, rutinele salvate și
-          comenzile tale. Fără acord, folosim doar ce alegi în quiz sau pe pagini.
+          Cu acordul tău, recomandările din site țin cont de favoritele și rutinele tale salvate.
+          Fără acord, folosim doar ce alegi în quiz sau pe pagini.
         </p>
         <PersonalizationToggle granted={personalization} />
       </AccountCard>

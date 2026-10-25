@@ -11,16 +11,13 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { formatMoney } from "@/lib/money";
-import { availablePaymentOptions } from "@/services/payments/registry";
 import { pageMetadata } from "@/services/seo";
-import { getSettings } from "@/services/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata({
     title: "Întrebări frecvente",
     description:
-      "Comenzi, livrare, plată, retur și cum alegi primele uleiuri esențiale — răspunsuri scurte.",
+      "Cum cumperi produsele de pe doTERRA și cum alegi primele uleiuri esențiale — răspunsuri scurte.",
     path: "/intrebari-frecvente",
   });
 }
@@ -29,22 +26,7 @@ type Faq = { q: string; a: React.ReactNode; text: string };
 
 const link = "text-forest underline underline-offset-2 hover:text-forest-deep";
 
-export default async function FaqPage() {
-  const { shipping, payment } = await getSettings();
-  const methods = shipping.methods.filter((m) => m.active);
-  const payments = availablePaymentOptions(payment);
-  const noCard = payments.some((p) => p.method === "CARD")
-    ? ""
-    : "Plata cu cardul nu este disponibilă momentan.";
-  const shippingText = methods
-    .map((m) => `${m.name}: ${m.price > 0 ? formatMoney(m.price) : "gratuit"}`)
-    .join("; ");
-  const freeText =
-    shipping.freeShippingThreshold != null
-      ? ` Comenzile de peste ${formatMoney(shipping.freeShippingThreshold)} (după reduceri) au livrare gratuită.`
-      : "";
-
-  // Answers are built from the site settings, so prices and methods stay accurate.
+export default function FaqPage() {
   const groups: Array<{ title: string; items: Faq[] }> = [
     {
       title: "Primii pași",
@@ -97,102 +79,45 @@ export default async function FaqPage() {
       ],
     },
     {
-      title: "Comenzi și livrare",
+      title: "Cum cumpăr",
       items: [
         {
-          q: "Cât costă livrarea?",
-          text: `${shippingText}.${freeText}`,
-          a: (
-            <>
-              <ul className="list-disc pl-5">
-                {methods.map((m) => (
-                  <li key={m.code}>
-                    {m.name}: {m.price > 0 ? formatMoney(m.price) : "gratuit"}
-                    {m.description ? ` — ${m.description}` : ""}
-                  </li>
-                ))}
-              </ul>
-              {freeText ? <p className="mt-2">{freeText.trim()}</p> : null}
-              <p className="mt-2">
-                Detalii în{" "}
-                <Link href="/livrare-si-retur" className={link}>
-                  Livrare și retur
-                </Link>
-                .
-              </p>
-            </>
-          ),
-        },
-        {
-          q: "Am nevoie de cont ca să comand?",
-          text: "Da, comanda se plasează dintr-un cont cu adresa de email confirmată. Coșul se păstrează și îl regăsești după autentificare.",
+          q: "Pot cumpăra produse de pe acest site?",
+          text: "Nu. Nu vindem produse: le descriem aici, iar tu le cumperi direct de pe site-ul oficial doTERRA.",
           a: (
             <p>
-              Da — comanda se plasează dintr-un cont cu adresa de email confirmată, ca să-ți putem
-              trimite confirmarea și să vezi oricând istoricul comenzilor. Ce ai pus în coș înainte
-              de autentificare rămâne acolo.{" "}
-              <Link href="/cont/inregistrare" className={link}>
-                Creează un cont
-              </Link>{" "}
-              în mai puțin de un minut.
-            </p>
-          ),
-        },
-        {
-          q: "Unde văd stadiul comenzii?",
-          text: "În contul tău, la Comenzi, cu toate schimbările de stare.",
-          a: (
-            <p>
-              În{" "}
-              <Link href="/cont/comenzi" className={link}>
-                contul tău, la Comenzi
-              </Link>
-              : vezi produsele, adresa, totalul și fiecare schimbare de stare.
-            </p>
-          ),
-        },
-      ],
-    },
-    {
-      title: "Plată și retur",
-      items: [
-        {
-          q: "Cum pot plăti?",
-          text: payments.length
-            ? `${payments.map((p) => p.label).join(", ")}. ${noCard}`.trim()
-            : "Metodele de plată sunt afișate la finalizarea comenzii.",
-          a: (
-            <>
-              <ul className="list-disc pl-5">
-                {payments.map((p) => (
-                  <li key={p.method}>
-                    {p.label}
-                    {p.description ? ` — ${p.description}` : ""}
-                  </li>
-                ))}
-              </ul>
-              {noCard ? <p className="mt-2">{noCard}</p> : null}
-            </>
-          ),
-        },
-        {
-          q: "Pot returna un produs?",
-          text: "Da, ai la dispoziție 14 zile de la primire pentru a te retrage din contract, în condițiile din Politica de retur.",
-          a: (
-            <p>
-              Da. Ai 14 zile de la primirea coletului ca să te retragi din contract, în condițiile
-              descrise în{" "}
-              <Link href="/politica-de-retur" className={link}>
-                Politica de retur
+              Nu. Nu vindem produse: le descriem aici, iar tu le cumperi direct de pe site-ul
+              oficial doTERRA. Vezi{" "}
+              <Link href="/cum-cumpar" className={link}>
+                Cum cumpăr
               </Link>
               .
             </p>
           ),
         },
         {
-          q: "Prețurile includ TVA?",
-          text: "Da, toate prețurile afișate includ TVA.",
-          a: <p>Da, toate prețurile afișate includ TVA; valoarea TVA apare pe fiecare comandă.</p>,
+          q: "Ce preț au produsele?",
+          text: "Prețul afișat la fiecare produs este cel de pe site-ul doTERRA. Comanda, plata, livrarea și retururile se fac pe site-ul doTERRA.",
+          a: (
+            <p>
+              Prețul afișat la fiecare produs este cel de pe site-ul doTERRA. Comanda, plata,
+              livrarea și eventualele retururi se fac pe site-ul doTERRA, după condițiile lor.
+            </p>
+          ),
+        },
+        {
+          q: "La ce îmi folosește un cont?",
+          text: "Cu un cont îți salvezi produsele favorite, ritualurile și rezultatele quiz-ului și poți scrie recenzii.",
+          a: (
+            <p>
+              Cu un cont îți salvezi produsele favorite, ritualurile și rezultatele quiz-ului și
+              poți scrie recenzii.{" "}
+              <Link href="/cont/inregistrare" className={link}>
+                Creează un cont
+              </Link>{" "}
+              în mai puțin de un minut.
+            </p>
+          ),
         },
       ],
     },
@@ -254,7 +179,7 @@ export default async function FaqPage() {
         <p className="text-eyebrow text-clay">Ajutor</p>
         <h1 className="text-display-xl">Întrebări frecvente</h1>
         <p className="text-lg text-ink-muted">
-          Răspunsuri scurte despre comenzi, livrare și primii pași cu uleiurile esențiale.
+          Răspunsuri scurte despre cum cumperi și primii pași cu uleiurile esențiale.
         </p>
       </Reveal>
 

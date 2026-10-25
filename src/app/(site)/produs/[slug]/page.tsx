@@ -1,4 +1,4 @@
-import { ArrowRight, Moon, PackageCheck, Truck } from "lucide-react";
+import { ArrowRight, Moon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,21 +9,19 @@ import { SectionDivider, Sprig } from "@/components/botanical";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Reveal } from "@/components/motion";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Markdown } from "@/components/ui/markdown";
 import { Price } from "@/components/ui/price";
 import { RatingStars, reviewCountLabel } from "@/components/ui/rating-stars";
+import { DoterraButton } from "@/features/catalog/doterra-button";
 import { ProductBadges } from "@/features/catalog/product-badges";
 import { ProductCard } from "@/features/catalog/product-card";
 import { ProductGallery } from "@/features/catalog/product-gallery";
-import { ProductPurchase } from "@/features/catalog/product-purchase";
 import { getCurrentUser } from "@/features/auth/session";
 import { ReviewsSection } from "@/features/reviews/reviews-section";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
-import { formatMoney } from "@/lib/money";
 import { absoluteUrl, siteUrl } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { categoryHref } from "@/services/catalog/category-tree";
@@ -32,16 +30,23 @@ import {
   getRelatedProducts,
   type ProductDetail,
 } from "@/services/catalog/product-detail";
-import { productHref, stockLabel, stockStatus } from "@/services/catalog/product-types";
+import { productHref } from "@/services/catalog/product-types";
 import { getArticlesForProduct } from "@/services/journal/journal";
 import { recordProductView } from "@/services/recommendation/signals";
 import { getProductReviews, getReviewEligibility } from "@/services/reviews/reviews";
 import { getRoutinesForProduct } from "@/services/routines/routines";
-import { getSetting } from "@/services/settings";
 import { productTypeLabels } from "@/validation/product";
 import { pageMetadata } from "@/services/seo";
+import { getSetting } from "@/services/settings";
 
 type Props = PageProps<"/produs/[slug]">;
+
+const checkedDate = new Intl.DateTimeFormat("ro-RO", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Europe/Bucharest",
+});
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const { slug } = await props.params;
@@ -141,16 +146,6 @@ function productJsonLd(product: ProductDetail) {
     category: product.parentCategory
       ? `${product.parentCategory.name} > ${product.category.name}`
       : product.category.name,
-    offers: {
-      "@type": "Offer",
-      url: siteUrl(productHref(product)),
-      priceCurrency: "RON",
-      price: (product.price / 100).toFixed(2),
-      availability:
-        product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      itemCondition: "https://schema.org/NewCondition",
-      seller: { "@id": siteUrl("/#organizatie") },
-    },
     ...(product.rating != null && product.reviewCount > 0
       ? {
           aggregateRating: {
@@ -169,16 +164,15 @@ export default async function ProductPage(props: Props) {
   if (!product) notFound();
 
   const user = await getCurrentUser();
-  const [related, shipping, routines, articles, { summary, reviews }, eligibility] =
+  const [related, routines, articles, { summary, reviews }, eligibility, affiliate] =
     await Promise.all([
       getRelatedProducts(product.id, 4),
-      getSetting("shipping"),
       getRoutinesForProduct(product.id),
       getArticlesForProduct(product.id),
       getProductReviews(product.id),
       getReviewEligibility(user?.id ?? null, product.id),
+      getSetting("affiliate"),
     ]);
-  const status = stockStatus(product.stock);
   const tone = product.aromas[0]?.colorHex ?? null;
   const categoryLink = categoryHref(product.category, product.parentCategory);
 
@@ -240,34 +234,36 @@ export default async function ProductPage(props: Props) {
               : "Nicio recenzie încă"}
           </a>
           <p className="text-lg text-ink-muted">{product.shortDescription}</p>
-          <Price price={product.price} compareAtPrice={product.compareAtPrice} size="xl" />
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge
-              variant={
-                status === "in-stock" ? "success" : status === "low-stock" ? "warning" : "danger"
-              }
-            >
-              <PackageCheck aria-hidden /> {stockLabel(product.stock)}
-            </Badge>
+          <div className="flex flex-col gap-1">
+            <Price price={product.price} size="xl" />
+            <span className="text-sm text-ink-muted">
+              Preț pe site-ul doTERRA
+              {product.priceCheckedAt ? (
+                <>
+                  , verificat pe{" "}
+                  <time dateTime={product.priceCheckedAt.toISOString()}>
+                    {checkedDate.format(product.priceCheckedAt)}
+                  </time>
+                </>
+              ) : null}
+            </span>
           </div>
 
-          <ProductPurchase product={product} />
+          <DoterraButton product={product} source="produs" size="lg" block />
 
-          <ul className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
-            {shipping.freeShippingThreshold != null ? (
-              <li className="flex items-center gap-2">
-                <Truck aria-hidden className="size-4 text-forest" />
-                Livrare gratuită pentru comenzi de peste{" "}
-                {formatMoney(shipping.freeShippingThreshold)}
-              </li>
-            ) : null}
-            <li className="flex items-center gap-2">
-              <span aria-hidden className="grid size-4 place-items-center">
-                <Sprig className="h-4 text-forest" />
-              </span>
-              Ambalat cu grijă, pregătit pentru ritualul tău
-            </li>
-          </ul>
+          <div className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
+            <span aria-hidden className="grid size-4 shrink-0 place-items-center pt-0.5">
+              <Sprig className="h-4 text-forest" />
+            </span>
+            <p>
+              {product.hasDoterraLink
+                ? affiliate.disclosureShort
+                : "Nu vindem produse: îl cumperi direct de pe site-ul oficial doTERRA. Linkul către produs va fi disponibil în curând."}{" "}
+              <Link href="/cum-cumpar" className="font-semibold text-forest hover:underline">
+                Cum cumpăr
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
 

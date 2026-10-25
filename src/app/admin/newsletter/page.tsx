@@ -49,7 +49,7 @@ export default async function NewsletterAdminPage({
     status,
     q: one(sp.q)?.trim().slice(0, 80) || undefined,
     source: one(sp.source)?.slice(0, 40) || undefined,
-    customersOnly: one(sp.customers) === "1",
+    membersOnly: one(sp.membri) === "1",
   };
   const [{ subscribers, total, statusCounts, sources }, campaigns] = await Promise.all([
     listSubscribers(actor, filter),
@@ -59,7 +59,7 @@ export default async function NewsletterAdminPage({
   if (status) exportParams.set("status", status);
   if (filter.q) exportParams.set("q", filter.q);
   if (filter.source) exportParams.set("source", filter.source);
-  if (filter.customersOnly) exportParams.set("customers", "1");
+  if (filter.membersOnly) exportParams.set("membri", "1");
 
   return (
     <>
@@ -142,12 +142,12 @@ export default async function NewsletterAdminPage({
         <label className="flex items-center gap-2 pb-2 text-sm">
           <input
             type="checkbox"
-            name="customers"
+            name="membri"
             value="1"
-            defaultChecked={filter.customersOnly}
+            defaultChecked={filter.membersOnly}
             className="size-4 accent-forest"
           />{" "}
-          Doar clienți
+          Doar membri
         </label>
       </AdminSearchForm>
       <div className="flex items-center justify-between gap-3">

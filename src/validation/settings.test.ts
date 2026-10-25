@@ -23,37 +23,15 @@ describe("site settings registry", () => {
 
   it("falls back to the default for invalid stored values", () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect(parseSetting("shipping", { flatFee: -1 })).toEqual(settingDefaults.shipping);
+    expect(parseSetting("email", { senderName: 5, replyTo: "nu-e-email" })).toEqual(
+      settingDefaults.email,
+    );
   });
 
-  it("upgrades the legacy flat-fee shipping value to a delivery method", () => {
-    expect(parseSetting("shipping", { flatFee: 1500, freeShippingThreshold: null })).toEqual({
-      freeShippingThreshold: null,
-      methods: [
-        {
-          code: "curier",
-          name: "Curier",
-          description: "Livrare la adresa ta.",
-          price: 1500,
-          freeShippingEligible: true,
-          active: true,
-        },
-      ],
-    });
-  });
-
-  it("requires an active delivery method with a unique code", () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {});
-    const method = settingDefaults.shipping.methods[0]!;
-    expect(
-      parseSetting("shipping", {
-        freeShippingThreshold: null,
-        methods: [{ ...method, active: false }],
-      }),
-    ).toEqual(settingDefaults.shipping);
-    expect(
-      parseSetting("shipping", { freeShippingThreshold: null, methods: [method, method] }),
-    ).toEqual(settingDefaults.shipping);
+  it("no longer knows the shop settings (delivery, payment, VAT)", () => {
+    expect(isSettingKey("shipping")).toBe(false);
+    expect(isSettingKey("payment")).toBe(false);
+    expect(isSettingKey("tax")).toBe(false);
   });
 
   it("accepts an image logo", () => {
@@ -68,13 +46,5 @@ describe("site settings registry", () => {
       },
     };
     expect(parseSetting("brand", value)).toEqual(value);
-  });
-
-  it("keeps stored payment settings saved before card payments existed", () => {
-    const { card: _card, ...legacy } = settingDefaults.payment;
-    const stored = { ...legacy, cashOnDelivery: { ...legacy.cashOnDelivery, label: "Ramburs" } };
-    const parsed = parseSetting("payment", stored);
-    expect(parsed.cashOnDelivery.label).toBe("Ramburs");
-    expect(parsed.card.enabled).toBe(false);
   });
 });

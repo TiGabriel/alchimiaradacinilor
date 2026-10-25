@@ -10,12 +10,12 @@ export type ProductCardData = {
   shortDescription: string;
   brandName: string | null;
   productType: ProductType;
-  /** Minor units (bani). */
+  /** Price on the doTERRA site, minor units (bani). */
   price: number;
-  compareAtPrice: number | null;
+  /** A referral link is set: show "Cumpără de pe doTERRA" (the link itself stays on the server). */
+  hasDoterraLink: boolean;
   rating: number | null;
   reviewCount: number;
-  stock: number;
   isDemo: boolean;
   isNew: boolean;
   /** Up to two images: the second one is revealed on hover. */
@@ -24,24 +24,14 @@ export type ProductCardData = {
   tone: string | null;
 };
 
-export const LOW_STOCK_THRESHOLD = 3;
-
-export type StockStatus = "in-stock" | "low-stock" | "out-of-stock";
-
-export function stockStatus(stock: number): StockStatus {
-  if (stock <= 0) return "out-of-stock";
-  if (stock <= LOW_STOCK_THRESHOLD) return "low-stock";
-  return "in-stock";
-}
-
-export function stockLabel(stock: number): string {
-  const status = stockStatus(stock);
-  if (status === "out-of-stock") return "Stoc epuizat";
-  if (status === "low-stock")
-    return stock === 1 ? "Ultimul produs în stoc" : `Doar ${stock} în stoc`;
-  return "În stoc";
-}
-
 export function productHref(product: { slug: string }) {
   return `/produs/${product.slug}`;
+}
+
+/**
+ * Products that can be bought through a doTERRA link come first in every list (owner decision,
+ * D-092); otherwise the order given is kept.
+ */
+export function linkedFirst<T>(items: readonly T[], hasLink: (item: T) => boolean): T[] {
+  return [...items.filter(hasLink), ...items.filter((item) => !hasLink(item))];
 }

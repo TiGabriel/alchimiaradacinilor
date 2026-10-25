@@ -1,12 +1,10 @@
 "use client";
 
 import {
-  ClipboardList,
   Heart,
   LayoutDashboard,
   LogOut,
   Mail,
-  MapPin,
   Moon,
   ShieldCheck,
   Sparkles,
@@ -22,12 +20,10 @@ import { logoutAction } from "../auth/actions";
 
 export const accountSections = [
   { href: "/cont", label: "Prezentare generală", icon: LayoutDashboard },
-  { href: "/cont/comenzi", label: "Comenzi", icon: ClipboardList },
   { href: "/cont/favorite", label: "Favorite", icon: Heart },
   { href: "/cont/rutine", label: "Rutinele mele", icon: Moon },
   { href: "/cont/quiz", label: "Rezultate quiz", icon: Sparkles },
   { href: "/cont/recomandari", label: "Recomandări", icon: Wand2 },
-  { href: "/cont/adrese", label: "Adrese", icon: MapPin },
   { href: "/cont/date-personale", label: "Date personale", icon: UserRound },
   { href: "/cont/newsletter", label: "Preferințe newsletter", icon: Mail },
   { href: "/cont/securitate", label: "Securitate", icon: ShieldCheck },

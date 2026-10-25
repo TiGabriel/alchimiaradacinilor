@@ -20,8 +20,6 @@ export const productSource: SearchSource = {
         shortDescription: true,
         productType: true,
         price: true,
-        compareAtPrice: true,
-        stock: true,
         brand: { select: { name: true } },
         category: { select: { name: true, parent: { select: { name: true } } } },
         tags: { select: { tag: { select: { name: true } } } },
@@ -53,11 +51,8 @@ export const productSource: SearchSource = {
         ...p.needs.map((n) => n.need.name),
         ...p.aromaProfiles.map((a) => a.aromaProfile.name),
       ].filter(Boolean),
-      // In-stock products rank slightly higher.
-      boost: p.stock > 0 ? 1 : 0.85,
       meta: {
         price: p.price,
-        compareAtPrice: p.compareAtPrice,
         productType: p.productType,
         image: p.images[0]?.media.url ?? null,
         tone: p.aromaProfiles[0]?.aromaProfile.colorHex ?? null,

@@ -16,7 +16,7 @@ import { previewAudienceAction, saveCampaignAction, sendCampaignAction } from ".
 type Segment = {
   interests?: string[];
   sources?: string[];
-  customersOnly?: boolean;
+  membersOnly?: boolean;
   confirmedSince?: string;
 };
 export type CampaignDraft = {
@@ -254,11 +254,11 @@ export function CampaignForm({
           <div className="flex flex-wrap items-end gap-6">
             <Checkbox
               id={`${uid}-cust`}
-              checked={v.segment.customersOnly ?? false}
+              checked={v.segment.membersOnly ?? false}
               onCheckedChange={(c) =>
-                setV({ ...v, segment: { ...v.segment, customersOnly: c === true } })
+                setV({ ...v, segment: { ...v.segment, membersOnly: c === true } })
               }
-              label="Doar clienți cu comenzi"
+              label="Doar membri cu cont"
             />
             <Field
               id={`${uid}-since`}

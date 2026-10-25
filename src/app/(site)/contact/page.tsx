@@ -13,7 +13,7 @@ import { pageMetadata } from "@/services/seo";
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata({
     title: "Contact",
-    description: "Scrie-ne pentru orice întrebare despre produse, comenzi sau ritualuri.",
+    description: "Scrie-ne pentru orice întrebare despre produse sau ritualuri.",
     path: "/contact",
   });
 }
@@ -41,8 +41,8 @@ export default async function ContactPage() {
         <p className="text-eyebrow text-clay">Contact</p>
         <h1 className="text-display-lg">Hai să vorbim</h1>
         <p className="max-w-md text-lg text-ink-muted">
-          Ai o întrebare despre un produs, o comandă sau vrei un sfat pentru rutina ta? Scrie-ne și
-          îți răspundem cât de repede putem.
+          Ai o întrebare despre un produs sau vrei un sfat pentru rutina ta? Scrie-ne și îți
+          răspundem cât de repede putem.
         </p>
         <Leaf className="mt-4 size-16 text-sage" />
       </Reveal>

@@ -32,8 +32,7 @@ export type ProductFormOptions = {
   products: Option[];
 };
 
-export type ProductFormState = Omit<ProductFormInput, "stock" | "attributes" | "seo"> & {
-  stock: string;
+export type ProductFormState = Omit<ProductFormInput, "attributes" | "seo"> & {
   attributes: Record<string, string>;
   seo: SeoDraft;
 };
@@ -311,40 +310,61 @@ export function ProductForm({
         </div>
       </AdminCard>
 
-      <AdminCard title="Preț și stoc">
+      <AdminCard title="Preț și link doTERRA">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field
             id={fid("price")}
-            label="Preț (lei)"
+            label="Preț pe site-ul doTERRA (lei)"
             required
             error={errors.price}
-            hint="Ex.: 59,90"
+            hint="Exact prețul afișat de doTERRA, fără adaos. Ex.: 59,90"
           >
             {(p) => (
               <Input {...p} inputMode="decimal" value={values.price} onChange={text("price")} />
             )}
           </Field>
           <Field
-            id={fid("compare")}
-            label="Preț vechi (lei)"
-            error={errors.compareAtPrice}
-            hint="Doar pentru o reducere reală."
+            id={fid("itemNumber")}
+            label="Cod produs doTERRA"
+            error={errors.doterraItemNumber}
+            hint="Numărul de articol din catalogul doTERRA (opțional)."
           >
             {(p) => (
               <Input
                 {...p}
-                inputMode="decimal"
-                value={values.compareAtPrice ?? ""}
-                onChange={text("compareAtPrice")}
+                inputMode="numeric"
+                value={values.doterraItemNumber ?? ""}
+                onChange={text("doterraItemNumber")}
               />
             )}
           </Field>
-          <Field id={fid("stock")} label="Stoc (bucăți)" required error={errors.stock}>
+          <Field
+            id={fid("referralUrl")}
+            label="Link de recomandare doTERRA"
+            error={errors.referralUrl}
+            hint="Linkul complet, copiat din contul tău doTERRA (începe cu https://). Gol = „Link în curând” pe site."
+            className="sm:col-span-3"
+          >
             {(p) => (
-              <Input {...p} inputMode="numeric" value={values.stock} onChange={text("stock")} />
+              <Input
+                {...p}
+                type="url"
+                inputMode="url"
+                placeholder="https://www.doterra.com/RO/ro_RO/..."
+                value={values.referralUrl ?? ""}
+                onChange={text("referralUrl")}
+              />
             )}
           </Field>
         </div>
+        {productId ? (
+          <Checkbox
+            id={fid("priceChecked")}
+            checked={values.priceChecked ?? false}
+            onCheckedChange={(v) => set("priceChecked", v === true)}
+            label="Am verificat azi prețul pe doTERRA (actualizează data afișată pe site)"
+          />
+        ) : null}
       </AdminCard>
 
       {typeFields.length ? (
@@ -587,7 +607,7 @@ export function ProductForm({
             id={fid("active")}
             checked={values.active ?? true}
             onCheckedChange={(v) => set("active", v === true)}
-            label="Activ — vizibil în magazin"
+            label="Activ — vizibil pe site"
           />
           <Checkbox
             id={fid("featured")}

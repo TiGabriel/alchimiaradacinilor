@@ -23,17 +23,16 @@ describe("parseServerEnv", () => {
       DATABASE_URL: "postgresql://u:p@localhost:5432/db",
       BREVO_LIST_ID: "",
       BREVO_WEBHOOK_SECRET: "",
-      NETOPIA_ENV: "",
-      NETOPIA_PUBLIC_KEY: "",
+      BREVO_SENDER_EMAIL: "",
     });
     expect(env.BREVO_LIST_ID).toBeUndefined();
-    expect(env.NETOPIA_ENV).toBeUndefined();
+    expect(env.BREVO_SENDER_EMAIL).toBeUndefined();
     expect(
       parseServerEnv({ DATABASE_URL: env.DATABASE_URL, BREVO_LIST_ID: "12" }).BREVO_LIST_ID,
     ).toBe(12);
-    expect(() => parseServerEnv({ DATABASE_URL: env.DATABASE_URL, NETOPIA_ENV: "prod" })).toThrow(
-      /NETOPIA_ENV/,
-    );
+    expect(() =>
+      parseServerEnv({ DATABASE_URL: env.DATABASE_URL, BREVO_SENDER_EMAIL: "nu-e-email" }),
+    ).toThrow(/BREVO_SENDER_EMAIL/);
   });
 
   it("requires AUTH_SECRET in production", () => {

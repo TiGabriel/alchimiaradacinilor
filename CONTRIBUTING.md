@@ -1,7 +1,8 @@
 # Alchimia Rădăcinilor — development guide
 
-Romanian e-commerce site for essential oils, blends, kits, diffusers, accessories
-and care products, with an aroma quiz, routines and a journal (blog).
+Romanian content site about essential oils (mostly doTERRA): a journal, product pages with
+reviews, routines and an aroma quiz. It does not sell: products link to the official doTERRA
+site (see docs/PIVOT_PLAN.md). Old shop data is archived in the `legacy_commerce` schema.
 
 ## Stack
 
@@ -31,7 +32,7 @@ pnpm db:reset       # drop, migrate, seed
 
 ```
 app/            routes only: compose features, read params, set metadata. No business logic.
-features/<x>/   UI + server actions for one domain (catalog, cart, search, …).
+features/<x>/   UI + server actions for one domain (catalog, wishlist, search, …).
 services/       business logic + data access. Server-only. No React/Next UI imports.
 validation/     Zod schemas shared by forms, server actions, route handlers, settings.
 lib/            infrastructure: db, env, money, text, slug, seo, motion, storage, email.
@@ -41,10 +42,9 @@ components/layout/  header, footer, navigation shells.
 
 - `app` and `features` never call Prisma directly — go through `services`.
 - Every external input (form, action, route handler, search param) is parsed with Zod.
-- Pure logic (pricing, cart totals, filtering, search matching, quiz scoring) lives in
+- Pure logic (filtering, search matching, quiz scoring, recommendations) lives in
   pure functions with unit tests next to them (`*.test.ts`).
 - Server Components by default; `"use client"` only where interaction needs it.
-- Never trust client prices or totals — recompute on the server.
 - Keep pure logic in modules that do not import `@/lib/db` (tests and client components
   import them); data access lives next to it in a `server-only` module.
 - No `loading.tsx` above routes that call `notFound()` (see DECISIONS D-017).
@@ -55,12 +55,12 @@ components/layout/  header, footer, navigation shells.
 ## Data rules
 
 - Money is **integer minor units (bani)**. Format only at the edge with `formatMoney`.
-- Derived values are computed, not stored: discount, thumbnail (image at position 0),
+- Derived values are computed, not stored: thumbnail (image at position 0),
   category/subcategory (from the tree). Exceptions are documented caches
   (`Product.rating`, `Product.reviewCount`).
-- Orders snapshot names, prices and addresses (legal record).
-- Cart, checkout and order totals all go through `services/checkout/quote.ts` (one pricing
-  path). Payment methods implement `PaymentProvider`; never simulate a payment (docs/PAYMENTS.md).
+- `Product.price` is the price on the doTERRA site, without markup. There is no cart, checkout,
+  stock or payment code; do not add any (docs/DECISIONS.md D-085–D-088).
+- Never query the `legacy_commerce` schema from the app; it is an archive.
 - New site settings: add a key to `src/validation/settings.ts` (no migration).
 - Uploads go through `storeImage` (`src/lib/storage`): sniffed, re-encoded to WebP, metadata
   stripped. Never serve user files from their original bytes.
@@ -86,18 +86,18 @@ whitespace, soft shadows, subtle botanical line motifs used sparingly.
 
 Tokens live in `src/app/globals.css` (`@theme`). Use tokens, not raw hex values.
 
-| Token        | Use                                 |
-| ------------ | ----------------------------------- |
-| `paper`      | page background                     |
-| `paper-deep` | alternating sections                |
-| `surface`    | cards, popovers                     |
-| `ink`        | body text                           |
-| `ink-muted`  | secondary text                      |
-| `line`       | borders, dividers                   |
-| `forest`     | primary actions, brand              |
-| `sage`       | soft accents, selected states       |
-| `clay`       | discounts, highlights (AA on white) |
-| `ochre`      | rating stars, small ornaments       |
+| Token        | Use                           |
+| ------------ | ----------------------------- |
+| `paper`      | page background               |
+| `paper-deep` | alternating sections          |
+| `surface`    | cards, popovers               |
+| `ink`        | body text                     |
+| `ink-muted`  | secondary text                |
+| `line`       | borders, dividers             |
+| `forest`     | primary actions, brand        |
+| `sage`       | soft accents, selected states |
+| `clay`       | highlights (AA on white)      |
+| `ochre`      | rating stars, small ornaments |
 
 Fonts: Fraunces (display) and Manrope (UI/body), loaded with `next/font` using the
 `latin-ext` subset for Romanian diacritics.
@@ -106,7 +106,7 @@ Motion: use `src/lib/motion` / `components/motion`. Every animation must respect
 `prefers-reduced-motion` (content must be visible and usable with motion off).
 
 Accessibility: keyboard reachable, visible focus rings, labelled controls,
-AA contrast, `aria-live` for cart/toast updates.
+AA contrast, `aria-live` for toast updates.
 
 ## Release checklist (run before every release)
 

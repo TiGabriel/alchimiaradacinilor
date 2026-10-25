@@ -8,7 +8,6 @@ export const PERMISSIONS = [
   "admin:access",
   "catalog:edit",
   "content:edit",
-  "orders:manage",
   "users:manage",
   "settings:manage",
 ] as const;

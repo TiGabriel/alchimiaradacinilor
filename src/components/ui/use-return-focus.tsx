@@ -3,7 +3,7 @@
 import { useCallback, useLayoutEffect, useRef, type RefObject } from "react";
 
 /**
- * Dialogs opened from code (after "add to cart", Ctrl+K) have no Radix trigger,
+ * Dialogs opened from code (quick view, Ctrl+K) have no Radix trigger,
  * so on close Radix would drop focus on <body>. Render `<FocusOrigin>` inside
  * the dialog content and pass `restoreFocus` as `onCloseAutoFocus`: focus goes
  * back to whatever had it when the dialog opened.

@@ -9,13 +9,13 @@ import { pageMetadata } from "@/services/seo";
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata({
     title: "Termeni și condiții",
-    description: "Condițiile de utilizare a site-ului și de vânzare pe Alchimia Rădăcinilor.",
+    description: "Condițiile de utilizare a site-ului Alchimia Rădăcinilor.",
     path: "/termeni-si-conditii",
   });
 }
 
 export default async function TermsPage() {
-  const { legal, contact } = await getSettings();
+  const { legal, contact, affiliate } = await getSettings();
   return (
     <LegalDocument
       title="Termeni și condiții"
@@ -23,16 +23,17 @@ export default async function TermsPage() {
       sections={[
         {
           id: "operator",
-          title: "Operatorul magazinului",
+          title: "Operatorul site-ului",
           body: <CompanyDetails legal={legal} email={contact.email} />,
         },
         {
           id: "cont",
-          title: "Contul de client",
+          title: "Contul de membru",
           body: (
             <p>
-              Poți cumpăra după crearea unui cont și confirmarea adresei de email. Ești responsabil
-              pentru păstrarea confidențialității parolei.{" "}
+              Contul este gratuit și îți permite să salvezi produse favorite și ritualuri, să
+              păstrezi rezultatele quiz-ului și să scrii recenzii după confirmarea adresei de email.
+              Ești responsabil pentru păstrarea confidențialității parolei.{" "}
               <ToComplete>condiții de suspendare/închidere a contului</ToComplete>
             </p>
           ),
@@ -43,10 +44,27 @@ export default async function TermsPage() {
           body: (
             <p>
               Descrierile produselor prezintă aroma și modul de folosire recomandat de producător.
-              Informațiile nu reprezintă sfaturi medicale. Produsele marcate „demonstrativ” nu sunt
-              disponibile pentru vânzare.{" "}
+              Informațiile nu reprezintă sfaturi medicale.{" "}
               <ToComplete>clauze privind acuratețea informațiilor și imaginilor</ToComplete>
             </p>
+          ),
+        },
+        {
+          id: "cumparare",
+          title: "Cumpărarea produselor",
+          body: (
+            <>
+              <p>
+                Nu vindem produse pe acest site. Produsele despre care scriem se cumpără de pe
+                site-ul oficial doTERRA, iar comanda, plata, livrarea și returul se fac după
+                condițiile doTERRA. Detalii în{" "}
+                <Link href="/cum-cumpar" className="text-forest underline underline-offset-2">
+                  Cum cumpăr
+                </Link>
+                .
+              </p>
+              <p>{affiliate.disclosureLong}</p>
+            </>
           ),
         },
         {
@@ -54,46 +72,9 @@ export default async function TermsPage() {
           title: "Prețuri",
           body: (
             <p>
-              Prețurile sunt afișate în lei (RON) și includ TVA. Costul livrării este afișat în coș
-              înainte de finalizarea comenzii.{" "}
-              <ToComplete>condiții privind modificarea prețurilor și erorile de afișare</ToComplete>
-            </p>
-          ),
-        },
-        {
-          id: "comenzi",
-          title: "Comenzi și plată",
-          body: (
-            <p>
-              <ToComplete>
-                încheierea contractului, confirmarea comenzii, metodele de plată
-              </ToComplete>
-            </p>
-          ),
-        },
-        {
-          id: "livrare",
-          title: "Livrare",
-          body: (
-            <p>
-              Detalii în{" "}
-              <Link href="/livrare-si-retur" className="text-forest underline underline-offset-2">
-                Livrare și retur
-              </Link>
-              . <ToComplete>termene și condiții de livrare</ToComplete>
-            </p>
-          ),
-        },
-        {
-          id: "retur",
-          title: "Dreptul de retragere și retur",
-          body: (
-            <p>
-              Detalii în{" "}
-              <Link href="/politica-de-retur" className="text-forest underline underline-offset-2">
-                Politica de retur
-              </Link>
-              .
+              Prețurile sunt afișate în lei (RON) cu titlu informativ și sunt cele de pe site-ul
+              doTERRA. Prețul valabil este cel afișat de doTERRA în momentul comenzii.{" "}
+              <ToComplete>condiții privind erorile de afișare</ToComplete>
             </p>
           ),
         },
@@ -102,7 +83,7 @@ export default async function TermsPage() {
           title: "Răspundere și garanții",
           body: (
             <p>
-              <ToComplete>garanția de conformitate, limitarea răspunderii</ToComplete>
+              <ToComplete>limitarea răspunderii pentru conținutul site-ului</ToComplete>
             </p>
           ),
         },

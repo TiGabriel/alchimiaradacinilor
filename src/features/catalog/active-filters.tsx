@@ -41,8 +41,6 @@ export function ActiveFilters({ facets }: { facets: Facets }) {
       remove: () => update({ rating: null }),
     });
   }
-  if (filters.inStock)
-    chips.push({ key: "stoc", label: "În stoc", remove: () => update({ inStock: false }) });
 
   return (
     <div className="flex flex-wrap items-center gap-2">

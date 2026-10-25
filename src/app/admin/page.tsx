@@ -1,13 +1,10 @@
-import { AlertTriangle, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 import { BarList, ColumnChart } from "@/features/admin/charts";
 import { AdminCard, AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
-import { OrderStatusBadge } from "@/features/orders/order-detail";
-import { formatMoney } from "@/lib/money";
 import { getDashboard } from "@/services/admin/dashboard";
-import { orderStatusLabels } from "@/services/orders/status";
 
 const dayLabel = new Intl.DateTimeFormat("ro-RO", { day: "numeric", month: "short" });
 const dateTime = new Intl.DateTimeFormat("ro-RO", {
@@ -68,21 +65,38 @@ export default async function AdminDashboard() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {d.sales ? (
-          <>
-            <Kpi
-              label="Vânzări"
-              value={formatMoney(d.kpis.revenue)}
-              change={d.kpis.revenueChange}
-            />
-            <Kpi label="Comenzi" value={String(d.kpis.orders)} change={d.kpis.ordersChange} />
-            <Kpi label="Valoare medie comandă" value={formatMoney(d.kpis.averageOrder)} />
-          </>
-        ) : null}
-        <Kpi label="Conturi noi" value={String(d.kpis.newCustomers)} />
-        <Kpi label="Abonați newsletter" value={String(d.kpis.subscribers)} />
+        <Kpi
+          label="Conturi noi"
+          value={String(d.kpis.newMembers)}
+          change={d.kpis.newMembersChange}
+        />
+        <Kpi
+          label="Abonați newsletter"
+          value={String(d.kpis.subscribers)}
+          note={`${d.kpis.newSubscribers} noi în această perioadă`}
+        />
         <Kpi label="Recenzii de moderat" value={String(d.kpis.pendingReviews)} />
+        <Kpi
+          label="Clicuri spre doTERRA"
+          value={String(d.outbound.clicks)}
+          change={d.outbound.change}
+        />
       </div>
+
+      {d.outbound.withoutLink ? (
+        <p className="rounded-xl border border-warning/40 bg-warning-soft p-4 text-sm">
+          {d.outbound.withoutLink === 1
+            ? "Un produs activ nu are încă link doTERRA"
+            : `${d.outbound.withoutLink} produse active nu au încă link doTERRA`}{" "}
+          și afișează „Link în curând”.{" "}
+          <Link
+            href="/admin/produse?link=fara"
+            className="font-semibold text-forest hover:underline"
+          >
+            Vezi lista
+          </Link>
+        </p>
+      ) : null}
 
       <section aria-labelledby="totaluri" className="flex flex-col gap-3">
         <h2 id="totaluri" className="text-xs font-bold tracking-[0.12em] text-ink-muted uppercase">
@@ -93,17 +107,12 @@ export default async function AdminDashboard() {
             <Kpi
               label="Produse"
               value={String(t.products)}
-              note={`${t.activeProducts ?? 0} active în magazin`}
+              note={`${t.activeProducts ?? 0} active pe site`}
             />
           ) : null}
           {t.users != null ? <Kpi label="Conturi" value={String(t.users)} /> : null}
-          {t.orders != null ? <Kpi label="Comenzi" value={String(t.orders)} /> : null}
-          {t.revenue != null ? (
-            <Kpi
-              label="Vânzări totale"
-              value={formatMoney(t.revenue)}
-              note="Fără comenzile anulate sau rambursate"
-            />
+          {t.articles != null ? (
+            <Kpi label="Articole publicate" value={String(t.articles)} />
           ) : null}
           {t.quizResults != null ? (
             <Kpi label="Rezultate quiz" value={String(t.quizResults)} />
@@ -111,108 +120,53 @@ export default async function AdminDashboard() {
         </div>
       </section>
 
-      {d.sales ? (
-        <AdminCard title="Vânzări pe zile">
-          <ColumnChart
-            caption={`Vânzări zilnice în ultimele ${d.days} de zile`}
-            format={(v) => formatMoney(v)}
-            data={d.series.map((p) => ({
-              label: dayLabel.format(new Date(`${p.day}T12:00:00Z`)),
-              value: p.revenue,
-              tooltip: `${dayLabel.format(new Date(`${p.day}T12:00:00Z`))}: ${formatMoney(p.revenue)} (${p.orders} comenzi)`,
-            }))}
-          />
-        </AdminCard>
-      ) : null}
+      <AdminCard title="Conturi noi pe zile">
+        <ColumnChart
+          caption={`Conturi create zilnic în ultimele ${d.days} de zile`}
+          format={(v) => String(v)}
+          data={d.signups.map((p) => ({
+            label: dayLabel.format(new Date(`${p.day}T12:00:00Z`)),
+            value: p.count,
+            tooltip: `${dayLabel.format(new Date(`${p.day}T12:00:00Z`))}: ${p.count} conturi`,
+          }))}
+        />
+      </AdminCard>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {d.sales ? (
-          <AdminCard title="Cele mai vândute produse">
-            <BarList
-              caption="Produse vândute (bucăți)"
-              data={d.topProducts.map((p) => ({ label: p.name, value: p.quantity }))}
-              format={(v) => `${v} buc.`}
-            />
-          </AdminCard>
-        ) : null}
-        <AdminCard title="De la vizită la comandă">
+        <AdminCard title="Cele mai accesate produse pe doTERRA">
           <BarList
-            caption="Pâlnia de conversie"
+            caption={`Clicuri pe „Cumpără de pe doTERRA” în ultimele ${d.days} de zile`}
+            empty="Încă nu a fost apăsat niciun buton spre doTERRA."
+            data={d.outbound.topProducts}
+          />
+        </AdminCard>
+        <AdminCard title="De unde vin clicurile">
+          <BarList
+            caption="Clicuri spre doTERRA după locul butonului"
+            empty="Încă nu există clicuri."
+            data={d.outbound.bySource}
+          />
+          <p className="text-xs text-ink-muted">
+            Numărate anonim, fără cookie-uri și fără date despre vizitatori.
+          </p>
+        </AdminCard>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <AdminCard title="Activitate pe site">
+          <BarList
+            caption="Activitatea vizitatorilor"
             empty="Nu există date de analiză (se colectează doar cu acordul vizitatorilor)."
-            data={d.funnel.map((s) => ({
-              label: s.label,
-              value: s.count,
-              note: s.rate != null ? `${s.rate.toString().replace(".", ",")}%` : undefined,
+            data={d.activity.map((a) => ({
+              label: a.label,
+              value: a.count,
+              note: a.rate != null ? `${a.rate.toString().replace(".", ",")}%` : undefined,
             }))}
           />
           <p className="text-xs text-ink-muted">
             Doar vizitatorii care au acceptat cookie-urile de analiză.
           </p>
         </AdminCard>
-        {d.sales ? (
-          <AdminCard
-            title="Comenzi după stare"
-            actions={
-              <Link
-                href="/admin/comenzi"
-                className="text-sm font-semibold text-forest hover:underline"
-              >
-                Toate comenzile
-              </Link>
-            }
-          >
-            <BarList
-              caption="Comenzi după stare"
-              data={(Object.keys(orderStatusLabels) as Array<keyof typeof orderStatusLabels>).map(
-                (s) => ({ label: orderStatusLabels[s], value: d.statusCounts[s] ?? 0 }),
-              )}
-            />
-          </AdminCard>
-        ) : null}
-        <AdminCard title="Stoc redus">
-          {d.lowStock.length ? (
-            <ul className="flex flex-col divide-y divide-line text-sm">
-              {d.lowStock.map((p) => (
-                <li key={p.id} className="flex items-center justify-between gap-3 py-2">
-                  <Link href={`/admin/produse/${p.id}`} className="font-semibold hover:text-forest">
-                    {p.name}
-                  </Link>
-                  <span
-                    className={
-                      p.stock <= 0
-                        ? "inline-flex items-center gap-1 font-semibold text-danger"
-                        : "font-semibold text-warning"
-                    }
-                  >
-                    {p.stock <= 0 ? <AlertTriangle aria-hidden className="size-4" /> : null}
-                    {p.stock <= 0 ? "epuizat" : `${p.stock} buc.`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-ink-muted">Toate produsele active au stoc suficient.</p>
-          )}
-        </AdminCard>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {d.sales && d.recent.length ? (
-          <AdminCard title="Comenzi recente">
-            <ul className="flex flex-col divide-y divide-line text-sm">
-              {d.recent.map((o) => (
-                <li key={o.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
-                  <Link href={`/admin/comenzi/${o.id}`} className="font-semibold hover:text-forest">
-                    {o.number}
-                  </Link>
-                  <span className="text-ink-muted">{dateTime.format(o.placedAt)}</span>
-                  <OrderStatusBadge status={o.status} />
-                  <span className="font-semibold tabular-nums">{formatMoney(o.total)}</span>
-                </li>
-              ))}
-            </ul>
-          </AdminCard>
-        ) : null}
         {d.recentUsers.length ? (
           <AdminCard
             title="Conturi recente"
@@ -221,7 +175,7 @@ export default async function AdminDashboard() {
                 href="/admin/clienti"
                 className="text-sm font-semibold text-forest hover:underline"
               >
-                Toți clienții
+                Toți membrii
               </Link>
             }
           >

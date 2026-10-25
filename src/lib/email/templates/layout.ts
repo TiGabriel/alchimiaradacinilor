@@ -1,7 +1,7 @@
 /**
  * Shared, responsive HTML email layout (table-based, inline styles — what
  * email clients support). Every template returns both HTML and plain text.
- * Order, status and newsletter emails reuse this layout later.
+ * Account and newsletter emails share it.
  */
 
 export type EmailBlock =
@@ -10,7 +10,7 @@ export type EmailBlock =
   | { type: "note"; text: string }
   | { type: "code"; text: string }
   | { type: "list"; items: string[] }
-  /** Label/value table (order lines, totals, addresses). */
+  /** Label/value table. */
   | { type: "rows"; rows: Array<{ label: string; value: string; strong?: boolean }> }
   | { type: "divider" };
 

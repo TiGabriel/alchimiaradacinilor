@@ -31,7 +31,7 @@ export default async function ReviewsAdminPage({
     <>
       <AdminPageHeader
         title="Recenzii"
-        description="Recenziile apar în magazin doar după aprobare. Ratingul produsului se actualizează automat."
+        description="Recenziile apar pe site doar după aprobare. Ratingul produsului se actualizează automat."
       />
       <nav aria-label="Filtru stare" className="flex flex-wrap gap-2">
         {tabs.map(([s, label]) => (

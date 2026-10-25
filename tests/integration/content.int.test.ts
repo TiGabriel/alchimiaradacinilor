@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { db } from "@/lib/db";
-import { addCartItem, loadCartView } from "@/services/cart/cart";
-import { addRoutineToCart } from "@/services/cart/routine";
 import {
   getArticlesForProduct,
   getRelatedArticles,
@@ -23,7 +21,7 @@ async function setupContent() {
     where: { id: (await makeProduct({ slug: "lavender" })).id },
     data: { name: "Lavender" },
   });
-  const blend = await makeProduct({ slug: "blend", stock: 0 });
+  const blend = await makeProduct({ slug: "blend" });
   const retired = await db.product.update({
     where: { id: (await makeProduct({ slug: "retired" })).id },
     data: { active: false },
@@ -142,34 +140,6 @@ describe("relationship queries", () => {
     expect((await listSavedRoutines(user.id)).map((r) => r.slug)).toEqual(["ritual-de-seara"]);
     expect(await toggleSavedRoutine(user.id, c.evening.id)).toBe(false);
     expect(await listSavedRoutines(user.id)).toEqual([]);
-  });
-});
-
-describe("add routine to cart", () => {
-  it("adds in-stock products once and reports what was skipped", async () => {
-    const c = await setupContent();
-    const guest = await addCartItem({ userId: null, token: null }, c.lemon.id, 2);
-    const owner = { userId: null, token: guest.token };
-
-    const result = await addRoutineToCart(owner, c.evening.id);
-    expect(result.added).toEqual(["Lavender"]);
-    expect(result.skipped.map((s) => [s.name, s.reason])).toEqual([
-      [`Produs blend`, "out-of-stock"],
-      [`Produs retired`, "unavailable"],
-      [`Produs lemon`, "already-in-cart"],
-    ]);
-    const view = await loadCartView(owner);
-    expect(view.lines.map((l) => [l.slug, l.quantity]).sort()).toEqual([
-      ["lavender", 1],
-      ["lemon", 2],
-    ]);
-  });
-
-  it("creates a guest cart when there is none", async () => {
-    const c = await setupContent();
-    const result = await addRoutineToCart({ userId: null, token: null }, c.morning.id);
-    expect(result.added).toHaveLength(1);
-    expect(result.token).toBeTruthy();
   });
 });
 

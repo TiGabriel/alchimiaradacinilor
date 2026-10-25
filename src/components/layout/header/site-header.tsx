@@ -3,7 +3,7 @@ import { getCategoryTree } from "@/services/catalog/categories";
 import { getSettings } from "@/services/settings";
 
 import { DesktopNav } from "./desktop-nav";
-import { CartButton, HeaderActions } from "./header-actions";
+import { HeaderActions, SearchButton } from "./header-actions";
 import { HeaderShell } from "./header-shell";
 import { MobileMenu } from "./mobile-menu";
 
@@ -25,13 +25,13 @@ export async function SiteHeader() {
         Sari la conținut
       </a>
       <div className="container-page flex h-16 items-center gap-3 lg:h-20">
-        {/* Mobile: menu · logo (centred) · cart */}
+        {/* Mobile: menu · logo (centred) · search */}
         <div className="flex flex-1 items-center lg:hidden">
           <MobileMenu categories={categories} contact={settings.contact} social={settings.social} />
         </div>
         <Logo brand={settings.brand} size="sm" className="lg:hidden" />
         <div className="flex flex-1 items-center justify-end lg:hidden">
-          <CartButton />
+          <SearchButton />
         </div>
 
         {/* Desktop */}

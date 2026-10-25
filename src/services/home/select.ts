@@ -3,14 +3,13 @@
 import type { CategoryNode } from "@/services/catalog/category-tree";
 
 /** Minimal product shape these helpers need. */
-type ProductLike = { id: string; slug: string; stock: number };
+type ProductLike = { id: string; slug: string };
 
 export type Essential<P> = { product: P; note: string; position: number };
 
 /**
  * "Cele 5 esențiale": keeps the configured order, drops slugs that are missing
- * or inactive (absent from `products`) and duplicates. Out-of-stock products stay:
- * the section is editorial, the card shows availability.
+ * or inactive (absent from `products`) and duplicates.
  */
 export function resolveEssentials<P extends ProductLike>(
   config: Array<{ slug: string; note: string }>,
@@ -31,7 +30,7 @@ export function resolveEssentials<P extends ProductLike>(
 /** The section only makes sense as a small curated set. */
 export const MIN_ESSENTIALS = 3;
 
-/** Top-level categories with products, most stocked first (stable for ties). */
+/** Top-level categories with products, largest first (stable for ties). */
 export function popularCategories(tree: CategoryNode[], limit = 6): CategoryNode[] {
   return tree
     .map((node, index) => ({ node, index }))
@@ -46,7 +45,7 @@ export type PersonalRow<P> = { source: "quiz" | "favourites"; items: Array<Perso
 
 /**
  * "Recomandat pentru tine": the latest quiz result wins (explicit choices), topped
- * up from favourite-based suggestions (consented). Only in-stock products, no duplicates.
+ * up from favourite-based suggestions (consented). No duplicates.
  * Returns null when there is nothing personal to show.
  */
 export function buildPersonalRow<P extends ProductLike>(
@@ -59,7 +58,7 @@ export function buildPersonalRow<P extends ProductLike>(
   const take = (list: Array<PersonalItem<P>>) => {
     for (const item of list) {
       if (items.length >= limit) return;
-      if (item.product.stock <= 0 || seen.has(item.product.id)) continue;
+      if (seen.has(item.product.id)) continue;
       seen.add(item.product.id);
       items.push(item);
     }

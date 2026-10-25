@@ -7,7 +7,7 @@ import { ProductImage } from "@/components/media/product-image";
 import { Button } from "@/components/ui/button";
 import { Price } from "@/components/ui/price";
 import { RatingStars } from "@/components/ui/rating-stars";
-import { AddToCartButton } from "@/features/cart/add-to-cart-button";
+import { DoterraButton } from "@/features/catalog/doterra-button";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { productHref, type ProductCardData } from "@/services/catalog/product-types";
 
@@ -55,16 +55,21 @@ export function PrimaryRecommendation({
             <p className="text-forest-deep">{reason}</p>
           </div>
         ) : null}
-        <Price price={product.price} compareAtPrice={product.compareAtPrice} size="lg" />
-        <div className="mt-auto flex flex-wrap gap-3">
-          <AddToCartButton product={product} size="lg" className="flex-1" />
-          <WishlistButton product={product} variant="inline" className="flex-1" />
+        <div className="flex flex-col gap-0.5">
+          <Price price={product.price} size="lg" />
+          <span className="text-xs text-ink-muted">Preț pe site-ul doTERRA</span>
         </div>
-        <Button asChild variant="link" className="self-start">
-          <Link href={productHref(product)}>
-            Vezi detalii <ArrowRight aria-hidden />
-          </Link>
-        </Button>
+        <div className="mt-auto flex flex-col gap-3">
+          <DoterraButton product={product} source="quiz" size="lg" block note />
+          <div className="flex flex-wrap gap-3">
+            <Button asChild variant="outline" className="flex-1">
+              <Link href={productHref(product)}>
+                Vezi detalii <ArrowRight aria-hidden />
+              </Link>
+            </Button>
+            <WishlistButton product={product} variant="inline" className="flex-1" />
+          </div>
+        </div>
       </div>
     </article>
   );

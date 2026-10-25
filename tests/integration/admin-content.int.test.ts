@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { db } from "@/lib/db";
 import { saveArticle, saveRoutine } from "@/services/admin/content";
-import { deleteCoupon, listCouponsWithStats, saveCoupon } from "@/services/admin/coupons";
 import { AdminError } from "@/services/admin/errors";
 import { exportSubscribersCsv } from "@/services/admin/newsletter";
 import {
@@ -16,7 +15,7 @@ import { ForbiddenError, type Actor } from "@/services/auth/permissions";
 import { submitQuiz } from "@/services/quiz/quiz";
 import { getSetting } from "@/services/settings";
 
-import { makeProduct, makeVerifiedUser, placeTestOrder } from "./helpers";
+import { makeProduct, makeVerifiedUser } from "./helpers";
 
 async function actors() {
   const admin = await makeVerifiedUser({ email: "admin@example.ro" });
@@ -105,44 +104,6 @@ describe("quiz manager", () => {
   });
 });
 
-describe("coupon admin", () => {
-  const base = { code: "vara 10", type: "PERCENTAGE", value: "10" };
-
-  it("normalises codes and refuses duplicates with a field error", async () => {
-    const { admin } = await actors();
-    const { id } = await saveCoupon(admin, base);
-    expect((await db.coupon.findUniqueOrThrow({ where: { id } })).code).toBe("VARA10");
-
-    const error = await rejection(saveCoupon(admin, { ...base, code: "vara10" }));
-    expect(error).toBeInstanceOf(AdminError);
-    expect((error as AdminError).fieldErrors).toHaveProperty("code");
-  });
-
-  it("is limited to order managers", async () => {
-    const { editor } = await actors();
-    await expect(saveCoupon(editor, base)).rejects.toBeInstanceOf(ForbiddenError);
-  });
-
-  it("reports usage and refuses to delete a used coupon", async () => {
-    const { admin } = await actors();
-    const buyer = await makeVerifiedUser({ email: "client@example.ro" });
-    const product = await makeProduct({ price: 10000 });
-    const { id } = await saveCoupon(admin, base);
-    await db.cart.create({ data: { userId: buyer.id, couponId: id } });
-    await placeTestOrder(buyer.id, [product.id]);
-
-    const [stats] = await listCouponsWithStats(admin);
-    expect(stats?.uses).toBe(1);
-    expect(stats?.discountGiven).toBe(1000);
-
-    await expect(deleteCoupon(admin, id)).rejects.toBeInstanceOf(AdminError);
-
-    const unused = await saveCoupon(admin, { ...base, code: "NOU" });
-    await deleteCoupon(admin, unused.id);
-    expect(await db.coupon.count({ where: { id: unused.id } })).toBe(0);
-  });
-});
-
 describe("content admin", () => {
   const routine = {
     title: "Seară liniștită",
@@ -212,6 +173,13 @@ describe("settings and newsletter export", () => {
     expect(lines).toHaveLength(2);
     expect(lines[1]).toContain("'=cmd@example.ro");
     expect(csv).not.toContain("altul@example.ro");
+
+    await db.newsletterSubscriber.create({
+      data: { email: "membru@example.ro", status: "ACTIVE", userId: admin.id },
+    });
+    const members = await exportSubscribersCsv(admin, { status: "ACTIVE", membersOnly: true });
+    expect(members).toContain("membru@example.ro");
+    expect(members).not.toContain("cmd@example.ro");
   });
 });
 
@@ -265,7 +233,6 @@ describe("SEO fields", () => {
 
 describe("admin permissions across services", () => {
   it("refuses customers and editors everywhere (admin-only)", async () => {
-    const { listAdminOrders } = await import("@/services/admin/orders");
     const { listCustomers } = await import("@/services/admin/customers");
     const { listReviewsForModeration } = await import("@/services/admin/moderation");
     const { listSubscribers } = await import("@/services/admin/newsletter");
@@ -275,9 +242,7 @@ describe("admin permissions across services", () => {
     const { admin, editor, customer } = await actors();
 
     const everyone = [
-      (a: Actor) => listAdminOrders(a, {}),
       (a: Actor) => listCustomers(a, {}),
-      (a: Actor) => listCouponsWithStats(a),
       (a: Actor) => listSubscribers(a, {}),
       (a: Actor) => saveSetting(a, "seo", {}),
       (a: Actor) => listReviewsForModeration(a, "PENDING"),
@@ -290,6 +255,6 @@ describe("admin permissions across services", () => {
       await expect(call(editor)).rejects.toBeInstanceOf(ForbiddenError);
     }
     // The read-only catalogue and content calls work for the admin.
-    for (const call of everyone.slice(5)) await expect(call(admin)).resolves.toBeDefined();
+    for (const call of everyone.slice(3)) await expect(call(admin)).resolves.toBeDefined();
   });
 });

@@ -10,19 +10,23 @@ import {
   productFormSchema,
 } from "@/validation/admin/product";
 
+import { testReferralLink, type LinkCheckResult } from "../affiliate/check";
+import { isAllowedReferralUrl } from "../affiliate/links";
 import { assertCan, type Actor } from "../auth/permissions";
+import { getSetting } from "../settings";
 
 import { AdminError } from "./errors";
 import { upsertSeo } from "./seo";
 
 export const PAGE_SIZE = 25;
-export const LOW_STOCK = 5;
 
 export type ProductListFilter = {
   q?: string;
-  status?: "active" | "inactive" | "low-stock" | "out-of-stock";
+  status?: "active" | "inactive";
   categoryId?: string;
   type?: ProductType;
+  /** fara: no referral link · nefunctional: last test failed. */
+  link?: "fara" | "nefunctional";
   page?: number;
 };
 
@@ -40,10 +44,10 @@ export async function listAdminProducts(actor: Actor, filter: ProductListFilter)
       : {}),
     ...(filter.status === "active" ? { active: true } : {}),
     ...(filter.status === "inactive" ? { active: false } : {}),
-    ...(filter.status === "low-stock" ? { stock: { gt: 0, lte: LOW_STOCK } } : {}),
-    ...(filter.status === "out-of-stock" ? { stock: { lte: 0 } } : {}),
     ...(filter.categoryId ? { categoryId: filter.categoryId } : {}),
     ...(filter.type ? { productType: filter.type } : {}),
+    ...(filter.link === "fara" ? { referralUrl: null } : {}),
+    ...(filter.link === "nefunctional" ? { linkStatus: "BROKEN" as const } : {}),
   };
   const page = Math.max(1, filter.page ?? 1);
   const [total, products] = await Promise.all([
@@ -59,8 +63,8 @@ export async function listAdminProducts(actor: Actor, filter: ProductListFilter)
         slug: true,
         sku: true,
         price: true,
-        compareAtPrice: true,
-        stock: true,
+        referralUrl: true,
+        linkStatus: true,
         active: true,
         featured: true,
         isDemo: true,
@@ -97,7 +101,7 @@ export async function getAdminProduct(actor: Actor, id: string) {
           media: { select: { url: true, width: true, height: true } },
         },
       },
-      _count: { select: { orderItems: true, partOfKits: true } },
+      _count: { select: { partOfKits: true } },
     },
   });
 }
@@ -125,29 +129,56 @@ export async function getProductFormOptions(actor: Actor) {
   return { categories, brands, needs, aromas, tags, collections, products };
 }
 
-async function assertUnique(slug: string, sku: string, exceptId?: string) {
+async function assertUnique(
+  slug: string,
+  sku: string,
+  doterraItemNumber: string | null,
+  exceptId?: string,
+) {
   const clash = await db.product.findFirst({
-    where: { OR: [{ slug }, { sku }], ...(exceptId ? { NOT: { id: exceptId } } : {}) },
-    select: { slug: true, sku: true },
+    where: {
+      OR: [{ slug }, { sku }, ...(doterraItemNumber ? [{ doterraItemNumber }] : [])],
+      ...(exceptId ? { NOT: { id: exceptId } } : {}),
+    },
+    select: { slug: true, sku: true, doterraItemNumber: true },
   });
   if (!clash) return;
   const fieldErrors: Record<string, string> = {};
   if (clash.slug === slug) fieldErrors.slug = "Există deja un produs cu acest slug.";
   if (clash.sku === sku) fieldErrors.sku = "Există deja un produs cu acest SKU.";
-  throw new AdminError("Slug-ul sau SKU-ul este deja folosit.", fieldErrors);
+  if (doterraItemNumber && clash.doterraItemNumber === doterraItemNumber)
+    fieldErrors.doterraItemNumber = "Alt produs are deja acest cod doTERRA.";
+  throw new AdminError("Unele valori sunt deja folosite de alt produs.", fieldErrors);
+}
+
+async function assertAllowedReferralUrl(url: string | null) {
+  if (!url) return;
+  const { allowedHosts } = await getSetting("affiliate");
+  if (!isAllowedReferralUrl(url, allowedHosts)) {
+    const message = `Linkul trebuie să fie pe ${allowedHosts.join(" sau ")} (vezi Setări › Linkuri doTERRA).`;
+    throw new AdminError(message, { referralUrl: message });
+  }
 }
 
 /** Creates or updates a product with all its relations in one transaction. */
 export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
   assertCan(actor, "catalog:edit");
   const input = productFormSchema.parse(raw);
-  await assertUnique(input.slug, input.sku, id);
+  await assertUnique(input.slug, input.sku, input.doterraItemNumber, id);
+  await assertAllowedReferralUrl(input.referralUrl);
 
   return db.$transaction(async (tx) => {
     const existing = id
-      ? await tx.product.findUnique({ where: { id }, select: { id: true, seoId: true } })
+      ? await tx.product.findUnique({
+          where: { id },
+          select: { id: true, seoId: true, price: true, referralUrl: true },
+        })
       : null;
     if (id && !existing) throw new AdminError("Produsul nu mai există.");
+    const now = new Date();
+    // A new or changed price was just copied from doTERRA; an unchanged one only when confirmed.
+    const priceChecked = !existing || existing.price !== input.price || input.priceChecked;
+    const linkChanged = existing?.referralUrl !== input.referralUrl;
 
     const seoId = await upsertSeo(tx, existing?.seoId ?? null, input.seo);
 
@@ -163,8 +194,11 @@ export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
       usageInfo: input.usageInfo ?? null,
       safetyInfo: input.safetyInfo ?? null,
       price: input.price,
-      compareAtPrice: input.compareAtPrice,
-      stock: input.stock,
+      ...(priceChecked ? { priceCheckedAt: now } : {}),
+      referralUrl: input.referralUrl,
+      doterraItemNumber: input.doterraItemNumber,
+      // A new link has not been tested yet.
+      ...(linkChanged ? { linkStatus: "UNCHECKED" as const, linkCheckedAt: null } : {}),
       featured: input.featured,
       active: input.active,
       isDemo: input.isDemo,
@@ -223,27 +257,45 @@ export async function saveProduct(actor: Actor, raw: unknown, id?: string) {
 }
 
 /**
- * Deletes a product that was never ordered and is not part of a kit.
- * Otherwise deactivate it: orders keep their snapshots either way.
+ * Deletes a product that is not part of a kit (otherwise deactivate it). Archived order lines
+ * (legacy_commerce) keep their snapshot; their product link is set to null.
  */
 export async function deleteProduct(actor: Actor, id: string) {
   assertCan(actor, "catalog:edit");
   const product = await db.product.findUnique({
     where: { id },
     select: {
-      _count: { select: { orderItems: true, partOfKits: true } },
+      _count: { select: { partOfKits: true } },
       images: { select: { id: true } },
     },
   });
   if (!product) return;
   if (product._count.partOfKits > 0)
     throw new AdminError("Produsul face parte dintr-un kit. Scoate-l din kit sau dezactivează-l.");
-  if (product._count.orderItems > 0)
-    throw new AdminError(
-      "Produsul apare în comenzi, așa că nu poate fi șters. Dezactivează-l — va dispărea din magazin.",
-    );
   for (const image of product.images) await removeProductImage(actor, id, image.id);
   await db.product.delete({ where: { id } });
+}
+
+// ── doTERRA link ────────────────────────────────────────────────────────────
+
+/** "Testează linkul": opens the saved referral link from the server and records a clear result. */
+export async function checkProductLink(
+  actor: Actor,
+  id: string,
+  fetcher: typeof fetch = fetch,
+): Promise<LinkCheckResult> {
+  assertCan(actor, "catalog:edit");
+  const product = await db.product.findUnique({ where: { id }, select: { referralUrl: true } });
+  if (!product) throw new AdminError("Produsul nu mai există.");
+  if (!product.referralUrl) throw new AdminError("Salvează mai întâi un link doTERRA.");
+  const { allowedHosts } = await getSetting("affiliate");
+  const result = await testReferralLink(product.referralUrl, allowedHosts, fetcher);
+  if (result.status !== "UNKNOWN")
+    await db.product.update({
+      where: { id },
+      data: { linkStatus: result.status, linkCheckedAt: new Date() },
+    });
+  return result;
 }
 
 // ── Images ──────────────────────────────────────────────────────────────────

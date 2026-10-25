@@ -48,12 +48,12 @@ describe("consent-gated analytics", () => {
     expect(send).not.toHaveBeenCalled();
 
     setAnalyticsConsent(true, "analytics_1234");
-    track("add_to_cart", { productId: "p1", email: "ana@example.ro" });
+    track("wishlist_add", { productId: "p1", email: "ana@example.ro" });
     expect(send).toHaveBeenCalledTimes(1);
     expect(send.mock.calls[0]![0].props).toEqual({ productId: "p1" });
 
     setAnalyticsConsent(false, null);
-    track("add_to_cart", { productId: "p2" });
+    track("wishlist_add", { productId: "p2" });
     expect(send).toHaveBeenCalledTimes(1);
   });
 });

@@ -8,6 +8,7 @@ import { DeleteButton } from "@/features/admin/delete-button";
 import { deleteProductAction } from "@/features/admin/products/actions";
 import { productToForm } from "@/features/admin/products/defaults";
 import { ImageManager } from "@/features/admin/products/image-manager";
+import { LinkCheck } from "@/features/admin/products/link-check";
 import { ProductForm } from "@/features/admin/products/product-form";
 import { AdminCard, AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
@@ -25,7 +26,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     getProductFormOptions(actor),
   ]);
   if (!product) notFound();
-  const deletable = product._count.orderItems === 0 && product._count.partOfKits === 0;
+  const deletable = product._count.partOfKits === 0;
 
   return (
     <>
@@ -36,7 +37,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href={`/produs/${product.slug}`} target="_blank">
-              Vezi în magazin <ExternalLink aria-hidden />
+              Vezi pe site <ExternalLink aria-hidden />
             </Link>
           </Button>
         }
@@ -53,12 +54,20 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           }))}
         />
       </AdminCard>
+      <AdminCard title="Link doTERRA">
+        <LinkCheck
+          productId={product.id}
+          referralUrl={product.referralUrl}
+          status={product.linkStatus}
+          lastChecked={product.linkCheckedAt?.toISOString() ?? null}
+        />
+      </AdminCard>
       <ProductForm productId={product.id} initial={productToForm(product)} options={options} />
       <AdminCard title="Zonă periculoasă" className="border-danger/30">
         <p className="text-sm text-ink-muted">
           {deletable
             ? "Ștergerea este definitivă. Dacă vrei doar să ascunzi produsul, debifează „Activ”."
-            : "Produsul apare în comenzi sau într-un kit, așa că nu poate fi șters. Debifează „Activ” ca să-l ascunzi din magazin."}
+            : "Produsul face parte dintr-un kit, așa că nu poate fi șters. Debifează „Activ” ca să-l ascunzi de pe site."}
         </p>
         {deletable ? (
           <div>

@@ -17,7 +17,7 @@ export async function GET(request: Request) {
       q: params.get("q")?.slice(0, 80) || undefined,
       source: params.get("source")?.slice(0, 40) || undefined,
       interest: params.get("interest")?.slice(0, 40) || undefined,
-      customersOnly: params.get("customers") === "1",
+      membersOnly: params.get("membri") === "1",
     },
   );
   const day = new Date().toISOString().slice(0, 10);

@@ -8,7 +8,6 @@ import {
   Settings,
   Sparkles,
   Star,
-  Ticket,
   Compass,
   Flower2,
   Folder,
@@ -16,7 +15,6 @@ import {
   LayoutDashboard,
   Menu,
   Package,
-  Receipt,
   Tag,
   UserRound,
   Users,
@@ -32,7 +30,6 @@ import { activeNavHref, type AdminNavGroup } from "./nav";
 
 const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   layout: LayoutDashboard,
-  receipt: Receipt,
   users: Users,
   package: Package,
   folder: Folder,
@@ -45,7 +42,6 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   book: BookOpen,
   sparkles: Sparkles,
   star: Star,
-  ticket: Ticket,
   mail: Mail,
   settings: Settings,
 };

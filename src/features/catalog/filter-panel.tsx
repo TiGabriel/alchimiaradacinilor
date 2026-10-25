@@ -172,30 +172,15 @@ type FilterPanelProps = { facets: Facets; showCategory: boolean };
 
 /** All facets, generated from data. Used in the desktop sidebar and the mobile drawer. */
 export function FilterPanel({ facets, showCategory }: FilterPanelProps) {
-  const { filters, update } = useCatalogState();
-  const idBase = useId();
+  const { filters } = useCatalogState();
   const order: MultiFacet[] = showCategory
     ? ["categorie", "nevoie", "aroma", "brand", "eticheta"]
     : ["nevoie", "aroma", "brand", "eticheta"];
   const sections = order.filter((facet) => facets[facet].length > 0);
-  const defaultOpen = ["disponibilitate", "pret", ...sections.slice(0, 3)];
+  const defaultOpen = ["pret", ...sections.slice(0, 3)];
 
   return (
     <Accordion type="multiple" defaultValue={defaultOpen} className="border-t border-line">
-      <AccordionItem value="disponibilitate">
-        <AccordionTrigger className="py-4 text-base">Disponibilitate</AccordionTrigger>
-        <AccordionContent className="pb-5">
-          <div className="flex items-center justify-between gap-3">
-            <Checkbox
-              id={`${idBase}-stoc`}
-              checked={filters.inStock}
-              onCheckedChange={(value) => update({ inStock: value === true })}
-              label="Doar produse în stoc"
-            />
-            <span className="text-xs text-ink-muted">{facets.inStockCount}</span>
-          </div>
-        </AccordionContent>
-      </AccordionItem>
       {facets.price ? (
         <AccordionItem value="pret">
           <AccordionTrigger className="py-4 text-base">Preț</AccordionTrigger>

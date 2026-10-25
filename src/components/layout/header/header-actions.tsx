@@ -1,10 +1,9 @@
 "use client";
 
-import { Heart, Search, ShoppingBag, UserRound } from "lucide-react";
+import { Heart, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { useSession } from "@/features/auth/session-context";
-import { useCart } from "@/features/cart/cart-context";
 import { useSearch } from "@/features/search/search-context";
 import { useWishlist } from "@/features/wishlist/wishlist-context";
 import { pluralRo } from "@/lib/plural";
@@ -27,23 +26,6 @@ export function SearchButton({ className }: { className?: string }) {
       aria-label="Caută produse"
     >
       <Search aria-hidden strokeWidth={1.75} />
-    </button>
-  );
-}
-
-export function CartButton({ className }: { className?: string }) {
-  const { count, openCart } = useCart();
-  return (
-    <button
-      type="button"
-      className={cn(iconButton, className)}
-      onClick={openCart}
-      aria-label={
-        count > 0 ? `Coșul tău, ${pluralRo(count, "produs", "produse")}` : "Coșul tău, gol"
-      }
-    >
-      <ShoppingBag aria-hidden strokeWidth={1.75} />
-      <CountBadge count={count} />
     </button>
   );
 }
@@ -92,7 +74,6 @@ export function HeaderActions() {
         <Heart aria-hidden strokeWidth={1.75} />
         <CountBadge count={wishlistCount} />
       </Link>
-      <CartButton />
     </div>
   );
 }

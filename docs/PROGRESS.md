@@ -1,457 +1,162 @@
-# Progress
+# Progress: content + doTERRA referral pivot
+
+Plan: [`PIVOT_PLAN.md`](./PIVOT_PLAN.md). The original shop build (phases 1–14) is logged in
+[`archive/PROGRESS-SHOP-BUILD.md`](./archive/PROGRESS-SHOP-BUILD.md).
+
+Every phase ends with `pnpm check`, `pnpm test:integration`, a browser pass and a stop for the
+owner's review. No commit, push or deploy without explicit approval.
 
 ## Phase overview
 
-| Phase | Scope                                                | Status |
-| ----- | ---------------------------------------------------- | ------ |
-| 1     | Inspection, architecture, foundation                 | Done   |
-| 2     | Design system and global layout                      | Done   |
-| 3     | Catalog, product page, search                        | Done   |
-| 4     | Cart and wishlist                                    | Done   |
-| 5     | Accounts, authentication, consent, legal pages       | Done   |
-| 6     | Recommendation engine, quiz, need discovery          | Done   |
-| 7     | Routines and journal                                 | Done   |
-| 8     | Homepage                                             | Done   |
-| 9     | Checkout, orders, coupons                            | Done   |
-| 10    | Reviews, newsletter, cookie consent, analytics       | Done   |
-| 11    | Admin part 1 (dashboard, catalog, orders, customers) | Done   |
-| 12    | Admin part 2 (quiz, content, marketing, settings)    | Done   |
-| 13    | SEO, performance, security, accessibility audit      | Done   |
-| 14    | Final UX review, tests, documentation                | Done   |
+| Phase | Scope                                                                                 | Status                    |
+| ----- | ------------------------------------------------------------------------------------- | ------------------------- |
+| 1     | Inspection and pivot plan                                                             | Done, approved 2026-10-25 |
+| 2     | Remove commerce (backup, archive migration, code removal, redirects)                  | Done, waiting for review  |
+| 3     | doTERRA outbound links (link per product, affiliate setting, click counter)           | Done, waiting for review  |
+| 4     | Restructure and rewrite (navigation, new pages, copy, legal, SEO schema)              | Not started               |
+| 5     | Colour palette editor                                                                 | Not started               |
+| 6     | Products and packages (kits, curated packages, editorial reviews, contract migration) | Not started               |
+| 7     | Newsletter rewrite                                                                    | Not started               |
+| 8     | Accounts and audience growth (follows, saved articles, notifications)                 | Not started               |
+| 9     | Final QA                                                                              | Not started               |
 
-## Phase 1 — Foundation
+## Phase 1: Inspection and plan
 
-- Next.js 16 app (TypeScript strict, ESLint, Prettier, Vitest), pnpm.
-- Full Prisma schema (see `prisma/schema.prisma`) and `init` migration with CHECK constraints.
-- Folder structure: `app`, `components/ui`, `components/layout`, `features`, `services`,
-  `validation`, `lib`.
-- `lib`: env validation, Prisma client, money (bani), Romanian text folding, slugs.
-- `validation`: site settings registry, product attribute schemas.
-- Idempotent seed: roles, 6 categories + 5 sample subcategories, 8 needs, 8 aroma
-  profiles, 6 tags, 2 fictional brands, 16 demo products (oils, blends, kits,
-  diffusers, accessories, care) with tags, needs, aromas, related products and kit contents.
-- `.env.example`, README, CONTRIBUTING.md, this file and DECISIONS.md.
+- Inspected the whole repository: routes, features, services, Prisma schema (8 migrations),
+  admin, emails, tests (58 unit files, 13 integration suites), legal pages, SEO, hosting config.
+- Wrote `docs/PIVOT_PLAN.md`: stack summary, REMOVE/ADAPT/KEEP inventory, new information
+  architecture, data model changes with safe migration rules, redirect map, phases 2–9, open
+  questions.
+- Moved the old `docs/PROGRESS.md` to `docs/archive/PROGRESS-SHOP-BUILD.md` (content unchanged).
+- No code, schema or test changed.
 
-**Open items**
+**Waiting on**
 
-- Real product data, images and official specs before launch (demo purge: delete rows
-  where `isDemo = true`).
+- Approval of the plan.
+- Answers to the open questions (`PIVOT_PLAN.md` § 7). Phase 2 needs Q11 (real orders in
+  production?) and Q13 (is the site indexed?); phase 3 needs Q1–Q3.
 
-## Phase 2 — Design system and global layout
+## Phase 2: Remove commerce
 
-- Tokens in `src/app/globals.css` (`@theme`): colours (AA-checked), radii, shadows, spacing,
-  easing, keyframes; Fraunces + Manrope via `next/font` with `latin-ext` (Romanian diacritics).
-- UI primitives (`src/components/ui`): Button (8 variants, 5 sizes, loading, asChild), Input/Textarea/
-  Field, Select, Checkbox, RadioCards, Badge, Card, Dialog, Drawer (left/right/bottom/full), Tabs,
-  Accordion, Toast (imperative `toast()`), Skeleton, Spinner, RatingStars, Price, QuantitySelector,
-  EmptyState.
-- `<Logo />` driven by the `brand` SiteSetting (wordmark today, image later).
-- Motion toolkit (`src/components/motion`): Reveal, Stagger, Parallax, HoverScale, PageTransition,
-  BotanicalFloat, DrawLine — all honour `prefers-reduced-motion` via a hydration-safe hook.
-- Botanical SVG motifs (Sprig, Leaf, Roots, Blossom) and SectionDivider.
-- Image system: SmartImage (next/image + fade-in + fallback) and ProductImage with branded,
-  product-type-aware placeholders.
-- Header with DB-driven mega menu (Produse), Descoperă dropdown, search/account/wishlist/cart
-  icons with counters; mobile slide-in menu, auto-hiding bottom nav, cart in the header.
-- Footer with navigation, legal links, contact details and Facebook link from SiteSettings,
-  newsletter slot (validates, explains it is not active yet, stores nothing).
-- Global states: 404 (real 404 status), error boundary, global-error, loading templates, EmptyState.
-- Placeholder pages for every linked route not built yet (no dead ends; noindex).
-- `/styleguide` (noindex, not linked, disallowed in robots.txt).
-- Home page first version (hero, entry points, categories).
+- **Backup** of the local database before any change (see the log below). Production not backed
+  up yet: required before deploying.
+- **Archive migration** `20261025120000_archive_commerce`: the 12 commerce tables and their 5
+  enum types move to the `legacy_commerce` schema (nothing dropped); the reviews → order items
+  foreign key is dropped, `reviews.orderItemId` values stay. Prisma only sees `public`.
+- **Removed**: cart, checkout, orders, addresses, coupons, NETOPIA payments (pages, features,
+  services, validation, emails, tests), the order/coupon admin, the shipping/payment/VAT settings,
+  the `orders:manage` permission, the `NETOPIA_*` env vars, the cart/checkout/order analytics
+  events, stock and compare-at prices everywhere in the UI, seed and recommendation ties.
+- **Redirects (301)**: `/cos` → `/favorite`, `/finalizare-comanda/*` → `/produse`,
+  `/cont/comenzi/*` → `/cont`, `/cont/adrese` → `/cont/date-personale`,
+  `/livrare-si-retur` and `/politica-de-retur` → `/cum-cumpar`, `/admin/comenzi/*` and
+  `/admin/cupoane/*` → `/admin`. `/api/plati/*` answers 410.
+- **New**: `/cum-cumpar` (purchases happen on doTERRA); the product page shows "Preț pe
+  site-ul doTERRA" and "Linkul către produs va fi disponibil în curând".
+- **Adapted**: reviews (any member with a confirmed email; no "verified purchase" badge until the
+  doTERRA check exists), newsletter segment "Doar membri cu cont" (old campaigns'
+  `customersOnly` is read as `membersOnly`), admin dashboard (audience instead of sales), member
+  pages, FAQ, interim legal pages (terms, privacy, cookies, still marked for the lawyer) and copy
+  that mentioned orders, cart, delivery or the shop.
+- **Checks**: `pnpm typecheck`, `pnpm lint`, `prettier` on changed files, `pnpm test` (47 files,
+  264 tests), `pnpm test:integration` (12 suites, 75 tests), `pnpm build`, `prisma db seed`;
+  redirects, the 410 and 15 key pages checked with curl on `next start`.
 
-**Open items**
+**Before deploying phase 2**
 
-- Legal review of required consumer links (ANPC SAL/SOL badges) before launch.
-- Real logo: upload an image and set `brand.logo` to `{ kind: "image", … }`.
-- Facebook URL: set `social.facebookUrl` in SiteSettings (hidden until set).
+- A fresh Neon backup right before the deploy (the 2026-10-25 dump below may be outdated by then).
+- Remove `NETOPIA_ENV`, `NETOPIA_API_KEY`, `NETOPIA_POS_SIGNATURE`, `NETOPIA_PUBLIC_KEY`
+  from Netlify.
+- Owner approval (deploy costs build credits).
 
-## Phase 3 — Catalogue, product page and search
+## Phase 3: doTERRA outbound links
 
-- `/produse` and `/produse/[categorie]/[subcategorie]`, fully DB-driven (invalid paths 404).
-- Filters generated from data (category, brand, price range, rating, availability, tags, needs,
-  aroma profiles) with disjunctive counts; sorting (recomandate, cele mai noi, preț ↑/↓, rating);
-  state in the URL (`?aroma=citric,floral&pret_min=40&sortare=noi&pagina=2`); active-filter chips;
-  bottom drawer on mobile; crawlable pagination; filtered variants are noindex with canonical base.
-- Product card (desktop hover → second image + quick actions; mobile compact + quick add),
-  wishlist heart (UI only until Phase 4), quick-view modal.
-- Product page `/produs/[slug]`: gallery (hover zoom, mobile swipe + dots, thumbnails), brand,
-  rating, price/discount, stock, quantity, Adaugă în coș / Cumpără acum / favorite; sections
-  Descriere (+ kit contents, ingredients), Profil aromatic, Cum poate fi integrat în rutină,
-  Recomandări de utilizare, Siguranță, Rutine (empty state), Recenzii placeholder,
-  Îți poate plăcea și (curated relations, then similarity). Product + BreadcrumbList JSON-LD.
-- Search: pure engine (diacritic folding, synonyms incl. multi-word, prefix, typo tolerance,
-  multi-field ranking), pluggable sources (products, categories, tags), 60 s in-memory index,
-  `/api/search`, command palette (Ctrl/⌘+K or "/", grouped results, keyboard navigation,
-  recent searches in localStorage, full-screen on mobile) and `/cautare` results page.
-- Descoperă hub, `/descopera/nevoi`, `/descopera/categorii`; featured products on the home page.
-- `sitemap.xml` (static pages, categories, products) referenced from robots.txt.
-- Tests: listing (parse/serialise, filters, sorting, facets, pagination), similarity,
-  search engine, stock labels, pagination window, Romanian plurals, recent searches.
+- **Migration** `20261025180000_doterra_links` (additive, nothing moved): `products` gains
+  `referralUrl`, `doterraItemNumber` (unique), `priceCheckedAt`, `linkCheckedAt`,
+  `linkStatus` (UNCHECKED/OK/BROKEN); new table `outbound_clicks_daily` (product, day, source,
+  count).
+- **Setting** `affiliate` (Setări › Linkuri doTERRA): allowed domains (default `doterra.com`,
+  `doterra.me`, subdomains included), short and long disclosure texts.
+- **Admin**: the product form has "Preț și link doTERRA" (link, doTERRA item number, "Am verificat
+  azi prețul"); a saved link must be https on an allowed domain, a changed link goes back to
+  "Netestat". The edit page has a "Link doTERRA" card with the status, the last test date,
+  "Testează linkul" (a server request that only follows redirects inside the allowed domains) and
+  "Deschide linkul". The product list shows the link status and filters "Fără link" /
+  "Nefuncțional". The dashboard shows clicks to doTERRA (30 days vs the 30 before), the most
+  clicked products, clicks per button location, and a notice with the active products without a
+  link.
+- **Site**: "Cumpără de pe doTERRA" (new tab, `rel="sponsored noopener"`) on the product page,
+  the quick view, the quiz result, rituals and favourites; without a link it shows "Link în
+  curând". The product page shows the short disclosure and "verificat pe <data>" when the price
+  date is known (products imported before phase 3 have none until the owner confirms the price).
+  `/cum-cumpar#recomandare`, the terms and the privacy policy explain the referral links and the
+  anonymous click count.
+- **Counter** `/spre-doterra/[slug]?sursa=…`: +1 per product, day and source, then 302 to the
+  saved link (re-checked against the allowed domains). Not counted: HEAD, prefetch, bots, more than
+  30 clicks per IP in 10 minutes (kept in memory only). No link → the product page; inactive or
+  unknown product → `/produse`. `no-store`, `noindex`, disallowed in robots.txt.
+- **Checks**: `pnpm typecheck`, `pnpm lint`, `prettier` on changed files, `pnpm test`
+  (47 files, 267 tests), `pnpm test:integration` (13 suites, 84 tests, new
+  `affiliate.int.test.ts`), `pnpm build`; the counter, the redirects and the pages checked with
+  curl on `next start` against the local copy of production data.
 
-## Phase 4 — Cart and wishlist
+**Linked products first (owner request, 2026-10-25, D-092)**
 
-- Pure cart calculation (`services/cart/calculate.ts`): quantities clamped to stock and to 99 per
-  line, unavailable/out-of-stock lines kept visible but excluded from totals, subtotal, discount
-  hook (rules applied in order, clamped, rounded to the ban), shipping from SiteSettings (flat fee
-  - free-shipping threshold on the subtotal after discounts), total, "mai adaugă X" amount.
-- Server actions (Zod-validated) re-read prices and stock from the DB on every call; the client
-  only sends product ids and quantities. Guest carts live in the DB behind an httpOnly `ar_cart`
-  cookie (60 days); `mergeGuestCartIntoUser()` is ready for login.
-- Cart drawer (opens after add-to-cart), animated header counter, free-shipping progress,
-  line editing/removal with undo, gentle "Se potrivește bine cu produsul tău" suggestions
-  (shared taxonomy scoring), `/cos` page with summary, coupon placeholder and suggestions.
-- `/finalizare-comanda` placeholder (checkout phase) so no button dead-ends.
-- Wishlist: localStorage store via `useSyncExternalStore` (hydration-safe, synced across tabs),
-  heart on cards and product page, toasts with undo, `/favorite` page with "Mută în coș",
-  designed empty state; `mergeLocalWishlistIntoUser()` ready for login.
-- Verified end-to-end in Chromium: stock clamp + notice, drawer, counters, move to cart,
-  persistence across reload, removal to empty state; no console errors.
+- Products with a referral link come first in every product list: catalogue and categories (every
+  sort), search, related products, journal articles, favourites, quiz results and
+  recommendations. Ritual steps keep their order, and so does the admin-curated "Cele 5 esențiale"
+  block.
+- Home page: a new "Disponibile pe doTERRA" section right under the hero, with up to 8 linked
+  products (featured, then newest) and their "Cumpără de pe doTERRA" button (`?sursa=acasa`,
+  "Prima pagină" on the dashboard). The "Recomandate" block also puts linked products first.
+- Product cards and the product page show a "Pe doTERRA" badge. The small button wraps onto two
+  lines on narrow cards (two per row on phones), instead of overflowing.
 
-**Open items for Phase 5 (auth)**
+**Waiting for the owner**
 
-- Resolve the signed-in user in `features/cart/owner.ts` and call `mergeGuestCartIntoUser()`
-  on login; call `mergeLocalWishlistIntoUser()` with the browser's ids and switch the wishlist
-  provider to the DB for signed-in users.
-- Cleanup job for expired guest carts (`carts.expiresAt`).
+- The referral link for each product (Setări › Linkuri doTERRA for the domains; each product's
+  form for its link). Until then every product shows "Link în curând".
+- Review of the two disclosure texts (PIVOT_PLAN Q16).
+- Whether `doterra.me` stays an allowed domain.
+- CSV import of links: not built yet (optional, later).
 
-## Phase 5 — Accounts, authentication and consent
+**Before deploying phase 3**: deploy together with or after phase 2; `prisma migrate deploy`
+applies the additive migration.
 
-- Custom auth on the existing schema: argon2id password hashes, random session tokens stored
-  hashed (`ar_session`, httpOnly, Secure in production, SameSite=Lax, 30-day sliding), single-use
-  hashed tokens for email verification (24 h) and password reset (60 min, revokes all sessions).
-- CSRF: all mutations are Server Actions (POST-only + Origin/Host check by Next) with SameSite
-  cookies. Rate limiting (sliding window) on login (IP + email), registration, reset, verification
-  resend and the contact form.
-- Registration: first/last name, email, password + confirmation; required privacy consent and an
-  optional, never pre-checked marketing consent. ConsentRecords store purpose, granted, timestamp,
-  policy version, source and a salted IP hash; marketing consent creates a pending subscriber that
-  activates on email verification.
-- Roles/permissions (customer/editor/admin), `requireUser` / `requirePermission` guards in layouts,
-  pages and actions, `/admin` returns 404 to non-staff; `proxy.ts` gives optimistic redirects that
-  keep the requested path. First admin: `pnpm admin:create` (env vars).
-- On sign-in: guest cart merged server-side; browser wishlist merged into the account and the
-  wishlist switches to the DB for signed-in users.
-- Email: provider abstraction (console in dev, Resend, SMTP); disabled — never faked — in
-  production when unconfigured. Responsive HTML + text templates (verification, welcome, reset,
-  contact) on a shared layout for later order/newsletter emails.
-- `/cont`: sidebar (scrollable menu on mobile) with overview ("Salut, …", recent order, saved
-  products, latest recommendation, saved routine, newsletter status — each with an empty state),
-  Comenzi, Favorite, Rutinele mele, Rezultate quiz, Recomandări, Adrese (CRUD, Romanian counties,
-  company invoicing), Date personale, Preferințe newsletter (withdraw/grant, personalisation toggle,
-  consent history), Securitate (change password, devices, sign out others).
-- Legal pages with real site facts and marked placeholders for lawyer review: confidențialitate,
-  termeni, cookies (actual cookies/storage listed), retur, livrare; contact form (validated,
-  rate-limited, honeypot, honest when email is unavailable).
-- Tests: unit (hashing, tokens, rate limiter, permissions, consent reducer, auth/address schemas,
-  email templates and provider resolution) and integration against PostgreSQL
-  (`pnpm test:integration`: registration, login, sessions, verification, reset/change password,
-  consent withdrawal, role guards, cart/wishlist merge).
-- Verified in Chromium: register (validation, consent defaults), cart merge, verification link,
-  addresses, consent withdrawal, customer 404 on /admin, logout → login with `next`, contact form,
-  admin created by script can open /admin; no horizontal overflow at 390 px.
+## Local copy of production data (2026-10-25)
 
-**Open items**
+- The local `alchimia` database (port 5433) was replaced by the production dump (backup of the
+  previous local database: `storage/backups/2026-10-25-production/local-before-import.dump`).
+  Row counts matched production table by table.
+- `prisma migrate deploy` then applied `20261025120000_archive_commerce` to that copy: a
+  rehearsal on real data. The 6 orders, 23 order lines and 2 coupons are kept in
+  `legacy_commerce`; the one review linked to an order keeps its `orderItemId`.
+- Production's `_prisma_migrations` lists the first 6 migrations twice (harmless; Prisma
+  applied only the new migration).
+- The 21 images that existed only in production storage were downloaded from the public
+  `/uploads/…` URLs into `storage/uploads/`. Copied sessions and verification tokens were
+  deleted locally.
 
-- Replace the in-memory rate limiter with a shared store (Redis/Upstash) if running more than one
-  instance. Email change flow (with re-verification). Account deletion / data export requests
-  (currently by email, per the privacy policy).
+## Backups log
 
-## Phase 6 — Recommendation engine, quiz and need discovery
+Every migration that moves or removes data records its backup here first: date, database,
+command, file name, table row counts.
 
-- One pure, deterministic engine (`services/recommendation/engine.ts`): weighted signals (needs,
-  aromas, tags, product types) from quiz answers, selected needs or — only with PERSONALIZATION
-  consent — the customer's favourites/saved routines/purchases. Tie-breaks: featured → rating →
-  review count → stock → name. Excludes inactive, out-of-stock, excluded and already-purchased
-  products and anything without a positive match. Budget is a configurable penalty. Every result
-  carries an explanation ("Recomandat pentru că ai ales: Relaxare + Seară + Floral.").
-  `rankProfiles` is the hook for routines and articles (Phase 7).
-- All question texts, answers and weights (incl. product-type and budget effects) are in the DB;
-  engine multipliers are the `recommendation` SiteSetting. Seeded 8-question quiz.
-- `/quiz`: intro, one question per screen, progress, animated direction-aware transitions (plain
-  fade with reduced motion), back/skip, native radio/checkbox semantics, keys 1–9 + Enter,
-  tap-to-advance for single choice, focus moved to each question, mobile-first layout.
-- `/quiz/rezultat/[id]` "Descoperă ce ți se potrivește": primary recommendation with "De ce",
-  secondary picks with reasons, add to cart/favorites. Results are saved for signed-in users;
-  guests get an httpOnly `ar_quiz` id, can only see their own result and are invited to create an
-  account — results are claimed on sign-in.
-- `/descopera` "Ce cauți?" need picker and `/descopera/[nevoie]` using the same engine, with routine
-  and article slots ready for Phase 7. `/cont/quiz` (history) and `/cont/recomandari` (latest quiz +
-  "Pe baza favoritelor tale" with consent).
-- Tests: engine (scoring, weights, ranking, tie-breaks, exclusions, budget, context, explanations,
-  criteria builders), submission rules; integration (saving results with reasons, budget penalty,
-  invalid answers, owner-only guest results + claim, consent-gated personal context).
+| Date       | Database                                  | Backup                                                                            | Row counts                                                                                                   | Before migration                                                  |
+| ---------- | ----------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| 2026-10-25 | local (5433)                              | `pg_dump -Fc` + CSV per commerce table, `storage/backups/2026-10-25-pre-phase2/`  | all 12 commerce tables 0, reviews 0, site_settings 11, users 1                                               | `20261025120000_archive_commerce`                                 |
+| 2026-10-25 | production (Neon, read-only `pg_dump` 18) | `storage/backups/2026-10-25-production/neon-production.dump` (+ `row-counts.txt`) | orders 6, order_items 23, coupons 2, carts 3, addresses 3, reviews 1, users 5, products 18, site_settings 11 | `20261025120000_archive_commerce` (not applied in production yet) |
 
-## Phase 7 — Routines, journal and content connections
+## Intentional leftovers
 
-- Schema (`content_relations` migration): `Routine.frequency`, `Article.authorName`, routine tags,
-  article ↔ routine and article tags. Routines carry cover, description, duration, difficulty,
-  time of day, ordered steps (optionally linked to a product), products, needs, tags, related
-  articles and SEO fields; articles carry cover, author, date, category, Markdown content, tags,
-  related products/routines, SEO and published status.
-- `/rutine` and `/rutine/[slug]`: steps timeline, product cards, related articles, HowTo JSON-LD.
-  "Adaugă produsele rutinei în coș" adds each in-stock, active product once and reports what was
-  skipped (out of stock / unavailable / already in cart) — pure `planRoutineCart`, server-side
-  `addRoutineToCart`. Signed-in users save routines (`/cont/rutine`); guests are invited to sign in.
-- `/jurnal`, `/jurnal/[categorie]`, `/jurnal/[slug]`: featured article, latest articles, category
-  filter with counts, diacritic-insensitive journal search, reading time, related articles
-  (category/routine/product/tag overlap), Article JSON-LD. Content is Markdown rendered without raw
-  HTML; a line `{{produs:slug}}` or `{{rutina:slug}}` embeds a product or routine card.
-- Connections: the product page shows real "Rutine care includ acest produs" and "Din jurnal";
-  `/descopera/[nevoie]` ranks routines and articles with the shared engine (`rankProfiles`);
-  search indexes routines and articles (keywords include their products, so "Lav" finds Lavender,
-  the evening ritual and the lavender articles). Sitemap includes routines, categories, articles.
-- Seed: 4 demo routines (Ritual de seară, Rutina de dimineață, Moment de concentrare, Atmosferă
-  pentru casă), 7 journal categories, 5 demo articles — no medical claims, all flagged demo.
-- Motion: `Reveal`/`Stagger` now show content immediately with reduced motion instead of waiting
-  for the viewport.
-- Tests: routine cart planning, article parsing/reading time/related ranking; integration
-  (relationship queries, published-only listing and search, related articles, need ranking, saved
-  routines, add-routine-to-cart skip reasons incl. guest cart, cross-type search).
+Commerce-looking names that stay on purpose after phase 2 (with the reason) go here.
 
-## Phase 8 — Homepage
-
-- Editorial hero "Ritualuri simple. Arome care îți transformă rutina." with "Descoperă produsele"
-  and "Găsește ce ți se potrivește" (→ quiz). The heading is never animated (it is the LCP element,
-  ~0.9 s locally); the rest rises in with a CSS animation that runs from first paint. An optional
-  hero photo (`homepage.heroImage` setting) is rendered with `next/image` `priority` +
-  `fetchPriority="high"`; without it, the illustrated botanical arch with parallax is shown.
-- "Nu știi de unde să începi?": the shared need picker plus an "Începe quiz-ul" card.
-- "Recomandat pentru tine" (signed-in only, right under the hero): latest quiz picks topped up with
-  favourite-based suggestions (consent-gated), in stock only, each with its reason; otherwise an
-  invitation to take the quiz.
-- Popular categories (top-level, by product count), featured products (stagger), "Cele 5 esențiale"
-  (editorial numbered list on forest green; slugs + aroma notes in the `homepage` setting, hidden if
-  fewer than 3 resolve), featured routines, latest articles.
-- Reviews: only real, APPROVED reviews rated ≥ 4 with a substantive text, shown as "Prenume I." with a
-  verified-purchase mark; the section is hidden when there are none (nothing is invented).
-- Newsletter block (premium card) — still the graceful placeholder form until Phase 10 wires double
-  opt-in — and a Facebook community card only when `social.facebookUrl` is set (plain outbound
-  link, no embedded or fabricated posts).
-- Motion: reveal/stagger/parallax; all content visible with reduced motion. No horizontal overflow
-  at 390 / 820 / 1280 px.
-- `Price` gained `tone="inverse"` for dark sections; `listArticles` limits in SQL when not searching.
-- Tests: essentials resolution, popular categories, personal row, reviewer name (unit); approved-only
-  reviews, essentials threshold, quiz-based personal row skipping sold-out products (integration).
-
-## Phase 9 — Checkout, orders and coupons
-
-- Schema (`checkout_orders` migration): order status history (`OrderStatusEvent`), per-year order
-  counter (human-friendly numbers `AR-2026-000123`), order snapshots (delivery method, coupon code,
-  terms/privacy versions and acceptance time, product slug/image per item), coupon restrictions by
-  product and category (categories include their subcategories).
-- Settings: `shipping` now holds delivery methods (code, name, description, price, free-shipping
-  eligibility, active) + the free-shipping threshold (old `{ flatFee }` values are upgraded on read);
-  `payment` (cash on delivery; bank transfer offered only once IBAN and holder are filled in);
-  `tax.vatRatePercent` (21, to confirm).
-- One pricing path (`services/checkout/quote.ts` → pure `priceOrder`) for the cart, the checkout
-  summary and order placement. Coupons: percentage (optional cap), fixed amount, free shipping;
-  codes are case/space-insensitive; validity dates, total and per-customer limits (by account or
-  email), minimum order value, product/category restrictions; clear Romanian reasons when a code
-  does not apply. Applied in the cart and at checkout; a guest's code follows them on sign-in;
-  attempts are rate-limited.
-- `/finalizare-comanda`: signed-in customers with a verified email only (otherwise a resend-link
-  state). Four steps — delivery details (saved or new address, save to account, same/other billing
-  address incl. company data), delivery method, payment, review (note, required Terms & Privacy
-  acceptance) — with a live summary, coupon field and "Plasează comanda cu obligație de plată".
-  Validation uses the same Zod schemas on both sides; server field errors are shown on the fields.
-- `placeOrder`: one transaction that locks the cart (double submits create one order) and the
-  coupon (limits hold under concurrency), re-prices from the database, rejects stock issues,
-  unavailable delivery/payment, invalid coupons and any difference from the total the customer saw,
-  decrements stock with a conditional atomic update, snapshots items/addresses/prices, records the
-  coupon use and the first status event, then empties the cart. Everything rolls back on failure.
-- Payment provider interface with offline providers; no card payment is simulated. Stripe/Netopia
-  integration steps in `docs/PAYMENTS.md`.
-- Confirmation page "Comanda ta a fost înregistrată." with payment instructions; `/cont/comenzi`
-  list and `/cont/comenzi/[numar]` detail (progress, items, totals, addresses, history). Order
-  confirmation and status-update emails are sent only when an email provider is configured.
-- `changeOrderStatus` (validated transitions, restock on cancellation before shipment, history,
-  optional email) and `markOrderPaid` are ready for the admin (Phase 11).
-- Tests: coupon rules, pricing/shipping/VAT, status transitions and numbering, payment methods,
-  checkout schema (unit); order placement, verification requirement, tampered/stale totals, stock
-  rollback, last-item race between two customers, double submit, foreign address, unavailable
-  delivery/payment, coupon usage and per-customer/total limits, restricted coupons, guest coupon
-  carry-over, order ownership, cancellation restock (integration).
-
-## Phase 10 — Reviews, newsletter, cookie consent, analytics
-
-- Storage abstraction (`src/lib/storage`): local disk (`./storage/uploads`, served by the
-  `/uploads/[...key]` route with strict key validation) or S3-compatible (R2/S3/MinIO). Uploaded
-  images are validated by their bytes (JPEG/PNG/WebP/AVIF; SVG/GIF refused), size-limited and
-  re-encoded to WebP with sharp — EXIF orientation applied, all metadata (e.g. location) stripped,
-  dimensions capped, decompression bombs refused. `next.config` whitelists the S3 public host.
-- Reviews: only customers whose order with the product has shipped (or been delivered); one per
-  product (a rejected one can be rewritten); rating 1–5, optional title, 20–2000 characters, optional
-  photo. New reviews are PENDING; `moderateReview` approves/rejects (reason kept) and recomputes the
-  cached `Product.rating/reviewCount` in the same transaction. Product page: average, count,
-  distribution bars, approved reviews ("Prenume I.", verified-purchase mark, photo), eligibility
-  messages and the form. No demo reviews are seeded (nothing invented).
-- Newsletter: double opt-in (hashed, 48 h, single-use token; consent recorded only on
-  confirmation), responses never reveal whether an address is subscribed, rate-limited. Without an
-  email provider nothing is stored and the visitor is told honestly. Confirm and unsubscribe pages
-  act on a button click (link scanners cannot confirm/cancel); signed (HMAC) unsubscribe links plus
-  an RFC 8058 one-click endpoint (`List-Unsubscribe` headers on campaigns). Account preferences,
-  unsubscribe links and guest confirmations stay in sync (same subscriber row + consent records).
-  Segment-ready model (interests, source, customers, confirmation date), `NewsletterCampaign`,
-  confirmation and campaign templates; `sendCampaign` refuses without a provider and only targets
-  ACTIVE subscribers. Footer and homepage forms are live.
-- Cookie consent: banner with "Accept toate" / "Doar necesare" as equally prominent buttons plus
-  "Setări"; settings modal (necesare always on, analiză, marketing); choice stored in `ar_consent`
-  (versioned with the cookie policy, re-asked after 12 months or a policy change) and recorded as
-  ANALYTICS/MARKETING consent evidence; "Setări cookie" in the footer reopens it. Cookie policy page
-  updated with every cookie and the analytics description.
-- Analytics: provider-agnostic `track()` layer; nothing leaves the browser before consent (events
-  are queued, then sent or dropped); first-party endpoint re-checks consent server-side, stores no IP,
-  user agent or account id and strips personal-looking properties. Events: product_view, search,
-  quiz_started, quiz_completed, add_to_cart, wishlist_add, checkout_started, order_completed.
-- Personalisation: recently viewed products of signed-in customers are recorded only with
-  PERSONALIZATION consent (deleted when withdrawn) and feed the engine's `viewedAffinity`.
-- Tests: image sniffing/validation/keys, review eligibility and rating aggregation, unsubscribe
-  signatures, segments, cookie-choice parsing/versioning, analytics event validation and client
-  consent gating (unit); image re-encoding without metadata, verified-purchase reviews and
-  moderation sync, photo upload, double opt-in, expired/single-use tokens, signed unsubscribe,
-  account sync, campaign segmentation, server-side analytics gate, cookie consent records,
-  consented product views (integration).
-
-## Phase 11 — Admin, part 1
-
-- Shell: `/admin` with a permission-filtered sidebar (mobile menu), skip link, sticky save bars.
-  Three layers of authorisation: the layout (`admin:access`, non-staff get a 404), every page and
-  action (`requirePermission` with the specific permission) and every service (`assertCan(actor, …)`).
-  Editors see the catalogue; orders, customers (and later settings) need the admin role.
-- Dashboard: 30-day sales per day (Bucharest days), KPIs with change vs the previous 30 days, average
-  order, new accounts, subscribers, reviews to moderate, orders by status, best sellers, a consented
-  analytics funnel, low stock, recent orders. Dependency-free SVG/CSS charts, each with a
-  screen-reader table. Editors see the non-sales parts only.
-- Products: list with search, status (active/inactive/low/out of stock) and type filters,
-  pagination; create/edit every field (basics, Markdown texts, lei → bani prices, stock,
-  type-specific specs, needs with relevance, aromas with intensity, tags, collections, visibility,
-  SEO with counters); medical/therapeutic wording is refused by validation; unique slug/SKU errors on
-  the field; delete only when never ordered and not in a kit (otherwise deactivate). Images:
-  multi-upload through the storage layer (re-encoded WebP), reorder, choose the thumbnail, alt
-  text, remove (files deleted when unused).
-- Taxonomy CRUD in one config-driven editor: categories (tree, parent with cycle protection),
-  brands, collections, tags, needs, aroma profiles (colour). Deletes are refused with an explanation
-  when products, subcategories or quiz answers depend on the entry.
-- Orders: list (search by number/email/name, status filter), detail with items, totals, addresses,
-  note, history with the acting admin; status changes along allowed transitions (with note and an
-  optional customer email when a provider is configured; cancellation returns stock) and "mark as
-  paid".
-- Customers: list with verification, newsletter status, order count and total spent; detail with
-  account, current consents, orders, addresses, reviews, favourites and saved routines (read-only).
-- Tests: admin nav/authorisation and `assertCan`, product and taxonomy validation, medical-claims
-  guard, dashboard helpers (unit); service authorisation per role, product create/update with
-  relations, slug clashes, image reorder/thumbnail/removal, delete rules, category cycles, order
-  status/payment (integration).
-
-## Phase 12 — Admin, part 2
-
-- Sidebar groups: Conținut (routines, journal, quiz, reviews), Marketing (coupons, newsletter) and
-  Configurare (settings). Content needs `content:edit` (editors); coupons need `orders:manage`,
-  subscribers `users:manage` and settings `settings:manage` (admin only).
-- Quiz manager (`/admin/quiz`): questions (text, help text, single/multiple choice, required,
-  order) and answers with weights for needs, aroma profiles, tags and product types (−10…10, zero
-  refused) plus an optional budget ceiling. Each answer shows how often customers chose it; answers
-  and questions that appear in saved results cannot be deleted (edit them instead). A preview panel
-  runs the real recommendation engine on any combination of answers (signals, budget, ranked
-  products with score and explanation) without storing anything.
-- Routines: CRUD with a step editor (add, reorder, remove, optional product per step), products
-  (optional flag, note), needs, tags, cover image, time of day, difficulty, duration, SEO.
-- Journal: CRUD with a Markdown editor (toolbar for headings, emphasis, lists, quotes, links and
-  product/routine cards), live preview with the same renderer as the site, status and publication
-  date (Bucharest days), category, tags, linked products/routines, cover and SEO. Cards that point at
-  missing products or routines are refused on the content field. Drafts open on the site with
-  `?previzualizare=1` for content editors only (banner, `noindex`).
-- Reviews: moderation queue by status with photo, verified-purchase badge and rejection reason;
-  approving/rejecting recomputes the product rating cache.
-- Newsletter: subscribers with status, search, source, interest and "customers only" filters;
-  CSV export of the current filter (UTF-8 BOM, formula-injection guard). Campaigns (draft, audience
-  preview by segment, send) are available only when an email provider is configured.
-- Coupons: CRUD (percentage with optional cap, fixed amount, free shipping; minimum subtotal,
-  validity in whole Bucharest days, total and per-customer limits, product/category restrictions)
-  with stats — uses, discount given and revenue of non-cancelled orders. Used coupons cannot be
-  deleted (deactivate instead).
-- Settings (`/admin/setari`): brand and logo upload, contact and social links, delivery methods and
-  prices with the free-shipping threshold, payment texts and bank details, email sender name and
-  reply-to, SEO defaults (title, template, description, social image upload), homepage, legal and
-  VAT, recommendation weights. Every section is validated by the same schema used when reading.
-  The root layout's metadata and every customer email now use these settings.
-- Tests: coupon, content and quiz validation, Bucharest date helpers, CSV (unit); quiz weights
-  changing the preview ranking, the delete guard for used answers, coupon code clashes, stats and
-  delete guard, routine slug clashes, article embed checks, settings validation and permissions,
-  subscriber CSV export (integration).
-
-## Phase 13 — Audit
-
-Full report with the change list and before/after Lighthouse scores: `docs/AUDIT.md`.
-
-- SEO: shared metadata builder (canonical, robots, complete Open Graph and Twitter, fallbacks to
-  the SEO settings and a default social image), editor `noIndex`/canonical honoured, Organization
-  and WebSite JSON-LD on the homepage, absolute image URLs in Product/Article/HowTo JSON-LD, sitemap
-  of indexable content only (plus legal pages), stricter robots.txt, brand favicon and touch icon.
-- Fixed: newly published journal articles stayed hidden until a server restart.
-- Performance: Fraunces without extra variation axes (−330 KB of preloaded fonts), Zod removed from
-  client bundles (−85 KB gzip), LazyMotion. Mobile LCP 7.4 s → 4.5–5.1 s, mobile performance
-  64–71 → 74–83, desktop 98–99.
-- Security: nonce-based CSP, security headers (HSTS on HTTPS), sandboxed uploads, dependency
-  advisories fixed with overrides (`pnpm audit` clean).
-- Accessibility: focus returns after the cart drawer and search palette, busy buttons keep focus,
-  quantity focus ring, logo label-in-name, catalogue heading order; Lighthouse accessibility 100 on
-  the four audited pages.
-- Tests: metadata builder, CSP/header builder (unit).
-
-## Phase 13 follow-up
-
-- SEO fields completed: canonical URL and social image (upload) next to title, description and
-  noindex for products, categories, routines and articles (shared `SeoFields` + `upsertSeo`);
-  categories gained SEO editing; the category page and the sitemap use it.
-- Per-IP rate limits on `/api/search` and `/api/analytics`; analytics refuses cross-origin beacons.
-- axe-core on 27 pages (public, cart, checkout, account, admin): heading order and list structure
-  fixed; 0 violations. Query, index and image review in `docs/AUDIT.md`.
-
-## Phase 14 — Final review, tests, documentation
-
-Final report: `docs/FINAL-REPORT.md` (customer review answers, what is production-ready, what
-needs content or credentials, next steps).
-
-- Customer review at 390/820/1440 px of every section. Fixed: "Despre" and "Întrebări frecvente"
-  were placeholders (now real pages; the FAQ is built from the settings and has FAQPage data),
-  English names of the demo oils, inconsistent quiz duration. The unused "coming soon" component
-  was removed.
-- Tests: role/permission matrix and `assertCan` (unit), every admin service refusing customers
-  and editors outside their area (integration). Coverage now spans auth, quiz scoring,
-  recommendations, cart, orders, coupons, permissions and consent: 289 unit + 85 integration tests.
-- `SEED_DEMO=false` seeds taxonomy, quiz, journal categories and settings without demo data.
-- README rewritten (install, env, database, seed, first admin, storage, email, payments, Vercel +
-  Postgres + S3 deployment, DNS for alchimiaradacinilor.ro at hostgate.ro); `.env.example`
-  completed and commented.
-
-## External services
-
-- **Email:** contact-form notifications can use a dedicated sender (`EMAIL_FROM_CONTACT`); the
-  existing Resend/SMTP drivers, verification flow and server-side "verified email before ordering"
-  check were audited and kept.
-- **Newsletter → Brevo:** confirmed subscribers and withdrawals are mirrored to a Brevo list;
-  Brevo unsubscribes, complaints and hard bounces return through `/api/newsletter/brevo`;
-  `pnpm newsletter:sync` reconciles (dry run by default). Off until `BREVO_*` is set.
-- **Card payments → NETOPIA (API v2):** card method in the existing checkout, payment start on the
-  hosted page, signed IPN at `/api/plati/netopia/ipn`, return route, retry button on the order page,
-  admin toggle and status. Off until `NETOPIA_*` is set and the setting is ticked.
-- Migration `20261010120000_order_payment_reference` (two nullable order columns).
-- Tests: NETOPIA request building, IPN verification (real RSA-signed tokens) and order state
-  transitions; Brevo client, webhook parsing and authentication; contact sender; env parsing.
-
-## Designed campaigns through Brevo
-
-- Campaigns can hold designed HTML (Brevo tags kept: `{{ unsubscribe }}` required, `{{ mirror }}`,
-  `{{ contact.FIRSTNAME }}`), pasted or loaded from an `.html` file; the campaign page shows a
-  sandboxed preview with sample values.
-- "Trimite prin Brevo": creates the Brevo campaign for the synced list and sends it now, after a
-  confirmation with the list's recipient count; readiness check (key, sender, list) on the page;
-  sent campaigns show the date, the Brevo campaign id and live Brevo statistics (delivered, opens,
-  clicks, unsubscribes). Designed campaigns are never sent by the site's own plain sender.
-- New env: `BREVO_SENDER_EMAIL`, optional `BREVO_SENDER_NAME`. Migration
-  `20261010160000_campaign_design_brevo` (`html`, `brevoCampaignId`).
-- Tests: Brevo campaigns client (requests, 204-only success, errors, stats), HTML tag check and
-  preview, campaign schema; integration: send, double-send and concurrent clicks, refused send and
-  retry reusing the Brevo campaign, lost answer recorded instead of resent.
+- `products.compare_at_price` and `products.stock` columns: unused, dropped in phase 6.
+- `reviews.orderItemId`: keeps the link of any review written while the shop sold; drives the
+  "Cumpărare verificată" badge until phase 6 replaces it.
+- Old `?stoc=1` catalogue links: the parameter is ignored (the page still works), not redirected.
+- `site_settings` rows `shipping`, `payment`, `tax`: kept in the database, no longer read.
+- `legacy_commerce` foreign keys to `users` and `products` stay: deleting a user removes their
+  archived cart and addresses (cascade) and nulls the user on archived orders; deleting a product
+  nulls it on archived order lines (their snapshot stays).
+- "Clienți" in the admin: renamed to "Membri" in phase 4.

@@ -50,7 +50,7 @@ export default async function VerifyEmailPage(props: PageProps<"/cont/verificare
         user.emailVerified ? undefined : (
           <>
             Ți-am trimis un link de confirmare la <strong className="text-ink">{user.email}</strong>
-            . Confirmarea este necesară înainte de a plasa o comandă.
+            . Confirmarea este necesară înainte de a scrie o recenzie.
           </>
         )
       }

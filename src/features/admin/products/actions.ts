@@ -7,6 +7,7 @@ import { StorageError } from "@/lib/storage";
 import { AdminError } from "@/services/admin/errors";
 import {
   addProductImage,
+  checkProductLink,
   deleteProduct,
   removeProductImage,
   reorderProductImages,
@@ -86,4 +87,14 @@ export async function removeProductImageAction(productId: string, imageId: strin
     revalidatePath(`/admin/produse/${productId}`);
     return null;
   });
+}
+
+export async function checkProductLinkAction(productId: string) {
+  const target = id.parse(productId);
+  const result = await adminAction("catalog:edit", (actor) => checkProductLink(actor, target));
+  if (result.ok) {
+    revalidatePath(`/admin/produse/${target}`);
+    revalidatePath("/admin/produse");
+  }
+  return result;
 }

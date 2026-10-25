@@ -51,13 +51,12 @@ export const limiters = {
   resetByEmail: new SlidingWindowLimiter(3, 60 * MINUTE),
   verificationResend: new SlidingWindowLimiter(3, 60 * MINUTE),
   contactByIp: new SlidingWindowLimiter(5, 60 * MINUTE),
-  /** Discount codes: slows down guessing. Keyed by user id or IP. */
-  couponAttempts: new SlidingWindowLimiter(10, 15 * MINUTE),
-  checkoutByUser: new SlidingWindowLimiter(10, 10 * MINUTE),
   newsletterByIp: new SlidingWindowLimiter(5, 60 * MINUTE),
   /** Instant search (debounced typing) and analytics beacons: generous, only stops floods. */
   searchByIp: new SlidingWindowLimiter(120, MINUTE),
   analyticsByIp: new SlidingWindowLimiter(300, MINUTE),
+  /** Clicks to doTERRA: above this the visitor is still redirected, just not counted. */
+  outboundByIp: new SlidingWindowLimiter(30, 10 * MINUTE),
 };
 
 export function retryAfterText(ms: number): string {

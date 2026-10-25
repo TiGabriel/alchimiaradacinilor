@@ -7,18 +7,7 @@ import { getUserWishlistIds } from "@/services/wishlist/wishlist";
 
 /** Everything the /cont overview shows, in one call. Each block may be empty. */
 export async function getAccountOverview(userId: string) {
-  const [recentOrder, wishlistIds, latestQuiz, savedRoutine, newsletter] = await Promise.all([
-    db.order.findFirst({
-      where: { userId },
-      orderBy: { placedAt: "desc" },
-      select: {
-        number: true,
-        placedAt: true,
-        status: true,
-        total: true,
-        _count: { select: { items: true } },
-      },
-    }),
+  const [wishlistIds, latestQuiz, savedRoutine, newsletter] = await Promise.all([
     getUserWishlistIds(userId),
     db.quizResult.findFirst({
       where: { userId },
@@ -42,7 +31,6 @@ export async function getAccountOverview(userId: string) {
   const recommendation = topPick ? ((await getProductCards([topPick.productId]))[0] ?? null) : null;
 
   return {
-    recentOrder,
     savedProducts,
     savedCount: wishlistIds.length,
     latestQuiz: latestQuiz

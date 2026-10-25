@@ -37,10 +37,10 @@ export function AuthShell({
           {aside ?? (
             <>
               <p className="font-display text-3xl leading-snug text-ink-inverse">
-                Ritualurile tale, favoritele și comenzile — într-un singur loc.
+                Ritualurile tale, favoritele și recomandările — într-un singur loc.
               </p>
               <p className="text-ink-inverse/75">
-                Salvează produsele preferate, rezultatele quiz-ului și adresele de livrare.
+                Salvează produsele preferate, rezultatele quiz-ului și ritualurile care îți plac.
               </p>
             </>
           )}

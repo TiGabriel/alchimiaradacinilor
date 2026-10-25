@@ -13,7 +13,7 @@ import {
   type ListingResult,
   type ListingRow,
 } from "./listing";
-import type { ProductCardData } from "./product-types";
+import { linkedFirst, type ProductCardData } from "./product-types";
 
 // ── Card data ───────────────────────────────────────────────────────────────
 
@@ -24,10 +24,9 @@ const cardSelect = {
   shortDescription: true,
   productType: true,
   price: true,
-  compareAtPrice: true,
+  referralUrl: true,
   rating: true,
   reviewCount: true,
-  stock: true,
   isDemo: true,
   brand: { select: { name: true } },
   images: {
@@ -54,10 +53,9 @@ function toCard(p: CardRow): ProductCardData {
     brandName: p.brand?.name ?? null,
     productType: p.productType,
     price: p.price,
-    compareAtPrice: p.compareAtPrice,
+    hasDoterraLink: p.referralUrl !== null,
     rating: p.rating,
     reviewCount: p.reviewCount,
-    stock: p.stock,
     isDemo: p.isDemo,
     isNew: p.tags.length > 0,
     images: p.images.map((i) => ({ url: i.media.url, alt: i.alt ?? i.media.alt })),
@@ -65,7 +63,7 @@ function toCard(p: CardRow): ProductCardData {
   };
 }
 
-/** Active products by id, returned in the order of `ids`. */
+/** Active products by id, in the order of `ids`, those with a doTERRA link first. */
 export async function getProductCards(ids: string[]): Promise<ProductCardData[]> {
   if (ids.length === 0) return [];
   const rows = await db.product.findMany({
@@ -73,7 +71,10 @@ export async function getProductCards(ids: string[]): Promise<ProductCardData[]>
     select: cardSelect,
   });
   const byId = new Map(rows.map((r) => [r.id, toCard(r)]));
-  return ids.flatMap((id) => byId.get(id) ?? []);
+  return linkedFirst(
+    ids.flatMap((id) => byId.get(id) ?? []),
+    (card) => card.hasDoterraLink,
+  );
 }
 
 /** Active products by slug (order not guaranteed). */
@@ -89,7 +90,17 @@ export async function getProductCardsBySlugs(slugs: string[]): Promise<ProductCa
 export async function getFeaturedProducts(limit = 8): Promise<ProductCardData[]> {
   const rows = await db.product.findMany({
     where: { active: true, featured: true },
-    orderBy: [{ stock: "desc" }, { createdAt: "desc" }],
+    orderBy: { createdAt: "desc" },
+    select: cardSelect,
+  });
+  return linkedFirst(rows.map(toCard), (card) => card.hasDoterraLink).slice(0, limit);
+}
+
+/** Active products that can be bought through a doTERRA link (home page): featured, then newest. */
+export async function getLinkedProducts(limit = 8): Promise<ProductCardData[]> {
+  const rows = await db.product.findMany({
+    where: { active: true, referralUrl: { not: null } },
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
     take: limit,
     select: cardSelect,
   });
@@ -111,8 +122,8 @@ async function loadListingRows(categoryIds: string[] | null): Promise<ListingRow
       price: true,
       rating: true,
       reviewCount: true,
-      stock: true,
       featured: true,
+      referralUrl: true,
       createdAt: true,
       brand: { select: { slug: true, active: true } },
       category: { select: { slug: true, parent: { select: { slug: true } } } },
@@ -126,8 +137,8 @@ async function loadListingRows(categoryIds: string[] | null): Promise<ListingRow
     price: r.price,
     rating: r.rating,
     reviewCount: r.reviewCount,
-    stock: r.stock,
     featured: r.featured,
+    hasLink: r.referralUrl !== null,
     createdAt: r.createdAt,
     brand: r.brand?.active ? r.brand.slug : null,
     categories: [r.category.slug, ...(r.category.parent ? [r.category.parent.slug] : [])],

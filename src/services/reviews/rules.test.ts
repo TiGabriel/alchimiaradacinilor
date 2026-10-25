@@ -2,53 +2,37 @@ import { describe, expect, it } from "vitest";
 
 import { distributionPercentages, reviewEligibility, summarizeRatings } from "./rules";
 
-const purchase = (orderStatus: "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED", day = 1) => ({
-  orderItemId: `item-${orderStatus}-${day}`,
-  orderStatus,
-  placedAt: new Date(2026, 8, day),
-});
+const member = { signedIn: true, emailVerified: true };
 
 describe("reviewEligibility", () => {
-  it("requires a signed-in customer", () => {
-    expect(reviewEligibility({ signedIn: false, purchases: [], existing: null })).toMatchObject({
-      canReview: false,
-      reason: "signed-out",
-    });
+  it("requires a signed-in member", () => {
+    expect(
+      reviewEligibility({ signedIn: false, emailVerified: false, existing: null }),
+    ).toMatchObject({ canReview: false, reason: "signed-out" });
   });
 
-  it("requires a purchase that has shipped", () => {
-    expect(reviewEligibility({ signedIn: true, purchases: [], existing: null })).toMatchObject({
-      reason: "not-purchased",
+  it("requires a confirmed email address", () => {
+    expect(
+      reviewEligibility({ signedIn: true, emailVerified: false, existing: null }),
+    ).toMatchObject({ canReview: false, reason: "email-unverified" });
+    expect(reviewEligibility({ ...member, existing: null })).toEqual({
+      canReview: true,
+      existing: null,
     });
-    expect(
-      reviewEligibility({ signedIn: true, purchases: [purchase("PENDING")], existing: null }),
-    ).toMatchObject({ reason: "not-received" });
-    expect(
-      reviewEligibility({ signedIn: true, purchases: [purchase("CANCELLED")], existing: null }),
-    ).toMatchObject({ reason: "not-received" });
-  });
-
-  it("links the review to the most recent received purchase", () => {
-    expect(
-      reviewEligibility({
-        signedIn: true,
-        purchases: [purchase("DELIVERED", 2), purchase("SHIPPED", 9), purchase("PENDING", 20)],
-        existing: null,
-      }),
-    ).toMatchObject({ canReview: true, orderItemId: "item-SHIPPED-9" });
   });
 
   it("allows one review per product, but a rejected one can be rewritten", () => {
-    const purchases = [purchase("DELIVERED")];
-    expect(
-      reviewEligibility({ signedIn: true, purchases, existing: { status: "PENDING" } }),
-    ).toMatchObject({ canReview: false, reason: "already-reviewed" });
-    expect(
-      reviewEligibility({ signedIn: true, purchases, existing: { status: "APPROVED" } }),
-    ).toMatchObject({ canReview: false, reason: "already-reviewed" });
-    expect(
-      reviewEligibility({ signedIn: true, purchases, existing: { status: "REJECTED" } }),
-    ).toMatchObject({ canReview: true });
+    expect(reviewEligibility({ ...member, existing: { status: "PENDING" } })).toMatchObject({
+      canReview: false,
+      reason: "already-reviewed",
+    });
+    expect(reviewEligibility({ ...member, existing: { status: "APPROVED" } })).toMatchObject({
+      canReview: false,
+      reason: "already-reviewed",
+    });
+    expect(reviewEligibility({ ...member, existing: { status: "REJECTED" } })).toMatchObject({
+      canReview: true,
+    });
   });
 });
 

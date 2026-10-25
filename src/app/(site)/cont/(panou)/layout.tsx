@@ -40,8 +40,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
             <p className="flex items-start gap-2 text-sm text-warning">
               <MailWarning aria-hidden className="mt-0.5 size-4 shrink-0" />
               <span>
-                Confirmă adresa <strong>{user.email}</strong> pentru a putea plasa comenzi. Verifică
-                emailul primit la înregistrare.
+                Confirmă adresa <strong>{user.email}</strong> pentru a putea scrie recenzii.
+                Verifică emailul primit la înregistrare.
               </span>
             </p>
             <div className="shrink-0">

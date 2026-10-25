@@ -351,8 +351,7 @@ export function RoutineForm({
 
       <AdminCard title="Produsele rutinei">
         <p className="-mt-2 text-sm text-ink-muted">
-          Butonul „Adaugă produsele rutinei în coș” adaugă produsele în această ordine (cele
-          opționale sunt marcate).
+          Produsele apar pe pagina rutinei în această ordine (cele opționale sunt marcate).
         </p>
         {errors.products ? <p className="text-sm text-danger">{errors.products}</p> : null}
         <ul className="flex flex-col gap-2">

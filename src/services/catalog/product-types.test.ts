@@ -1,23 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { productHref, stockLabel, stockStatus } from "./product-types";
+import { linkedFirst, productHref } from "./product-types";
 
-describe("stock status", () => {
-  it("classifies stock levels", () => {
-    expect(stockStatus(0)).toBe("out-of-stock");
-    expect(stockStatus(-1)).toBe("out-of-stock");
-    expect(stockStatus(3)).toBe("low-stock");
-    expect(stockStatus(4)).toBe("in-stock");
-  });
-
-  it("labels stock in Romanian", () => {
-    expect(stockLabel(0)).toBe("Stoc epuizat");
-    expect(stockLabel(1)).toBe("Ultimul produs în stoc");
-    expect(stockLabel(2)).toBe("Doar 2 în stoc");
-    expect(stockLabel(20)).toBe("În stoc");
-  });
-
+describe("product URLs", () => {
   it("builds product URLs", () => {
     expect(productHref({ slug: "lemon" })).toBe("/produs/lemon");
+  });
+});
+
+describe("linkedFirst", () => {
+  it("moves products with a doTERRA link to the front and keeps the order within each group", () => {
+    const items = [
+      { id: "a", link: false },
+      { id: "b", link: true },
+      { id: "c", link: false },
+      { id: "d", link: true },
+    ];
+    expect(linkedFirst(items, (i) => i.link).map((i) => i.id)).toEqual(["b", "d", "a", "c"]);
+    expect(items.map((i) => i.id)).toEqual(["a", "b", "c", "d"]);
   });
 });

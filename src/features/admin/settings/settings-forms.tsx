@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Field, Input, Textarea } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -15,16 +14,6 @@ import type { SettingKey, SettingValue } from "@/validation/settings";
 import { AdminCard, adminSelect } from "../ui";
 
 import { saveSettingAction, uploadSiteImageAction } from "./actions";
-
-/** Bani ↔ lei for money inputs. */
-const toLei = (bani: number | null | undefined) =>
-  bani == null ? "" : (bani / 100).toFixed(2).replace(".", ",").replace(/,00$/, "");
-const toBani = (lei: string): number | null => {
-  const t = lei.trim().replace(",", ".");
-  if (!t) return null;
-  const n = Number(t);
-  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
-};
 
 function useSave<K extends SettingKey>(key: K) {
   const router = useRouter();
@@ -111,7 +100,7 @@ export function BrandForm({ initial }: { initial: SettingValue<"brand"> }) {
         noValidate
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <Field id={`${uid}-name`} label="Numele magazinului" required error={errors.siteName}>
+          <Field id={`${uid}-name`} label="Numele site-ului" required error={errors.siteName}>
             {(p) => (
               <Input
                 {...p}
@@ -318,380 +307,6 @@ export function ContactForm({
           </Field>
         </div>
         <SaveRow pending={contactSave.pending || socialSave.pending} />
-      </form>
-    </AdminCard>
-  );
-}
-
-// ── Shipping ───────────────────────────────────────────────────────────────
-
-type MethodDraft = {
-  code: string;
-  name: string;
-  description: string;
-  price: string;
-  freeShippingEligible: boolean;
-  active: boolean;
-};
-
-export function ShippingForm({ initial }: { initial: SettingValue<"shipping"> }) {
-  const uid = useId();
-  const [threshold, setThreshold] = useState(toLei(initial.freeShippingThreshold));
-  const [methods, setMethods] = useState<MethodDraft[]>(
-    initial.methods.map((m) => ({
-      ...m,
-      description: m.description ?? "",
-      price: toLei(m.price) || "0",
-    })),
-  );
-  const { errors, pending, save } = useSave("shipping");
-  const update = (i: number, patch: Partial<MethodDraft>) =>
-    setMethods((ms) => ms.map((m, j) => (j === i ? { ...m, ...patch } : m)));
-  return (
-    <AdminCard title="Livrare">
-      <form
-        noValidate
-        className="flex flex-col gap-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          save({
-            freeShippingThreshold: toBani(threshold),
-            methods: methods.map((m) => ({
-              ...m,
-              description: m.description || undefined,
-              price: toBani(m.price) ?? 0,
-            })),
-          });
-        }}
-      >
-        <Field
-          id={`${uid}-free`}
-          label="Livrare gratuită de la (lei)"
-          hint="Gol = fără livrare gratuită. Se compară cu valoarea după reduceri."
-          error={errors.freeShippingThreshold}
-        >
-          {(p) => (
-            <Input
-              {...p}
-              inputMode="decimal"
-              value={threshold}
-              onChange={(e) => setThreshold(e.target.value)}
-              className="max-w-48"
-            />
-          )}
-        </Field>
-        <fieldset className="flex flex-col gap-3">
-          <legend className="mb-2 text-sm font-semibold">Metode de livrare</legend>
-          {errors.methods ? <p className="text-sm text-danger">{errors.methods}</p> : null}
-          {methods.map((m, i) => (
-            <div
-              key={i}
-              className="grid gap-3 rounded-lg border border-line p-4 md:grid-cols-[1fr_1fr_8rem]"
-            >
-              <Field id={`${uid}-m${i}-name`} label="Nume" error={errors[`methods.${i}.name`]}>
-                {(p) => (
-                  <Input
-                    {...p}
-                    value={m.name}
-                    onChange={(e) => update(i, { name: e.target.value })}
-                  />
-                )}
-              </Field>
-              <Field
-                id={`${uid}-m${i}-code`}
-                label="Cod intern"
-                hint="Ex.: curier, easybox"
-                error={errors[`methods.${i}.code`]}
-              >
-                {(p) => (
-                  <Input
-                    {...p}
-                    value={m.code}
-                    onChange={(e) => update(i, { code: e.target.value })}
-                  />
-                )}
-              </Field>
-              <Field
-                id={`${uid}-m${i}-price`}
-                label="Preț (lei)"
-                error={errors[`methods.${i}.price`]}
-              >
-                {(p) => (
-                  <Input
-                    {...p}
-                    inputMode="decimal"
-                    value={m.price}
-                    onChange={(e) => update(i, { price: e.target.value })}
-                  />
-                )}
-              </Field>
-              <div className="md:col-span-3">
-                <Field
-                  id={`${uid}-m${i}-desc`}
-                  label="Descriere"
-                  error={errors[`methods.${i}.description`]}
-                >
-                  {(p) => (
-                    <Input
-                      {...p}
-                      value={m.description}
-                      onChange={(e) => update(i, { description: e.target.value })}
-                    />
-                  )}
-                </Field>
-              </div>
-              <div className="flex flex-wrap items-center gap-5 md:col-span-3">
-                <Checkbox
-                  id={`${uid}-m${i}-active`}
-                  checked={m.active}
-                  onCheckedChange={(c) => update(i, { active: c === true })}
-                  label="Activă"
-                />
-                <Checkbox
-                  id={`${uid}-m${i}-free`}
-                  checked={m.freeShippingEligible}
-                  onCheckedChange={(c) => update(i, { freeShippingEligible: c === true })}
-                  label="Eligibilă pentru livrare gratuită"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="ml-auto text-danger"
-                  disabled={methods.length === 1}
-                  onClick={() => setMethods((ms) => ms.filter((_, j) => j !== i))}
-                >
-                  <Trash2 aria-hidden /> Elimină
-                </Button>
-              </div>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="self-start"
-            onClick={() =>
-              setMethods((ms) => [
-                ...ms,
-                {
-                  code: "",
-                  name: "",
-                  description: "",
-                  price: "",
-                  freeShippingEligible: true,
-                  active: true,
-                },
-              ])
-            }
-          >
-            <Plus aria-hidden /> Adaugă o metodă
-          </Button>
-        </fieldset>
-        <SaveRow pending={pending} />
-      </form>
-    </AdminCard>
-  );
-}
-
-// ── Payment ────────────────────────────────────────────────────────────────
-
-export function PaymentForm({
-  initial,
-  netopia,
-}: {
-  initial: SettingValue<"payment">;
-  /** NETOPIA environment configured on the server, or null when credentials are missing. */
-  netopia: "sandbox" | "live" | null;
-}) {
-  const uid = useId();
-  const [v, setV] = useState(initial);
-  const { errors, pending, save } = useSave("payment");
-  const cod = v.cashOnDelivery;
-  const bank = v.bankTransfer;
-  const card = v.card;
-  return (
-    <AdminCard title="Plată">
-      <form
-        noValidate
-        className="flex flex-col gap-5"
-        onSubmit={(e) => (e.preventDefault(), save(v))}
-      >
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
-          <legend className="px-1 text-sm font-semibold">Plată la livrare</legend>
-          <Checkbox
-            id={`${uid}-cod`}
-            checked={cod.enabled}
-            onCheckedChange={(c) => setV({ ...v, cashOnDelivery: { ...cod, enabled: c === true } })}
-            label="Activă"
-          />
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field id={`${uid}-cod-l`} label="Denumire" error={errors["cashOnDelivery.label"]}>
-              {(p) => (
-                <Input
-                  {...p}
-                  value={cod.label}
-                  onChange={(e) =>
-                    setV({ ...v, cashOnDelivery: { ...cod, label: e.target.value } })
-                  }
-                />
-              )}
-            </Field>
-            <Field
-              id={`${uid}-cod-d`}
-              label="Text pentru client"
-              error={errors["cashOnDelivery.description"]}
-            >
-              {(p) => (
-                <Input
-                  {...p}
-                  value={cod.description}
-                  onChange={(e) =>
-                    setV({ ...v, cashOnDelivery: { ...cod, description: e.target.value } })
-                  }
-                />
-              )}
-            </Field>
-          </div>
-        </fieldset>
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
-          <legend className="px-1 text-sm font-semibold">Transfer bancar</legend>
-          <Checkbox
-            id={`${uid}-bank`}
-            checked={bank.enabled}
-            onCheckedChange={(c) => setV({ ...v, bankTransfer: { ...bank, enabled: c === true } })}
-            label="Activ (apare la checkout doar cu IBAN și titular completate)"
-          />
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field id={`${uid}-bank-l`} label="Denumire" error={errors["bankTransfer.label"]}>
-              {(p) => (
-                <Input
-                  {...p}
-                  value={bank.label}
-                  onChange={(e) => setV({ ...v, bankTransfer: { ...bank, label: e.target.value } })}
-                />
-              )}
-            </Field>
-            <Field
-              id={`${uid}-bank-d`}
-              label="Text pentru client"
-              error={errors["bankTransfer.description"]}
-            >
-              {(p) => (
-                <Input
-                  {...p}
-                  value={bank.description}
-                  onChange={(e) =>
-                    setV({ ...v, bankTransfer: { ...bank, description: e.target.value } })
-                  }
-                />
-              )}
-            </Field>
-            <Field
-              id={`${uid}-bank-h`}
-              label="Titular cont"
-              error={errors["bankTransfer.accountHolder"]}
-            >
-              {(p) => (
-                <Input
-                  {...p}
-                  value={bank.accountHolder ?? ""}
-                  onChange={(e) =>
-                    setV({ ...v, bankTransfer: { ...bank, accountHolder: e.target.value || null } })
-                  }
-                />
-              )}
-            </Field>
-            <Field id={`${uid}-bank-i`} label="IBAN" error={errors["bankTransfer.iban"]}>
-              {(p) => (
-                <Input
-                  {...p}
-                  value={bank.iban ?? ""}
-                  onChange={(e) =>
-                    setV({
-                      ...v,
-                      bankTransfer: {
-                        ...bank,
-                        iban: e.target.value.replace(/\s+/g, "").toUpperCase() || null,
-                      },
-                    })
-                  }
-                />
-              )}
-            </Field>
-            <Field id={`${uid}-bank-b`} label="Banca" error={errors["bankTransfer.bankName"]}>
-              {(p) => (
-                <Input
-                  {...p}
-                  value={bank.bankName ?? ""}
-                  onChange={(e) =>
-                    setV({ ...v, bankTransfer: { ...bank, bankName: e.target.value || null } })
-                  }
-                />
-              )}
-            </Field>
-            <Field
-              id={`${uid}-bank-t`}
-              label="Termen de plată (zile)"
-              error={errors["bankTransfer.paymentTermDays"]}
-            >
-              {(p) => (
-                <Input
-                  {...p}
-                  inputMode="numeric"
-                  value={String(bank.paymentTermDays)}
-                  onChange={(e) =>
-                    setV({
-                      ...v,
-                      bankTransfer: { ...bank, paymentTermDays: Number(e.target.value) || 0 },
-                    })
-                  }
-                />
-              )}
-            </Field>
-          </div>
-        </fieldset>
-        <fieldset className="flex flex-col gap-3 rounded-lg border border-line p-4">
-          <legend className="px-1 text-sm font-semibold">Card bancar (NETOPIA Payments)</legend>
-          <p className="text-sm text-ink-muted">
-            {netopia === "live"
-              ? "NETOPIA este configurat în modul live: plățile sunt reale."
-              : netopia === "sandbox"
-                ? "NETOPIA este configurat în modul de test (sandbox): plățile nu sunt reale, iar la checkout metoda apare marcată „mediu de test”."
-                : "NETOPIA nu este configurat pe server (cheile lipsesc), deci metoda nu apare la checkout chiar dacă este bifată."}
-          </p>
-          <Checkbox
-            id={`${uid}-card`}
-            checked={card.enabled}
-            onCheckedChange={(c) => setV({ ...v, card: { ...card, enabled: c === true } })}
-            label="Activă (apare la checkout doar cu NETOPIA configurat)"
-          />
-          <div className="grid gap-3 md:grid-cols-2">
-            <Field id={`${uid}-card-l`} label="Denumire" error={errors["card.label"]}>
-              {(p) => (
-                <Input
-                  {...p}
-                  value={card.label}
-                  onChange={(e) => setV({ ...v, card: { ...card, label: e.target.value } })}
-                />
-              )}
-            </Field>
-            <Field
-              id={`${uid}-card-d`}
-              label="Text pentru client"
-              error={errors["card.description"]}
-            >
-              {(p) => (
-                <Input
-                  {...p}
-                  value={card.description}
-                  onChange={(e) => setV({ ...v, card: { ...card, description: e.target.value } })}
-                />
-              )}
-            </Field>
-          </div>
-        </fieldset>
-        <SaveRow pending={pending} />
       </form>
     </AdminCard>
   );
@@ -958,20 +573,12 @@ export function HomepageForm({
   );
 }
 
-// ── Legal, tax, recommendations ─────────────────────────────────────────────
+// ── Legal, recommendations ──────────────────────────────────────────────────
 
-export function LegalTaxForm({
-  legal,
-  tax,
-}: {
-  legal: SettingValue<"legal">;
-  tax: SettingValue<"tax">;
-}) {
+export function LegalForm({ legal }: { legal: SettingValue<"legal"> }) {
   const uid = useId();
   const [l, setL] = useState(legal);
-  const [vat, setVat] = useState(String(tax.vatRatePercent));
   const legalSave = useSave("legal");
-  const taxSave = useSave("tax");
   const text = (k: keyof typeof l, label: string, hint?: string) => (
     <Field id={`${uid}-${k}`} label={label} hint={hint} error={legalSave.errors[k]}>
       {(p) => (
@@ -986,14 +593,13 @@ export function LegalTaxForm({
     </Field>
   );
   return (
-    <AdminCard title="Date legale și TVA">
+    <AdminCard title="Date legale">
       <form
         noValidate
         className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           legalSave.save(l);
-          taxSave.save({ vatRatePercent: Number(vat.replace(",", ".")) });
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1001,35 +607,15 @@ export function LegalTaxForm({
           {text("companyRegistration", "Nr. Registrul Comerțului")}
           {text("companyVatNumber", "CUI")}
           {text("companyAddress", "Sediul social")}
-          {text(
-            "termsVersion",
-            "Versiune termeni",
-            "Schimb-o când modifici textul; comenzile rețin versiunea.",
-          )}
+          {text("termsVersion", "Versiune termeni", "Schimb-o când modifici textul.")}
           {text("privacyPolicyVersion", "Versiune politică de confidențialitate")}
           {text(
             "cookiePolicyVersion",
             "Versiune politică de cookies",
             "O versiune nouă reafișează bannerul de cookie-uri.",
           )}
-          <Field
-            id={`${uid}-vat`}
-            label="Cota TVA inclusă în prețuri (%)"
-            hint="0 dacă firma nu este plătitoare de TVA."
-            error={taxSave.errors.vatRatePercent}
-          >
-            {(p) => (
-              <Input
-                {...p}
-                inputMode="decimal"
-                value={vat}
-                onChange={(e) => setVat(e.target.value)}
-                className="max-w-32"
-              />
-            )}
-          </Field>
         </div>
-        <SaveRow pending={legalSave.pending || taxSave.pending} />
+        <SaveRow pending={legalSave.pending} />
       </form>
     </AdminCard>
   );
@@ -1083,6 +669,82 @@ export function RecommendationForm({ initial }: { initial: SettingValue<"recomme
             </Field>
           ))}
         </div>
+        <SaveRow pending={pending} />
+      </form>
+    </AdminCard>
+  );
+}
+
+// ── doTERRA links ─────────────────────────────────────────────────────────
+
+export function AffiliateForm({ initial }: { initial: SettingValue<"affiliate"> }) {
+  const uid = useId();
+  const [hosts, setHosts] = useState(initial.allowedHosts.join("\n"));
+  const [v, setV] = useState(initial);
+  const { errors, pending, save } = useSave("affiliate");
+  const hostsError = Object.entries(errors).find(([key]) => key.startsWith("allowedHosts"))?.[1];
+  return (
+    <AdminCard title="Linkuri doTERRA">
+      <form
+        onSubmit={(e) => (
+          e.preventDefault(),
+          save({
+            ...v,
+            allowedHosts: hosts
+              .split(/\s+/)
+              .map((h) => h.trim())
+              .filter(Boolean),
+          })
+        )}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        <Field
+          id={`${uid}-hosts`}
+          label="Domenii permise pentru linkuri"
+          required
+          error={hostsError}
+          hint="Câte unul pe rând, fără https://. Sunt permise și subdomeniile (ex.: www.doterra.com)."
+        >
+          {(p) => (
+            <Textarea
+              {...p}
+              value={hosts}
+              onChange={(e) => setHosts(e.target.value)}
+              className="min-h-20 font-mono"
+            />
+          )}
+        </Field>
+        <Field
+          id={`${uid}-short`}
+          label="Mențiune scurtă (sub butonul de pe pagina produsului)"
+          required
+          error={errors.disclosureShort}
+        >
+          {(p) => (
+            <Textarea
+              {...p}
+              value={v.disclosureShort}
+              onChange={(e) => setV({ ...v, disclosureShort: e.target.value })}
+              className="min-h-16"
+            />
+          )}
+        </Field>
+        <Field
+          id={`${uid}-long`}
+          label="Explicație completă (pagina „Cum cumpăr” și termeni)"
+          required
+          error={errors.disclosureLong}
+        >
+          {(p) => (
+            <Textarea
+              {...p}
+              value={v.disclosureLong}
+              onChange={(e) => setV({ ...v, disclosureLong: e.target.value })}
+              className="min-h-32"
+            />
+          )}
+        </Field>
         <SaveRow pending={pending} />
       </form>
     </AdminCard>

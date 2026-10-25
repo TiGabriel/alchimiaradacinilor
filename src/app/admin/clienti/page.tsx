@@ -11,7 +11,6 @@ import {
   th,
 } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
-import { formatMoney } from "@/lib/money";
 import { listCustomers } from "@/services/admin/customers";
 
 export const metadata: Metadata = { title: "Clienți" };
@@ -49,8 +48,8 @@ export default async function CustomersPage({
             <th className={th}>Client</th>
             <th className={th}>Cont</th>
             <th className={th}>Newsletter</th>
-            <th className={`${th} text-right`}>Comenzi</th>
-            <th className={`${th} text-right`}>Total cheltuit</th>
+            <th className={`${th} text-right`}>Rutine salvate</th>
+            <th className={`${th} text-right`}>Recenzii</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -85,10 +84,8 @@ export default async function CustomersPage({
                     ? "În așteptare"
                     : "—"}
               </td>
-              <td className={`${td} text-right tabular-nums`}>{c._count.orders}</td>
-              <td className={`${td} text-right font-semibold tabular-nums`}>
-                {formatMoney(c.totalSpent)}
-              </td>
+              <td className={`${td} text-right tabular-nums`}>{c._count.savedRoutines}</td>
+              <td className={`${td} text-right tabular-nums`}>{c._count.reviews}</td>
             </tr>
           ))}
           {customers.length === 0 ? (

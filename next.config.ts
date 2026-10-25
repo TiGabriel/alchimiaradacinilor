@@ -17,9 +17,27 @@ function storageRemotePatterns(): NonNullable<NonNullable<NextConfig["images"]>[
   ];
 }
 
+/**
+ * Pages of the former shop (the site no longer sells; products are bought on doTERRA).
+ * statusCode 301 rather than `permanent: true`, which would send 308.
+ */
+const shopRedirects: Array<{ source: string; destination: string }> = [
+  { source: "/cos", destination: "/favorite" },
+  { source: "/finalizare-comanda/:path*", destination: "/produse" },
+  { source: "/cont/comenzi/:path*", destination: "/cont" },
+  { source: "/cont/adrese", destination: "/cont/date-personale" },
+  { source: "/livrare-si-retur", destination: "/cum-cumpar" },
+  { source: "/politica-de-retur", destination: "/cum-cumpar" },
+  { source: "/admin/comenzi/:path*", destination: "/admin" },
+  { source: "/admin/cupoane/:path*", destination: "/admin" },
+];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async redirects() {
+    return shopRedirects.map((r) => ({ ...r, statusCode: 301 as const }));
+  },
   // The CSP (with a per-request nonce) is set in src/proxy.ts.
   async headers() {
     return [

@@ -19,7 +19,7 @@ export default async function LoginPage(props: PageProps<"/cont/autentificare">)
     <AuthShell
       eyebrow="Contul meu"
       title="Bine ai revenit"
-      intro="Autentifică-te pentru a-ți vedea comenzile, favoritele și rutinele salvate."
+      intro="Autentifică-te pentru a-ți vedea favoritele, rutinele salvate și recomandările."
     >
       <LoginForm next={nextPath} />
     </AuthShell>

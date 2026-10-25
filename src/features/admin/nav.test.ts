@@ -8,7 +8,7 @@ const hrefs = (roles: string[]) => navFor(roles).flatMap((g) => g.items.map((i) 
 
 describe("admin authorization", () => {
   it("shows admins everything and everyone else nothing", () => {
-    expect(hrefs(["admin"])).toContain("/admin/comenzi");
+    expect(hrefs(["admin"])).toContain("/admin/clienti");
     expect(hrefs(["admin"])).toContain("/admin/produse");
     expect(hrefs(["editor"])).toEqual([]);
     expect(hrefs(["customer"])).toEqual([]);
@@ -16,9 +16,7 @@ describe("admin authorization", () => {
   });
 
   it("services refuse actors without the permission", () => {
-    expect(() => assertCan({ id: "u", roles: ["editor"] }, "orders:manage")).toThrow(
-      ForbiddenError,
-    );
+    expect(() => assertCan({ id: "u", roles: ["editor"] }, "users:manage")).toThrow(ForbiddenError);
     expect(() => assertCan({ id: "u", roles: ["customer"] }, "catalog:edit")).toThrow(
       ForbiddenError,
     );

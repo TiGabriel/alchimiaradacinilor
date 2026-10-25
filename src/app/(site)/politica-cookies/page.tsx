@@ -21,13 +21,6 @@ const rows = [
     category: "Strict necesar",
   },
   {
-    name: "ar_cart",
-    kind: "Cookie (httpOnly)",
-    purpose: "Păstrează coșul de cumpărături pentru vizitatorii fără cont.",
-    duration: "60 de zile",
-    category: "Strict necesar",
-  },
-  {
     name: "ar_quiz",
     kind: "Cookie (httpOnly)",
     purpose: "Îți permite să revezi rezultatul quiz-ului aromatic fără cont.",
@@ -112,10 +105,10 @@ export default async function CookiePolicyPage() {
             <>
               <p>
                 <strong>Analiză (doar cu acordul tău).</strong> Dacă accepți, înregistrăm anonim
-                câteva evenimente — produse vizualizate, căutări, adăugări în coș, începerea și
-                finalizarea unei comenzi — împreună cu un identificator aleator. Datele rămân pe
-                serverele noastre, nu includ adresa IP, numele sau emailul tău și nu sunt legate de
-                contul tău. Nu folosim servicii de analiză ale unor terți.
+                câteva evenimente — produse vizualizate, căutări, produse salvate la favorite,
+                începerea și finalizarea quiz-ului — împreună cu un identificator aleator. Datele
+                rămân pe serverele noastre, nu includ adresa IP, numele sau emailul tău și nu sunt
+                legate de contul tău. Nu folosim servicii de analiză ale unor terți.
               </p>
               <p>
                 <strong>Marketing.</strong> Momentan nu folosim cookie-uri de marketing sau reclame
@@ -132,7 +125,7 @@ export default async function CookiePolicyPage() {
             <p>
               Îți poți schimba oricând alegerea din linkul „Setări cookie” din subsolul fiecărei
               pagini. Poți șterge cookie-urile și stocarea locală și din setările browserului. Fără
-              cookie-urile strict necesare, autentificarea și coșul nu vor funcționa.{" "}
+              cookie-urile strict necesare, autentificarea nu va funcționa.{" "}
               <ToComplete>verificare juridică a clasificării cookie-urilor</ToComplete>
             </p>
           ),

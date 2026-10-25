@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/features/auth/session";
+import { DoterraButton } from "@/features/catalog/doterra-button";
 import { ProductCard } from "@/features/catalog/product-card";
 import { CategoryTiles } from "@/features/discover/category-cards";
 import { NeedPicker } from "@/features/discover/need-picker";
@@ -18,7 +19,7 @@ import { ReviewsSection } from "@/features/home/reviews";
 import { ArticleCard } from "@/features/journal/article-card";
 import { RoutineCard } from "@/features/routines/routine-card";
 import { getCategoryTree } from "@/services/catalog/categories";
-import { getFeaturedProducts } from "@/services/catalog/products";
+import { getFeaturedProducts, getLinkedProducts } from "@/services/catalog/products";
 import { getNeedsWithCounts } from "@/services/catalog/taxonomy";
 import { getHomeEssentials, getHomeReviews, getPersonalRow } from "@/services/home/home";
 import { popularCategories } from "@/services/home/select";
@@ -68,18 +69,29 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  const [settings, needs, tree, featured, essentials, routines, articles, reviews, personal] =
-    await Promise.all([
-      getSettings(),
-      getNeedsWithCounts(),
-      getCategoryTree(),
-      getFeaturedProducts(4),
-      getHomeEssentials(),
-      listRoutines({ take: 3 }),
-      listArticles({ take: 3 }),
-      getHomeReviews(3),
-      user ? getPersonalRow(user.id) : Promise.resolve(null),
-    ]);
+  const [
+    settings,
+    needs,
+    tree,
+    linked,
+    featured,
+    essentials,
+    routines,
+    articles,
+    reviews,
+    personal,
+  ] = await Promise.all([
+    getSettings(),
+    getNeedsWithCounts(),
+    getCategoryTree(),
+    getLinkedProducts(8),
+    getFeaturedProducts(4),
+    getHomeEssentials(),
+    listRoutines({ take: 3 }),
+    listArticles({ take: 3 }),
+    getHomeReviews(3),
+    user ? getPersonalRow(user.id) : Promise.resolve(null),
+  ]);
   const structuredData = await organizationJsonLd();
   const categories = popularCategories(tree, 6);
   const pickerNeeds = needs.filter((n) => n.productCount > 0);
@@ -90,6 +102,40 @@ export default async function HomePage() {
       <HomeHero image={settings.homepage.heroImage} brand={settings.brand} />
 
       {user ? <PersonalRowSection firstName={user.firstName} row={personal} /> : null}
+
+      {/* Products that can be bought through a doTERRA link, right under the hero (D-092). */}
+      {linked.length > 0 ? (
+        <section aria-labelledby="pe-doterra" className="py-(--spacing-section)">
+          <div className="container-page">
+            <SectionHeading
+              id="pe-doterra"
+              eyebrow="Disponibile pe doTERRA"
+              title="Le poți comanda de pe site-ul doTERRA"
+              link={{ href: "/produse", label: "Toate produsele" }}
+            />
+            <Stagger
+              as="ul"
+              className="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-4"
+            >
+              {linked.map((product, index) => (
+                <StaggerItem as="li" key={product.id} className="flex flex-col gap-3">
+                  <ProductCard product={product} priority={index < 2} className="flex-1" />
+                  <DoterraButton product={product} source="acasa" size="sm" block />
+                </StaggerItem>
+              ))}
+            </Stagger>
+            <p className="mt-8 text-sm text-ink-muted">
+              Linkuri de recomandare: prețul pentru tine rămâne cel de pe doTERRA.{" "}
+              <Link
+                href="/cum-cumpar#recomandare"
+                className="font-semibold text-forest underline underline-offset-2"
+              >
+                Ce înseamnă
+              </Link>
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       {/* Need picker → quiz */}
       <section aria-labelledby="de-unde" className="bg-paper-deep py-(--spacing-section)">

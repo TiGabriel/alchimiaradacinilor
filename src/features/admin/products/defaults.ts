@@ -14,8 +14,8 @@ type LoadedProduct = {
   usageInfo: string | null;
   safetyInfo: string | null;
   price: number;
-  compareAtPrice: number | null;
-  stock: number;
+  referralUrl: string | null;
+  doterraItemNumber: string | null;
   featured: boolean;
   active: boolean;
   isDemo: boolean;
@@ -29,7 +29,7 @@ type LoadedProduct = {
 };
 
 /** Bani → "59,90" for editing. */
-const lei = (v: number | null) => (v == null ? "" : (v / 100).toFixed(2).replace(".", ","));
+const lei = (v: number) => (v / 100).toFixed(2).replace(".", ",");
 
 export function emptyProductForm(): ProductFormState {
   return {
@@ -44,8 +44,9 @@ export function emptyProductForm(): ProductFormState {
     usageInfo: "",
     safetyInfo: "",
     price: "",
-    compareAtPrice: "",
-    stock: "0",
+    priceChecked: false,
+    referralUrl: "",
+    doterraItemNumber: "",
     featured: false,
     active: true,
     isDemo: false,
@@ -76,8 +77,9 @@ export function productToForm(p: LoadedProduct): ProductFormState {
     usageInfo: p.usageInfo ?? "",
     safetyInfo: p.safetyInfo ?? "",
     price: lei(p.price),
-    compareAtPrice: lei(p.compareAtPrice),
-    stock: String(p.stock),
+    priceChecked: false,
+    referralUrl: p.referralUrl ?? "",
+    doterraItemNumber: p.doterraItemNumber ?? "",
     featured: p.featured,
     active: p.active,
     isDemo: p.isDemo,

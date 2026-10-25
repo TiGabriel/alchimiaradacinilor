@@ -53,7 +53,7 @@ export async function SiteFooter() {
         </div>
 
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:gap-8">
-          <Column title="Magazin">
+          <Column title="Produse">
             <li>
               <Link href={primaryLinks.products.href} className={footerLink}>
                 Toate produsele

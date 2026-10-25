@@ -28,7 +28,6 @@ const weights: EngineWeights = {
 const product = (o: Partial<ProductCandidate> & { id: string }): ProductCandidate => ({
   name: o.id,
   price: 5000,
-  stock: 10,
   active: true,
   featured: false,
   rating: null,
@@ -135,7 +134,7 @@ describe("rankProducts", () => {
     expect(aromaHeavy[0]!.item.id).toBe("lavender");
   });
 
-  it("breaks ties by featured, then rating, then review count, then stock, then name", () => {
+  it("breaks ties by featured, then rating, then review count, then name", () => {
     const base = { needs: [{ key: "casa", relevance: 1 }] };
     const criteria = { signals: [sig("need", "casa", 1)] };
     const order = (items: ProductCandidate[]) =>
@@ -153,9 +152,6 @@ describe("rankProducts", () => {
       ]),
     ).toEqual(["b", "a"]);
     expect(
-      order([product({ id: "a", ...base, stock: 2 }), product({ id: "b", ...base, stock: 20 })]),
-    ).toEqual(["b", "a"]);
-    expect(
       order([
         product({ id: "z", name: "Zambila", ...base }),
         product({ id: "y", name: "Ălbăstrea", ...base }),
@@ -163,20 +159,14 @@ describe("rankProducts", () => {
     ).toEqual(["y", "z"]);
   });
 
-  it("excludes inactive, out-of-stock, excluded and purchased products", () => {
+  it("excludes inactive and excluded products", () => {
     const criteria = { signals: [sig("need", "seara", 3)] };
     const items = [
       product({ ...lavender, id: "inactive", active: false }),
-      product({ ...lavender, id: "sold-out", stock: 0 }),
       product({ ...lavender, id: "excluded" }),
-      product({ ...lavender, id: "bought" }),
       lavender,
     ];
-    const ranked = rankProducts(
-      { ...criteria, excludeIds: ["excluded"], context: { purchasedIds: ["bought"] } },
-      items,
-      weights,
-    );
+    const ranked = rankProducts({ ...criteria, excludeIds: ["excluded"] }, items, weights);
     expect(ranked.map((r) => r.item.id)).toEqual(["lavender"]);
   });
 

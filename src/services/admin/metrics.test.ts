@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fillDays, funnel, percentChange, shopDay } from "./metrics";
+import { fillDays, percentChange, rate, shopDay } from "./metrics";
 
 describe("dashboard metrics", () => {
   it("uses the shop's time zone for days", () => {
@@ -10,23 +10,17 @@ describe("dashboard metrics", () => {
 
   it("fills missing days with zeros, oldest first", () => {
     const today = new Date("2026-09-25T12:00:00Z");
-    const points = fillDays([{ day: "2026-09-24", revenue: 5000, orders: 2 }], 3, today);
+    const points = fillDays([{ day: "2026-09-24", count: 2 }], 3, today);
     expect(points).toEqual([
-      { day: "2026-09-23", revenue: 0, orders: 0 },
-      { day: "2026-09-24", revenue: 5000, orders: 2 },
-      { day: "2026-09-25", revenue: 0, orders: 0 },
+      { day: "2026-09-23", count: 0 },
+      { day: "2026-09-24", count: 2 },
+      { day: "2026-09-25", count: 0 },
     ]);
   });
 
-  it("computes step conversion", () => {
-    expect(
-      funnel([
-        { name: "a", label: "A", count: 200 },
-        { name: "b", label: "B", count: 50 },
-        { name: "c", label: "C", count: 0 },
-        { name: "d", label: "D", count: 3 },
-      ]).map((s) => s.rate),
-    ).toEqual([null, 25, 0, null]);
+  it("computes rates and changes", () => {
+    expect(rate(50, 200)).toBe(25);
+    expect(rate(3, 0)).toBeNull();
     expect(percentChange(120, 100)).toBe(20);
     expect(percentChange(5, 0)).toBeNull();
   });

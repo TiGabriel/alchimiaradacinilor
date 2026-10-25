@@ -11,7 +11,7 @@ import { buildCsp, createNonce, originOf } from "@/lib/security-headers";
  *    the real checks (session validity, roles) run on the server in layouts,
  *    pages and every action.
  */
-const PROTECTED_PREFIXES = ["/cont", "/admin", "/finalizare-comanda"];
+const PROTECTED_PREFIXES = ["/cont", "/admin"];
 const PUBLIC_ACCOUNT_PATHS = [
   "/cont/autentificare",
   "/cont/inregistrare",

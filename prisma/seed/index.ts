@@ -344,8 +344,6 @@ async function main() {
       usageInfo: demoUsage,
       safetyInfo: demoSafety,
       price: p.price,
-      compareAtPrice: p.compareAtPrice ?? null,
-      stock: p.stock,
       featured: p.featured ?? false,
       active: true,
       isDemo: true,

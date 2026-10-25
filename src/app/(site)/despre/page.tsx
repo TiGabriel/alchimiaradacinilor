@@ -31,7 +31,7 @@ const principles = [
   },
   {
     title: "Totul la vedere",
-    body: "Prețuri cu TVA inclus, costuri de livrare afișate înainte de comandă, 14 zile pentru retur și date personale folosite doar cu acordul tău.",
+    body: "Nu vindem produse: îți spunem ce ne place și de ce, cu prețul exact de pe site-ul doTERRA, de unde le cumperi. Datele tale personale le folosim doar cu acordul tău.",
   },
 ];
 
@@ -46,7 +46,7 @@ export default function AboutPage() {
               Arome simple, <em className="font-normal text-forest italic">spuse pe înțeles.</em>
             </h1>
             <p className="max-w-xl text-lg text-ink-muted">
-              Alchimia Rădăcinilor este un magazin de uleiuri esențiale, amestecuri și accesorii
+              Alchimia Rădăcinilor este un jurnal despre uleiuri esențiale, amestecuri și ritualuri
               pentru casă, gândit pentru cei care vor să înceapă fără să se piardă în termeni
               tehnici. Numele vine de la ideea care ne ghidează: tot ce e bun pornește de la
               rădăcină — din plantă, din obicei, din câteva minute doar pentru tine.

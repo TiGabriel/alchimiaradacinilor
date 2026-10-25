@@ -7,7 +7,7 @@ import {
   mergeLocalWishlistIntoUser,
   toggleUserWishlist,
 } from "@/services/wishlist/wishlist";
-import { productIdSchema, productIdsSchema } from "@/validation/cart";
+import { productIdSchema, productIdsSchema } from "@/validation/wishlist";
 
 import { getCurrentUser } from "../auth/session";
 

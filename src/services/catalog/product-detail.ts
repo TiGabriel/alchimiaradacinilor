@@ -18,9 +18,12 @@ export type ProductDetail = {
   description: string;
   usageInfo: string | null;
   safetyInfo: string | null;
+  /** Price on the doTERRA site, minor units (bani). */
   price: number;
-  compareAtPrice: number | null;
-  stock: number;
+  /** When the admin last confirmed the price on the doTERRA site. */
+  priceCheckedAt: Date | null;
+  /** A referral link is set: show "Cumpără de pe doTERRA" (the link itself stays on the server). */
+  hasDoterraLink: boolean;
   rating: number | null;
   reviewCount: number;
   isDemo: boolean;
@@ -90,8 +93,8 @@ export const getProductBySlug = cache(async (slug: string): Promise<ProductDetai
     usageInfo: p.usageInfo,
     safetyInfo: p.safetyInfo,
     price: p.price,
-    compareAtPrice: p.compareAtPrice,
-    stock: p.stock,
+    priceCheckedAt: p.priceCheckedAt,
+    hasDoterraLink: p.referralUrl !== null,
     rating: p.rating,
     reviewCount: p.reviewCount,
     isDemo: p.isDemo,
@@ -138,7 +141,6 @@ export async function getSimilarityProfiles(): Promise<SimilarityProfile[]> {
     where: { active: true },
     select: {
       id: true,
-      stock: true,
       categoryId: true,
       tags: { select: { tagId: true } },
       needs: { select: { needId: true } },
@@ -148,7 +150,6 @@ export async function getSimilarityProfiles(): Promise<SimilarityProfile[]> {
   return rows.map((r) => ({
     id: r.id,
     categoryId: r.categoryId,
-    inStock: r.stock > 0,
     tags: r.tags.map((t) => t.tagId),
     needs: r.needs.map((n) => n.needId),
     aromas: r.aromaProfiles.map((a) => a.aromaProfileId),

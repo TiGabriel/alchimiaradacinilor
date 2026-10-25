@@ -40,12 +40,6 @@ const serverEnvSchema = z.object({
   BREVO_SENDER_NAME: unsetIfEmpty(z.string().max(70)),
   /** Shared secret Brevo sends with its webhook (unsubscribes, bounces, complaints). */
   BREVO_WEBHOOK_SECRET: unsetIfEmpty(z.string().min(24)),
-  /** NETOPIA Payments (card). No default: card payments stay off until this is set explicitly. */
-  NETOPIA_ENV: unsetIfEmpty(z.enum(["sandbox", "live"])),
-  NETOPIA_API_KEY: unsetIfEmpty(z.string()),
-  NETOPIA_POS_SIGNATURE: unsetIfEmpty(z.string()),
-  /** NETOPIA public certificate/key (PEM) used to verify IPN signatures; "\n" escapes allowed. */
-  NETOPIA_PUBLIC_KEY: unsetIfEmpty(z.string()),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

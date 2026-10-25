@@ -1,22 +1,22 @@
 /** Review rules — pure and unit-tested. */
-import type { OrderStatus, ReviewStatus } from "@/generated/prisma/enums";
+import type { ReviewStatus } from "@/generated/prisma/enums";
 
-/** A purchase counts once the parcel has left the warehouse. */
-export const REVIEWABLE_ORDER_STATUSES: OrderStatus[] = ["SHIPPED", "DELIVERED"];
-
+/**
+ * Any signed-in member with a confirmed email may review a product. Purchases happen on the
+ * doTERRA site, so the "verified purchase" badge is granted separately (docs/PIVOT_PLAN.md 4.6).
+ */
 export type ReviewEligibility =
-  | { canReview: true; orderItemId: string; existing: { status: ReviewStatus } | null }
+  | { canReview: true; existing: { status: ReviewStatus } | null }
   | {
       canReview: false;
-      reason: "signed-out" | "not-purchased" | "not-received" | "already-reviewed";
+      reason: "signed-out" | "email-unverified" | "already-reviewed";
       message: string;
       existing: { status: ReviewStatus; rejectionReason?: string | null } | null;
     };
 
 export function reviewEligibility(input: {
   signedIn: boolean;
-  /** The customer's order lines for this product. */
-  purchases: Array<{ orderItemId: string; orderStatus: OrderStatus; placedAt: Date }>;
+  emailVerified: boolean;
   existing: { status: ReviewStatus; rejectionReason?: string | null } | null;
 }): ReviewEligibility {
   if (!input.signedIn)
@@ -24,7 +24,7 @@ export function reviewEligibility(input: {
       canReview: false,
       reason: "signed-out",
       message:
-        "Recenziile pot fi scrise de clienții care au comandat produsul. Autentifică-te pentru a lăsa o recenzie.",
+        "Recenziile pot fi scrise de membrii comunității. Autentifică-te pentru a lăsa o recenzie.",
       existing: null,
     };
   if (input.existing?.status === "APPROVED" || input.existing?.status === "PENDING")
@@ -37,25 +37,15 @@ export function reviewEligibility(input: {
           : "Ai scris deja o recenzie pentru acest produs. Mulțumim!",
       existing: input.existing,
     };
-  if (input.purchases.length === 0)
+  if (!input.emailVerified)
     return {
       canReview: false,
-      reason: "not-purchased",
-      message: "Recenziile pot fi scrise de clienții care au comandat produsul.",
-      existing: input.existing,
-    };
-  const received = input.purchases
-    .filter((p) => REVIEWABLE_ORDER_STATUSES.includes(p.orderStatus))
-    .sort((a, b) => b.placedAt.getTime() - a.placedAt.getTime());
-  if (received.length === 0)
-    return {
-      canReview: false,
-      reason: "not-received",
-      message: "Vei putea scrie o recenzie după ce comanda ta este expediată.",
+      reason: "email-unverified",
+      message: "Confirmă-ți adresa de email pentru a putea scrie o recenzie.",
       existing: input.existing,
     };
   // A rejected review may be rewritten.
-  return { canReview: true, orderItemId: received[0]!.orderItemId, existing: input.existing };
+  return { canReview: true, existing: input.existing };
 }
 
 export type RatingSummary = {

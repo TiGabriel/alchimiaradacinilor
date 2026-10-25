@@ -25,7 +25,7 @@ export default async function ProductsPage(props: PageProps<"/produse">) {
 
   return (
     <CatalogView
-      eyebrow="Magazin"
+      eyebrow="Catalog"
       title="Toate produsele"
       description="Uleiuri esențiale, amestecuri, kit-uri, difuzoare și accesorii — alese pentru ritualurile tale de zi cu zi."
       breadcrumbs={[{ label: "Produse" }]}

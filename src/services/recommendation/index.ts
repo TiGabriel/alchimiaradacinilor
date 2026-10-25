@@ -3,7 +3,7 @@ import { cache } from "react";
 
 import { db } from "@/lib/db";
 import { getProductCards } from "@/services/catalog/products";
-import type { ProductCardData } from "@/services/catalog/product-types";
+import { linkedFirst, type ProductCardData } from "@/services/catalog/product-types";
 import { hasPersonalizationConsent } from "@/services/consent/consent";
 import { getArticleCards, loadArticleProfiles } from "@/services/journal/journal";
 import { getRoutineCards, loadRoutineProfiles } from "@/services/routines/routines";
@@ -32,7 +32,6 @@ export const loadProductCandidates = cache(async (): Promise<ProductCandidate[]>
       id: true,
       name: true,
       price: true,
-      stock: true,
       active: true,
       featured: true,
       rating: true,
@@ -47,7 +46,6 @@ export const loadProductCandidates = cache(async (): Promise<ProductCandidate[]>
     id: r.id,
     name: r.name,
     price: r.price,
-    stock: r.stock,
     active: r.active,
     featured: r.featured,
     rating: r.rating,
@@ -65,21 +63,13 @@ export async function getEngineWeights(): Promise<EngineWeights & { needSelectio
 
 /**
  * Personal context for the engine — only with PERSONALIZATION consent.
- * Purchases exclude products the customer already owns.
  */
 export async function loadPersonalContext(
   userId: string | null | undefined,
 ): Promise<Criteria["context"] | undefined> {
   if (!userId || !(await hasPersonalizationConsent(userId))) return undefined;
-  const [wishlist, orders, routines, views] = await Promise.all([
+  const [wishlist, routines, views] = await Promise.all([
     db.wishlistItem.findMany({ where: { wishlist: { userId } }, select: { productId: true } }),
-    db.orderItem.findMany({
-      where: {
-        order: { userId, status: { notIn: ["CANCELLED", "REFUNDED"] } },
-        productId: { not: null },
-      },
-      select: { productId: true },
-    }),
     db.routineProduct.findMany({
       where: { routine: { savedBy: { some: { userId } } } },
       select: { productId: true },
@@ -93,7 +83,6 @@ export async function loadPersonalContext(
   ]);
   return {
     wishlistIds: wishlist.map((w) => w.productId),
-    purchasedIds: orders.map((o) => o.productId!),
     routineProductIds: routines.map((r) => r.productId),
     viewedIds: views.map((v) => v.productId),
   };
@@ -117,10 +106,13 @@ export async function recommendProducts(
   );
   const cards = await getProductCards(ranked.map((r) => r.item.id));
   const byId = new Map(cards.map((c) => [c.id, c]));
-  return ranked.flatMap((r) => {
-    const product = byId.get(r.item.id);
-    return product ? [{ product, score: r.score, explanation: r.explanation }] : [];
-  });
+  return linkedFirst(
+    ranked.flatMap((r) => {
+      const product = byId.get(r.item.id);
+      return product ? [{ product, score: r.score, explanation: r.explanation }] : [];
+    }),
+    (r) => r.product.hasDoterraLink,
+  );
 }
 
 export async function recommendForNeed(

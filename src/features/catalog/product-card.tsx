@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Plus, Sparkles } from "lucide-react";
+import { Eye, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -9,7 +9,6 @@ import { ProductImage } from "@/components/media/product-image";
 import { SmartImage } from "@/components/media/smart-image";
 import { Price } from "@/components/ui/price";
 import { RatingStars } from "@/components/ui/rating-stars";
-import { useCart } from "@/features/cart/cart-context";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { cn } from "@/lib/utils";
 import { productHref, type ProductCardData } from "@/services/catalog/product-types";
@@ -28,8 +27,8 @@ type ProductCardProps = {
 };
 
 /**
- * Product tile. Desktop: hover reveals the second image and quick actions.
- * Mobile: compact text, an always-visible quick-add button.
+ * Product tile. Desktop: hover reveals the second image and the quick view.
+ * Mobile: compact text.
  */
 export function ProductCard({
   product,
@@ -38,21 +37,9 @@ export function ProductCard({
   className,
   reason,
 }: ProductCardProps) {
-  const { addItem } = useCart();
   const [quickView, setQuickView] = useState(false);
-  const [adding, setAdding] = useState(false);
   const href = productHref(product);
-  const soldOut = product.stock <= 0;
   const [first, second] = product.images;
-
-  const quickAdd = async () => {
-    setAdding(true);
-    try {
-      await addItem(product, 1);
-    } finally {
-      setAdding(false);
-    }
-  };
 
   return (
     <article className={cn("group/card relative flex flex-col", className)}>
@@ -85,16 +72,8 @@ export function ProductCard({
         <ProductBadges product={product} className="absolute top-3 left-3 z-10" />
         <WishlistButton product={product} className="absolute top-2.5 right-2.5 z-10" />
 
-        {/* Desktop quick actions */}
-        <div className="absolute inset-x-3 bottom-3 z-10 hidden translate-y-2 gap-2 opacity-0 transition-[opacity,transform] duration-300 ease-(--ease-botanical) group-focus-within/card:translate-y-0 group-focus-within/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:opacity-100 md:flex">
-          <button
-            type="button"
-            onClick={quickAdd}
-            disabled={soldOut || adding}
-            className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full bg-forest px-3 text-sm font-semibold text-ink-inverse shadow-soft transition-colors hover:bg-forest-deep disabled:cursor-not-allowed disabled:bg-ink-muted/60"
-          >
-            {soldOut ? "Stoc epuizat" : adding ? "Se adaugă…" : "Adaugă rapid"}
-          </button>
+        {/* Desktop quick view */}
+        <div className="absolute right-3 bottom-3 z-10 hidden translate-y-2 opacity-0 transition-[opacity,transform] duration-300 ease-(--ease-botanical) group-focus-within/card:translate-y-0 group-focus-within/card:opacity-100 group-hover/card:translate-y-0 group-hover/card:opacity-100 md:flex">
           <button
             type="button"
             onClick={() => setQuickView(true)}
@@ -105,19 +84,6 @@ export function ProductCard({
             <Eye aria-hidden className="size-[1.15rem]" />
           </button>
         </div>
-
-        {/* Mobile quick add */}
-        {!soldOut ? (
-          <button
-            type="button"
-            onClick={quickAdd}
-            disabled={adding}
-            className="absolute right-2.5 bottom-2.5 z-10 grid size-10 place-items-center rounded-full bg-forest text-ink-inverse shadow-soft md:hidden"
-            aria-label={`Adaugă ${product.name} în coș`}
-          >
-            <Plus aria-hidden className="size-5" />
-          </button>
-        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 pt-3 md:pt-4">
@@ -152,13 +118,7 @@ export function ProductCard({
             className="mt-0.5"
           />
         ) : null}
-        <Price
-          price={product.price}
-          compareAtPrice={product.compareAtPrice}
-          size="sm"
-          showDiscountBadge={false}
-          className="mt-auto pt-1"
-        />
+        <Price price={product.price} size="sm" className="mt-auto pt-1" />
       </div>
 
       {quickView ? (

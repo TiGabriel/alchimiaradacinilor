@@ -39,24 +39,3 @@ export function toMinor(major: number | string): number {
   const shifted = Number(`${abs}e2`);
   return Math.sign(value) * Math.round(Number.isNaN(shifted) ? abs * 100 : shifted);
 }
-
-/**
- * Percentage of `value`, in minor units, rounded half away from zero.
- * Used for percentage discounts: percentOf(4999, 10) → 500.
- */
-export function percentOf(minor: number, percent: number): number {
-  return Math.sign(minor) * Math.round((Math.abs(minor) * percent) / 100);
-}
-
-/**
- * Whole-percent discount implied by a compare-at price, or null when there is
- * no real discount. Rounded down so the badge never overstates the saving.
- */
-export function discountPercent(
-  price: number,
-  compareAtPrice: number | null | undefined,
-): number | null {
-  if (compareAtPrice == null || compareAtPrice <= price || compareAtPrice <= 0) return null;
-  const percent = Math.floor(((compareAtPrice - price) / compareAtPrice) * 100);
-  return percent > 0 ? percent : null;
-}

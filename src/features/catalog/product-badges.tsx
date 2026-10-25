@@ -1,27 +1,21 @@
 import { Badge } from "@/components/ui/badge";
-import { discountPercent } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import type { ProductCardData } from "@/services/catalog/product-types";
 
-/** Badges stacked on a product image: discount, new, sold out. */
+/** Badges stacked on a product image. */
 export function ProductBadges({
   product,
   className,
 }: {
-  product: Pick<ProductCardData, "price" | "compareAtPrice" | "isNew" | "stock">;
+  product: Pick<ProductCardData, "isNew" | "hasDoterraLink">;
   className?: string;
 }) {
-  const discount = discountPercent(product.price, product.compareAtPrice);
+  if (!product.isNew && !product.hasDoterraLink) return null;
   return (
     <div className={cn("pointer-events-none flex flex-col items-start gap-1.5", className)}>
-      {product.stock <= 0 ? (
-        <Badge variant="neutral" size="sm">
-          Stoc epuizat
-        </Badge>
-      ) : null}
-      {discount ? (
-        <Badge variant="clay" size="sm">
-          −{discount}%
+      {product.hasDoterraLink ? (
+        <Badge variant="sage" size="sm">
+          Pe doTERRA
         </Badge>
       ) : null}
       {product.isNew ? (

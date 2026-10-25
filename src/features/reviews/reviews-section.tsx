@@ -106,6 +106,10 @@ export function ReviewsSection({
                     Autentifică-te
                   </Link>
                 </Button>
+              ) : eligibility.reason === "email-unverified" ? (
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/cont/verificare-email">Confirmă adresa de email</Link>
+                </Button>
               ) : null}
             </div>
           )}

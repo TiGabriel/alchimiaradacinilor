@@ -4,7 +4,7 @@ import type { CategoryNode } from "@/services/catalog/category-tree";
 
 import { buildPersonalRow, popularCategories, resolveEssentials, reviewerName } from "./select";
 
-const p = (id: string, stock = 5) => ({ id, slug: id, stock });
+const p = (id: string) => ({ id, slug: id });
 
 describe("resolveEssentials", () => {
   it("keeps the configured order and numbers the resolved items", () => {
@@ -29,7 +29,7 @@ describe("resolveEssentials", () => {
         { slug: "lemon", note: "b" },
         { slug: "mint", note: "c" },
       ],
-      [p("lemon"), p("mint", 0)],
+      [p("lemon"), p("mint")],
     );
     expect(result.map((e) => [e.product.slug, e.position])).toEqual([
       ["lemon", 1],
@@ -56,7 +56,7 @@ describe("popularCategories", () => {
 });
 
 describe("buildPersonalRow", () => {
-  const item = (id: string, stock = 5, reason = `r-${id}`) => ({ product: p(id, stock), reason });
+  const item = (id: string, reason = `r-${id}`) => ({ product: p(id), reason });
 
   it("prefers quiz picks and tops up from favourites without duplicates", () => {
     const row = buildPersonalRow([item("a"), item("b")], [item("b"), item("c"), item("d")], 3);
@@ -64,14 +64,13 @@ describe("buildPersonalRow", () => {
     expect(row?.items.map((i) => i.product.id)).toEqual(["a", "b", "c"]);
   });
 
-  it("skips out-of-stock products", () => {
-    const row = buildPersonalRow([item("a", 0)], [item("c")]);
+  it("uses favourites when the quiz gave nothing", () => {
+    const row = buildPersonalRow([], [item("c")]);
     expect(row).toEqual({ source: "favourites", items: [item("c")] });
   });
 
   it("returns null when there is nothing personal", () => {
     expect(buildPersonalRow([], [])).toBeNull();
-    expect(buildPersonalRow([item("a", 0)], [])).toBeNull();
   });
 });
 

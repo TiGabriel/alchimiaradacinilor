@@ -1,53 +1,13 @@
 "use client";
 
-import { Bookmark, BookmarkCheck, ShoppingBag } from "lucide-react";
+import { Bookmark, BookmarkCheck } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
-import { useCart } from "@/features/cart/cart-context";
 
-import { addRoutineToCartAction, toggleSaveRoutineAction } from "./actions";
-
-export function AddRoutineToCartButton({
-  routineId,
-  className,
-}: {
-  routineId: string;
-  className?: string;
-}) {
-  const { applyCart } = useCart();
-  const [pending, start] = useTransition();
-  return (
-    <Button
-      size="lg"
-      className={className}
-      loading={pending}
-      onClick={() =>
-        start(async () => {
-          const result = await addRoutineToCartAction(routineId);
-          if (!result.ok) {
-            toast({ title: result.error, variant: "error" });
-            return;
-          }
-          if (result.added > 0) applyCart(result.cart);
-          toast({
-            title:
-              result.added > 0
-                ? "Produsele rutinei au fost adăugate"
-                : "Nu am adăugat niciun produs",
-            description: result.message,
-            variant: result.added > 0 ? "success" : "default",
-            duration: 8000,
-          });
-        })
-      }
-    >
-      <ShoppingBag aria-hidden /> Adaugă produsele rutinei în coș
-    </Button>
-  );
-}
+import { toggleSaveRoutineAction } from "./actions";
 
 export function SaveRoutineButton({
   routineId,

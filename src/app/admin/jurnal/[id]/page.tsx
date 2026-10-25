@@ -33,7 +33,7 @@ export default async function ArticleAdminPage({ params }: { params: Promise<{ i
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href={`/jurnal/${article.slug}?previzualizare=1`} target="_blank">
-              {article.status === "PUBLISHED" ? "Vezi în magazin" : "Previzualizează pagina"}{" "}
+              {article.status === "PUBLISHED" ? "Vezi pe site" : "Previzualizează pagina"}{" "}
               <ExternalLink aria-hidden />
             </Link>
           </Button>

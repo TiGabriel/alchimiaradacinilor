@@ -182,7 +182,7 @@ export function ImageManager({ productId, images }: { productId: string; images:
         </ol>
       ) : (
         <p className="text-sm text-ink-muted">
-          Produsul nu are încă imagini. Magazinul afișează o ilustrație până atunci.
+          Produsul nu are încă imagini. Site-ul afișează o ilustrație până atunci.
         </p>
       )}
       <div className="flex flex-wrap items-center gap-3">

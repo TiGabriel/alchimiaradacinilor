@@ -25,10 +25,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/despre",
     "/intrebari-frecvente",
     "/contact",
+    "/cum-cumpar",
   ];
   const legalPaths = [
-    "/livrare-si-retur",
-    "/politica-de-retur",
     "/termeni-si-conditii",
     "/politica-de-confidentialitate",
     "/politica-cookies",

@@ -70,12 +70,12 @@ const categories = [
   {
     key: "necessary",
     title: "Necesare",
-    text: "Păstrează coșul, sesiunea de autentificare și alegerea ta despre cookie-uri. Fără ele site-ul nu funcționează, așa că sunt mereu active.",
+    text: "Păstrează sesiunea de autentificare și alegerea ta despre cookie-uri. Fără ele site-ul nu funcționează, așa că sunt mereu active.",
   },
   {
     key: "analytics",
     title: "Analiză",
-    text: "Ne arată, anonim, ce pagini și produse sunt vizitate, ca să îmbunătățim magazinul. Datele rămân la noi și nu sunt legate de contul tău.",
+    text: "Ne arată, anonim, ce pagini și produse sunt vizitate, ca să îmbunătățim site-ul. Datele rămân la noi și nu sunt legate de contul tău.",
   },
   {
     key: "marketing",
@@ -141,9 +141,9 @@ export function ConsentProvider({
                 <Cookie aria-hidden className="size-5 text-clay" /> Cookie-uri, cu măsură
               </h2>
               <p className="text-sm text-ink-muted">
-                Folosim cookie-uri necesare pentru coș și cont. Cu acordul tău, folosim și
-                cookie-uri de analiză ca să înțelegem ce funcționează. Poți schimba oricând alegerea
-                din subsolul paginii.{" "}
+                Folosim cookie-uri necesare pentru cont. Cu acordul tău, folosim și cookie-uri de
+                analiză ca să înțelegem ce funcționează. Poți schimba oricând alegerea din subsolul
+                paginii.{" "}
                 <Link
                   href="/politica-cookies"
                   className="font-semibold text-forest underline underline-offset-2"

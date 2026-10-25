@@ -1,13 +1,13 @@
 "use client";
 
-import { Heart, ShoppingBag, X } from "lucide-react";
+import { Heart, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductGridSkeleton } from "@/components/states/skeletons";
-import { useCart } from "@/features/cart/cart-context";
+import { DoterraButton } from "@/features/catalog/doterra-button";
 import { ProductCard } from "@/features/catalog/product-card";
 import { pluralRo } from "@/lib/plural";
 import type { ProductCardData } from "@/services/catalog/product-types";
@@ -25,7 +25,6 @@ function EmptyHeart() {
 
 export function FavoritesView() {
   const { ids, remove, storage } = useWishlist();
-  const { addItem, pendingIds } = useCart();
   const [loaded, setLoaded] = useState<{ key: string; products: ProductCardData[] } | null>(null);
   const key = ids.join(",");
 
@@ -72,35 +71,15 @@ export function FavoritesView() {
         {storage === "account" ? "salvate în contul tău" : "păstrate în acest browser"}
       </p>
       <ul className="grid grid-cols-2 gap-x-4 gap-y-12 md:grid-cols-3 md:gap-x-6 lg:grid-cols-4">
-        {products.map((product) => {
-          const soldOut = product.stock <= 0;
-          return (
-            <li key={product.id} className="flex flex-col gap-3">
-              <ProductCard product={product} />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  disabled={soldOut}
-                  loading={pendingIds.has(product.id)}
-                  onClick={async () => {
-                    if (await addItem(product, 1)) remove(product.id);
-                  }}
-                >
-                  <ShoppingBag aria-hidden /> {soldOut ? "Stoc epuizat" : "Mută în coș"}
-                </Button>
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  onClick={() => remove(product.id)}
-                  aria-label={`Elimină ${product.name} din favorite`}
-                >
-                  <X aria-hidden />
-                </Button>
-              </div>
-            </li>
-          );
-        })}
+        {products.map((product) => (
+          <li key={product.id} className="flex flex-col gap-3">
+            <ProductCard product={product} />
+            <DoterraButton product={product} source="favorite" size="sm" block />
+            <Button size="sm" variant="ghost" onClick={() => remove(product.id)}>
+              <X aria-hidden /> Elimină din favorite
+            </Button>
+          </li>
+        ))}
       </ul>
     </div>
   );

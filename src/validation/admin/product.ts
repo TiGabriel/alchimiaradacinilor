@@ -4,15 +4,7 @@ import { ProductType } from "@/generated/prisma/enums";
 
 import { productAttributeSchemas } from "../product";
 
-import {
-  claimFree,
-  moneySchema,
-  optionalId,
-  optionalMoneySchema,
-  optionalText,
-  seoSchema,
-  slugSchema,
-} from "./common";
+import { claimFree, moneySchema, optionalId, optionalText, seoSchema, slugSchema } from "./common";
 
 const numberField = z
   .union([z.string(), z.number()])
@@ -59,9 +51,40 @@ export const productFormSchema = z
     description: claimFree(z.string().trim().min(20, "Cel puțin 20 de caractere.").max(20_000)),
     usageInfo: claimFree(optionalText(5000)),
     safetyInfo: optionalText(5000),
+    /** The price on the doTERRA site. */
     price: moneySchema.refine((v) => v > 0, "Prețul trebuie să fie mai mare decât 0."),
-    compareAtPrice: optionalMoneySchema,
-    stock: z.coerce.number().int("Stocul este un număr întreg.").min(0).max(1_000_000),
+    /** Ticked when the admin re-checked an unchanged price on doTERRA today. */
+    priceChecked: z.boolean().default(false),
+    /** Full doTERRA referral link; the allowed domains (a setting) are checked by the service. */
+    referralUrl: z
+      .union([
+        z.literal(""),
+        z
+          .string()
+          .trim()
+          .max(2000, "Linkul este prea lung.")
+          .pipe(
+            z.url({
+              protocol: /^https$/,
+              error: "Lipește linkul complet, care începe cu https://",
+            }),
+          ),
+      ])
+      .optional()
+      .nullable()
+      .transform((v) => v || null),
+    /** doTERRA item number, digits only (e.g. 60201755). */
+    doterraItemNumber: z
+      .union([
+        z.literal(""),
+        z
+          .string()
+          .trim()
+          .regex(/^\d{4,12}$/, "Doar cifre (4–12)."),
+      ])
+      .optional()
+      .nullable()
+      .transform((v) => v || null),
     featured: z.boolean().default(false),
     active: z.boolean().default(true),
     /** Placeholder product: shows the "Demo" badge and notice in the shop. */
@@ -90,12 +113,6 @@ export const productFormSchema = z
     seo: seoSchema.prefault({}),
   })
   .superRefine((value, ctx) => {
-    if (value.compareAtPrice != null && value.compareAtPrice <= value.price)
-      ctx.addIssue({
-        code: "custom",
-        path: ["compareAtPrice"],
-        message: "Prețul vechi trebuie să fie mai mare decât prețul actual.",
-      });
     const attrs = productAttributeSchemas[value.productType].safeParse(
       Object.fromEntries(Object.entries(value.attributes).filter(([, v]) => v != null)),
     );

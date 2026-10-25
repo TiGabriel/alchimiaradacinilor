@@ -174,25 +174,6 @@ export async function toggleSavedRoutine(userId: string, routineId: string): Pro
   return true;
 }
 
-/** Items for "add the whole routine to the cart". */
-export async function getRoutineCartItems(routineId: string) {
-  const rows = await db.routineProduct.findMany({
-    where: { routineId, routine: { active: true } },
-    orderBy: { position: "asc" },
-    select: {
-      isOptional: true,
-      product: { select: { id: true, name: true, active: true, stock: true } },
-    },
-  });
-  return rows.map((r) => ({
-    productId: r.product.id,
-    name: r.product.name,
-    active: r.product.active,
-    stock: r.product.stock,
-    optional: r.isOptional,
-  }));
-}
-
 /** Engine profiles for routines: own needs and tags + aromas of their products. */
 export const loadRoutineProfiles = cache(
   async (): Promise<Array<Profile & { id: string; title: string }>> => {

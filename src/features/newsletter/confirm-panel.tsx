@@ -67,7 +67,7 @@ export function ConfirmUnsubscribe({
         <MailX aria-hidden className="size-10 text-forest" />
         <p className="font-display text-2xl">Te-ai dezabonat.</p>
         <p className="text-ink-muted">
-          Nu vei mai primi newsletterul. Emailurile despre comenzi continuă să ajungă la tine.
+          Nu vei mai primi newsletterul. Emailurile despre contul tău continuă să ajungă la tine.
         </p>
       </div>
     );

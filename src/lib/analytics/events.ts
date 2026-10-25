@@ -8,10 +8,7 @@ export const ANALYTICS_EVENTS = [
   "search",
   "quiz_started",
   "quiz_completed",
-  "add_to_cart",
   "wishlist_add",
-  "checkout_started",
-  "order_completed",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[number];

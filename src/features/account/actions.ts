@@ -2,14 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import { AddressError, deleteAddress, saveAddress } from "@/services/account/addresses";
 import { updateProfile } from "@/services/account/profile";
 import { AuthError, changePassword } from "@/services/auth/accounts";
 import { deleteUserSessions } from "@/services/auth/sessions";
 import { setNewsletterConsent, setPersonalizationConsent } from "@/services/consent/consent";
-import { addressSchema } from "@/validation/address";
 import { changePasswordSchema, fieldErrors, profileSchema } from "@/validation/auth";
-import { z } from "zod";
 
 import { formValues, type FormState } from "../auth/form-state";
 import { getRequestMeta, requireUser } from "../auth/session";
@@ -25,54 +22,6 @@ export async function updateProfileAction(
   await updateProfile(user.id, parsed.data);
   revalidatePath("/cont", "layout");
   return { status: "success", message: "Datele au fost salvate.", values };
-}
-
-const ADDRESS_FIELDS = [
-  "label",
-  "firstName",
-  "lastName",
-  "phone",
-  "street",
-  "streetExtra",
-  "city",
-  "county",
-  "postalCode",
-  "companyName",
-  "vatNumber",
-  "tradeRegisterNo",
-];
-
-export async function saveAddressAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const { user } = await requireUser("/cont/adrese");
-  const values = formValues(formData, ADDRESS_FIELDS);
-  const parsed = addressSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { status: "error", errors: fieldErrors(parsed.error), values };
-  const id = z.uuid().safeParse(formData.get("id"));
-  try {
-    await saveAddress(user.id, parsed.data, id.success ? id.data : undefined);
-  } catch (error) {
-    if (error instanceof AddressError) return { status: "error", message: error.message, values };
-    throw error;
-  }
-  revalidatePath("/cont/adrese");
-  return {
-    status: "success",
-    message: id.success ? "Adresa a fost actualizată." : "Adresa a fost adăugată.",
-  };
-}
-
-export async function deleteAddressAction(addressId: string): Promise<FormState> {
-  const { user } = await requireUser("/cont/adrese");
-  const id = z.uuid().safeParse(addressId);
-  if (!id.success) return { status: "error", message: "Adresa nu a fost găsită." };
-  try {
-    await deleteAddress(user.id, id.data);
-  } catch (error) {
-    if (error instanceof AddressError) return { status: "error", message: error.message };
-    throw error;
-  }
-  revalidatePath("/cont/adrese");
-  return { status: "success", message: "Adresa a fost ștearsă." };
 }
 
 export async function changePasswordAction(

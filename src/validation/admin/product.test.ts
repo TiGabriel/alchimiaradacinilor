@@ -14,8 +14,6 @@ const base: ProductFormInput = {
   usageInfo: "",
   safetyInfo: "",
   price: "59,90",
-  compareAtPrice: "",
-  stock: "12",
   needs: [],
   aromas: [],
   tagIds: [],
@@ -62,8 +60,6 @@ describe("productFormSchema", () => {
     const parsed = productFormSchema.parse(base);
     expect(parsed).toMatchObject({
       price: 5990,
-      compareAtPrice: null,
-      stock: 12,
       sku: "AR-LAV-10",
       brandId: null,
       usageInfo: null,
@@ -73,13 +69,9 @@ describe("productFormSchema", () => {
     expect(parsed.attributes).not.toHaveProperty("tankCapacityMl");
   });
 
-  it("rejects invalid prices, stock and slugs", () => {
+  it("rejects invalid prices and slugs", () => {
     expect(errors({ ...base, price: "0" })).toHaveProperty("price");
     expect(errors({ ...base, price: "abc" })).toHaveProperty("price");
-    expect(errors({ ...base, compareAtPrice: "50" })).toHaveProperty("compareAtPrice");
-    expect(errors({ ...base, compareAtPrice: "79,90" })).toEqual({});
-    expect(errors({ ...base, stock: "-1" })).toHaveProperty("stock");
-    expect(errors({ ...base, stock: "2.5" })).toHaveProperty("stock");
     expect(errors({ ...base, slug: "Lavandă Mare" })).toHaveProperty("slug");
     expect(errors({ ...base, categoryId: "" })).toHaveProperty("categoryId");
   });
@@ -103,5 +95,29 @@ describe("productFormSchema", () => {
         ],
       }),
     ).toHaveProperty("aromas");
+  });
+
+  it("keeps the doTERRA link and item number optional, trimmed and well-formed", () => {
+    const parsed = productFormSchema.parse(base);
+    expect(parsed).toMatchObject({
+      referralUrl: null,
+      doterraItemNumber: null,
+      priceChecked: false,
+    });
+    expect(
+      productFormSchema.parse({
+        ...base,
+        referralUrl: "  https://www.doterra.com/RO/ro_RO/p/lavender-oil  ",
+        doterraItemNumber: " 30010001 ",
+      }),
+    ).toMatchObject({
+      referralUrl: "https://www.doterra.com/RO/ro_RO/p/lavender-oil",
+      doterraItemNumber: "30010001",
+    });
+    expect(errors({ ...base, referralUrl: "http://www.doterra.com/p" })).toHaveProperty(
+      "referralUrl",
+    );
+    expect(errors({ ...base, referralUrl: "doterra.com/p" })).toHaveProperty("referralUrl");
+    expect(errors({ ...base, doterraItemNumber: "LAV-10" })).toHaveProperty("doterraItemNumber");
   });
 });

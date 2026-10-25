@@ -20,8 +20,8 @@ const row = (overrides: Partial<ListingRow> & { id: string }): ListingRow => ({
   price: 5000,
   rating: null,
   reviewCount: 0,
-  stock: 10,
   featured: false,
+  hasLink: false,
   createdAt: day(1),
   brand: "botanica",
   categories: ["uleiuri"],
@@ -47,14 +47,12 @@ const rows: ListingRow[] = [
     needs: ["seara", "relaxare"],
     rating: 4.8,
     reviewCount: 12,
-    stock: 3,
   }),
   row({
     id: "tea-tree",
     price: 4900,
     aromas: ["proaspat"],
     needs: ["casa"],
-    stock: 0,
     createdAt: day(9),
   }),
   row({
@@ -106,14 +104,13 @@ const f = (overrides: Partial<CatalogFilters>): CatalogFilters => ({
 });
 
 describe("parseCatalogParams", () => {
-  it("parses multi-value facets, price, rating, stock, sort and page", () => {
+  it("parses multi-value facets, price, rating, sort and page", () => {
     const filters = parseCatalogParams({
       aroma: "citric,floral,citric",
       brand: "botanica",
       pret_min: "40",
       pret_max: "60",
       rating: "4",
-      stoc: "1",
       sortare: "pret-crescator",
       pagina: "2",
     });
@@ -123,7 +120,6 @@ describe("parseCatalogParams", () => {
       pretMin: 40,
       pretMax: 60,
       rating: 4,
-      inStock: true,
       sort: "pret-crescator",
       page: 2,
     });
@@ -136,14 +132,18 @@ describe("parseCatalogParams", () => {
       rating: "9",
       sortare: "random",
       pagina: "0",
-      stoc: "yes",
     });
     expect(filters.aroma).toEqual(["citric"]);
     expect(filters.pretMin).toBeNull();
     expect(filters.rating).toBeNull();
     expect(filters.sort).toBe("recomandate");
     expect(filters.page).toBe(1);
-    expect(filters.inStock).toBe(false);
+  });
+
+  it("ignores the stock filter of the former shop", () => {
+    expect(serializeCatalogParams(parseCatalogParams({ stoc: "1", aroma: "floral" }))).toBe(
+      "aroma=floral",
+    );
   });
 
   it("swaps an inverted price range", () => {
@@ -162,11 +162,9 @@ describe("parseCatalogParams", () => {
 describe("serializeCatalogParams", () => {
   it("omits defaults and sorts values for stable URLs", () => {
     expect(serializeCatalogParams(EMPTY_FILTERS)).toBe("");
-    expect(
-      serializeCatalogParams(
-        f({ aroma: ["floral", "citric"], inStock: true, sort: "noi", page: 3 }),
-      ),
-    ).toBe("aroma=citric%2Cfloral&stoc=1&sortare=noi&pagina=3");
+    expect(serializeCatalogParams(f({ aroma: ["floral", "citric"], sort: "noi", page: 3 }))).toBe(
+      "aroma=citric%2Cfloral&sortare=noi&pagina=3",
+    );
   });
 
   it("round-trips", () => {
@@ -192,14 +190,11 @@ describe("matchesFilters", () => {
     ]);
   });
 
-  it("filters by minimum rating and availability", () => {
+  it("filters by minimum rating", () => {
     expect(rows.filter((r) => matchesFilters(r, f({ rating: 4 }))).map((r) => r.id)).toEqual([
       "lavender",
       "kit",
     ]);
-    expect(
-      rows.filter((r) => matchesFilters(r, f({ inStock: true }))).map((r) => r.id),
-    ).not.toContain("tea-tree");
   });
 
   it("can ignore one facet", () => {
@@ -223,7 +218,7 @@ describe("sortRows", () => {
     expect(ids("rating").slice(0, 2)).toEqual(["lavender", "kit"]);
   });
 
-  it("recommended: in stock first, then featured, then rating", () => {
+  it("recommended: featured first, then rating, then newest", () => {
     const order = ids("recomandate");
     expect(order.slice(0, 2)).toEqual(["kit", "lemon"]);
     expect(order.at(-1)).toBe("tea-tree");
@@ -233,6 +228,21 @@ describe("sortRows", () => {
     const copy = [...rows];
     sortRows(rows, "pret-crescator");
     expect(rows).toEqual(copy);
+  });
+
+  it("lists products with a doTERRA link first, whatever the sort", () => {
+    const linked = rows.map((r) => ({ ...r, hasLink: r.id === "kit" || r.id === "tea-tree" }));
+    const order = (sort: Parameters<typeof sortRows>[1]) => sortRows(linked, sort).map((r) => r.id);
+    expect(order("pret-crescator")).toEqual(["tea-tree", "kit", "lemon", "lavender", "diffuser"]);
+    expect(order("pret-descrescator")).toEqual([
+      "kit",
+      "tea-tree",
+      "diffuser",
+      "lavender",
+      "lemon",
+    ]);
+    expect(order("noi").slice(0, 2)).toEqual(["tea-tree", "kit"]);
+    expect(order("recomandate").slice(0, 2)).toEqual(["kit", "tea-tree"]);
   });
 });
 
@@ -251,7 +261,6 @@ describe("computeFacets", () => {
       color: "#E3B23C",
     });
     expect(facets.price).toEqual({ min: 49, max: 219 });
-    expect(facets.inStockCount).toBe(4);
   });
 
   it("counts disjunctively: a facet ignores its own selection", () => {
@@ -297,10 +306,8 @@ describe("runListing", () => {
 describe("countActiveFilters", () => {
   it("counts each selected value and each scalar filter once", () => {
     expect(countActiveFilters(EMPTY_FILTERS)).toBe(0);
-    expect(
-      countActiveFilters(
-        f({ aroma: ["a", "b"], pretMin: 1, pretMax: 2, inStock: true, sort: "noi" }),
-      ),
-    ).toBe(4);
+    expect(countActiveFilters(f({ aroma: ["a", "b"], pretMin: 1, pretMax: 2, sort: "noi" }))).toBe(
+      3,
+    );
   });
 });

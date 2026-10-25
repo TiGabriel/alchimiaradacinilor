@@ -7,26 +7,26 @@ describe("segmentWhere", () => {
     expect(segmentWhere({})).toEqual({ AND: [{ status: "ACTIVE" }] });
   });
 
-  it("combines interests, sources, customers and date", () => {
+  it("combines interests, sources, members and date", () => {
     const where = segmentWhere({
       interests: ["seara"],
       sources: ["homepage"],
-      customersOnly: true,
+      membersOnly: true,
       confirmedSince: "2026-09-01",
     });
     expect(where.AND).toEqual([
       { status: "ACTIVE" },
       { interests: { hasSome: ["seara"] } },
       { source: { in: ["homepage"] } },
-      { user: { orders: { some: { status: { notIn: ["CANCELLED", "REFUNDED"] } } } } },
+      { userId: { not: null } },
       { confirmedAt: { gte: new Date("2026-09-01T00:00:00Z") } },
     ]);
   });
 
   it("describes the audience", () => {
     expect(describeSegment({})).toBe("Toți abonații activi");
-    expect(describeSegment({ interests: ["seara"], customersOnly: true })).toBe(
-      "Abonați activi — interese: seara; doar clienți cu comenzi",
+    expect(describeSegment({ interests: ["seara"], membersOnly: true })).toBe(
+      "Abonați activi — interese: seara; doar membri cu cont",
     );
   });
 });

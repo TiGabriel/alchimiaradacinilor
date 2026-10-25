@@ -47,12 +47,8 @@ export default async function PrivacyPolicyPage() {
                 formă de hash argon2id, niciodată în clar), telefon (opțional).
               </li>
               <li>
-                <strong>Adrese:</strong> adresele de livrare și facturare pe care alegi să le
-                salvezi, inclusiv datele firmei (opțional).
-              </li>
-              <li>
                 <strong>Activitate în cont:</strong> produse favorite, rezultatele quiz-ului, rutine
-                salvate, coșul de cumpărături.
+                salvate, recenziile pe care le scrii.
               </li>
               <li>
                 <strong>Consimțăminte:</strong> ce ai acceptat sau retras, data, versiunea politicii
@@ -62,10 +58,19 @@ export default async function PrivacyPolicyPage() {
                 <strong>Mesaje:</strong> datele din formularul de contact (nume, email, mesaj).
               </li>
               <li>
-                <strong>Comenzi:</strong>{" "}
+                <strong>Cumpărături:</strong> nu prelucrăm date de comandă sau de plată. Produsele
+                se cumpără de pe site-ul doTERRA, care prelucrează datele tale de acolo după propria
+                politică.{" "}
                 <ToComplete>
-                  descrierea datelor de comandă și plată, după implementarea finalizării comenzii
+                  ce informații despre comenzile făcute prin linkurile de recomandare vede
+                  operatorul în contul doTERRA
                 </ToComplete>
+              </li>
+              <li>
+                <strong>Clicuri spre doTERRA:</strong> numărăm de câte ori este apăsat butonul
+                „Cumpără de pe doTERRA” pentru fiecare produs, pe zile. Nu salvăm cine a apăsat și
+                nu folosim cookie-uri pentru asta. Adresa IP este ținută doar câteva minute, în
+                memoria serverului, ca să limităm apăsările automate repetate.
               </li>
             </ul>
           ),
@@ -112,10 +117,10 @@ export default async function PrivacyPolicyPage() {
           title: "Recomandări personalizate",
           body: (
             <p>
-              Recomandările din site pot ține cont de favoritele, rutinele salvate și comenzile tale
-              doar dacă activezi această opțiune din cont. Fără acord, recomandările folosesc doar
-              alegerile pe care le faci în quiz sau pe paginile site-ului. Recomandările sunt
-              calculate după reguli fixe (fără decizii automate cu efecte juridice).
+              Recomandările din site pot ține cont de favoritele și rutinele tale salvate doar dacă
+              activezi această opțiune din cont. Fără acord, recomandările folosesc doar alegerile
+              pe care le faci în quiz sau pe paginile site-ului. Recomandările sunt calculate după
+              reguli fixe (fără decizii automate cu efecte juridice).
             </p>
           ),
         },
@@ -131,8 +136,8 @@ export default async function PrivacyPolicyPage() {
                 Furnizorul de trimitere a emailurilor: <ToComplete>furnizor, țară</ToComplete>
               </li>
               <li>
-                Curieri și procesatori de plăți (după implementarea comenzilor):{" "}
-                <ToComplete>furnizori</ToComplete>
+                Nu transmitem datele tale către doTERRA. Când deschizi un link către site-ul
+                doTERRA, acesta poate afla că vii de pe site-ul nostru.
               </li>
             </ul>
           ),
@@ -143,7 +148,7 @@ export default async function PrivacyPolicyPage() {
           body: (
             <p>
               <ToComplete>
-                perioadele de stocare pentru cont, comenzi, consimțăminte și mesaje
+                perioadele de stocare pentru cont, recenzii, consimțăminte și mesaje
               </ToComplete>
             </p>
           ),
