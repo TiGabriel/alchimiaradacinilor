@@ -29,7 +29,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return pageMetadata({
     title: `${need.name} — ce ți se potrivește`,
     description:
-      need.description ?? `Produse, rutine și articole pentru ${need.name.toLowerCase()}.`,
+      need.description ?? `Produse, ritualuri și articole pentru ${need.name.toLowerCase()}.`,
     path: `/descopera/${need.slug}`,
   });
 }
@@ -87,14 +87,14 @@ export default async function NeedPage(props: Props) {
         )}
       </section>
 
-      <section aria-labelledby="rutine" className="flex flex-col gap-6">
+      <section aria-labelledby="ritualuri" className="flex flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h2 id="rutine" className="flex items-center gap-2 text-display-md">
-            <Moon aria-hidden className="size-6 text-forest" /> Rutine
+          <h2 id="ritualuri" className="flex items-center gap-2 text-display-md">
+            <Moon aria-hidden className="size-6 text-forest" /> Ritualuri
           </h2>
           <Button asChild variant="link">
-            <Link href="/rutine">
-              Toate rutinele <ArrowRight aria-hidden />
+            <Link href="/ritualuri">
+              Toate ritualurile <ArrowRight aria-hidden />
             </Link>
           </Button>
         </div>
@@ -108,9 +108,9 @@ export default async function NeedPage(props: Props) {
           </ul>
         ) : (
           <p className="rounded-xl border border-line bg-surface p-5 text-ink-muted">
-            Încă nu avem o rutină pentru {need.name.toLowerCase()}. Descoperă{" "}
-            <Link href="/rutine" className="font-semibold text-forest underline">
-              celelalte rutine
+            Încă nu avem un ritual pentru {need.name.toLowerCase()}. Descoperă{" "}
+            <Link href="/ritualuri" className="font-semibold text-forest underline">
+              celelalte ritualuri
             </Link>
             .
           </p>

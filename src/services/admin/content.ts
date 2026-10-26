@@ -94,7 +94,7 @@ export async function saveRoutine(actor: Actor, raw: unknown, id?: string) {
       const existing = id
         ? await tx.routine.findUnique({ where: { id }, select: { seoId: true } })
         : null;
-      if (id && !existing) throw new AdminError("Rutina nu mai există.");
+      if (id && !existing) throw new AdminError("Ritualul nu mai există.");
       const data = {
         title: input.title,
         slug: input.slug,
@@ -198,7 +198,7 @@ async function assertEmbedsExist(content: string) {
   ]);
   const missing = [
     ...products.filter((s) => !foundProducts.some((p) => p.slug === s)).map((s) => `produs „${s}”`),
-    ...routines.filter((s) => !foundRoutines.some((r) => r.slug === s)).map((s) => `rutină „${s}”`),
+    ...routines.filter((s) => !foundRoutines.some((r) => r.slug === s)).map((s) => `ritual „${s}”`),
   ];
   if (missing.length)
     throw new AdminError("Articolul include carduri către elemente inexistente.", {

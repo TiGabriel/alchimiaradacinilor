@@ -5,11 +5,9 @@ import { Logo } from "@/components/brand/logo";
 import { Roots } from "@/components/botanical";
 import { FacebookIcon } from "@/components/icons/facebook";
 import { CookieSettingsButton } from "@/features/consent/consent-context";
-import { getCategoryTree } from "@/services/catalog/categories";
-import { categoryHref } from "@/services/catalog/category-tree";
 import { getSettings } from "@/services/settings";
 
-import { consumerLinks, discoverLinks, helpLinks, legalLinks, primaryLinks } from "../nav-config";
+import { aboutLinks, exploreLinks, legalLinks, NEWSLETTER_ANCHOR } from "../nav-config";
 
 import { NewsletterForm } from "./newsletter-form";
 
@@ -26,14 +24,7 @@ const footerLink =
   "text-ink-inverse/90 transition-colors hover:text-ink-inverse hover:underline underline-offset-4";
 
 export async function SiteFooter() {
-  const [settings, categories] = await Promise.all([
-    getSettings(),
-    getCategoryTree().catch((error: unknown) => {
-      console.error("[footer] Could not load categories:", error);
-      return [];
-    }),
-  ]);
-  const { brand, contact, social } = settings;
+  const { brand, contact, social } = await getSettings();
   const year = new Date().getFullYear();
 
   return (
@@ -44,50 +35,30 @@ export async function SiteFooter() {
         <div className="flex flex-col gap-6">
           <Logo brand={brand} tone="inverse" />
           <p className="max-w-sm text-ink-inverse/80">{brand.tagline}</p>
-          <div className="flex max-w-sm flex-col gap-3">
+          {/* Target of every "Abonează-te" link (header, mobile menu). */}
+          <div id={NEWSLETTER_ANCHOR} className="flex max-w-sm scroll-mt-28 flex-col gap-3">
             <p className="font-display text-xl text-ink-inverse">
               Scrisori botanice, o dată pe lună
+            </p>
+            <p className="text-sm text-ink-inverse/75">
+              Articole noi din jurnal, recenzii și ritualul lunii.
             </p>
             <NewsletterForm />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-4 lg:gap-8">
-          <Column title="Produse">
-            <li>
-              <Link href={primaryLinks.products.href} className={footerLink}>
-                Toate produsele
-              </Link>
-            </li>
-            {categories.map((category) => (
-              <li key={category.id}>
-                <Link href={categoryHref(category)} className={footerLink}>
-                  {category.name}
-                </Link>
-              </li>
-            ))}
-          </Column>
-          <Column title="Descoperă">
-            {discoverLinks.map((l) => (
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:gap-8">
+          <Column title="Explorează">
+            {exploreLinks.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className={footerLink}>
                   {l.label}
                 </Link>
               </li>
             ))}
-            <li>
-              <Link href={primaryLinks.journal.href} className={footerLink}>
-                {primaryLinks.journal.label}
-              </Link>
-            </li>
-            <li>
-              <Link href={primaryLinks.about.href} className={footerLink}>
-                {primaryLinks.about.label}
-              </Link>
-            </li>
           </Column>
-          <Column title="Ajutor">
-            {helpLinks.map((l) => (
+          <Column title="Despre">
+            {aboutLinks.map((l) => (
               <li key={l.href}>
                 <Link href={l.href} className={footerLink}>
                   {l.label}
@@ -146,37 +117,36 @@ export async function SiteFooter() {
       </div>
 
       <div className="relative border-t border-ink-inverse/15">
-        <div className="container-page flex flex-col gap-4 py-6 pb-24 text-sm text-ink-inverse/70 md:flex-row md:items-center md:justify-between lg:pb-6">
-          <p>
-            © {year} {brand.siteName}. Toate drepturile rezervate.
+        <div className="container-page flex flex-col gap-4 py-6 pb-24 text-sm text-ink-inverse/70 lg:pb-6">
+          <p className="text-ink-inverse/85">
+            Nu vindem produse. Linkurile către doTERRA sunt linkuri de recomandare.{" "}
+            <Link
+              href="/transparenta-afiliere"
+              className="underline underline-offset-4 hover:text-ink-inverse"
+            >
+              Ce înseamnă asta
+            </Link>
           </p>
-          <ul className="flex flex-wrap gap-x-5 gap-y-2">
-            {legalLinks.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className="underline-offset-4 hover:text-ink-inverse hover:underline"
-                >
-                  {l.label}
-                </Link>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <p>
+              © {year} {brand.siteName}. Toate drepturile rezervate.
+            </p>
+            <ul className="flex flex-wrap gap-x-5 gap-y-2">
+              {legalLinks.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="underline-offset-4 hover:text-ink-inverse hover:underline"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <CookieSettingsButton className="cursor-pointer underline-offset-4 hover:text-ink-inverse hover:underline" />
               </li>
-            ))}
-            <li>
-              <CookieSettingsButton className="cursor-pointer underline-offset-4 hover:text-ink-inverse hover:underline" />
-            </li>
-            {consumerLinks.map((l) => (
-              <li key={l.href}>
-                <a
-                  href={l.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline-offset-4 hover:text-ink-inverse hover:underline"
-                >
-                  {l.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+            </ul>
+          </div>
         </div>
       </div>
     </footer>

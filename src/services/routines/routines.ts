@@ -106,7 +106,7 @@ export async function getRoutineCards(ids: string[]): Promise<RoutineCardData[]>
   return ids.flatMap((id) => byId.get(id) ?? []);
 }
 
-/** "Rutine care includ acest produs". */
+/** "Ritualuri care includ acest produs". */
 export async function getRoutinesForProduct(productId: string) {
   const rows = await db.routine.findMany({
     where: { active: true, products: { some: { productId } } },

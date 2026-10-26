@@ -101,15 +101,15 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       toast(
         adding
           ? {
-              title: "Adăugat la favorite",
+              title: "Produs salvat",
               description: product.name,
               action: {
-                label: "Vezi favoritele",
-                onClick: () => router.push(signedIn ? "/cont/favorite" : "/favorite"),
+                label: "Vezi salvatele",
+                onClick: () => router.push(signedIn ? "/cont/salvate" : "/salvate"),
               },
             }
           : {
-              title: "Eliminat din favorite",
+              title: "Scos din salvate",
               description: product.name,
               action: { label: "Anulează", onClick: () => void apply(product.id) },
             },

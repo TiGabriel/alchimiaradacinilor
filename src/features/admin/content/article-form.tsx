@@ -210,7 +210,7 @@ function MarkdownEditor({
               onChange={(e) => setEmbed(e.target.value)}
               className={cn(adminSelect, "h-8 max-w-56 text-xs")}
             >
-              <option value="">Card produs / rutină…</option>
+              <option value="">Card produs / ritual…</option>
               <optgroup label="Produse">
                 {options.products.map((p) => (
                   <option key={p.id} value={`produs:${p.slug}`}>
@@ -218,9 +218,9 @@ function MarkdownEditor({
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Rutine">
+              <optgroup label="Ritualuri">
                 {options.routines.map((r) => (
-                  <option key={r.id} value={`rutina:${r.slug}`}>
+                  <option key={r.id} value={`ritual:${r.slug}`}>
                     {r.title}
                   </option>
                 ))}
@@ -264,7 +264,7 @@ function MarkdownEditor({
                     <Sparkles aria-hidden className="size-5 text-forest" />
                   )}
                   <span>
-                    Card {b.type === "product" ? "produs" : "rutină"}:{" "}
+                    Card {b.type === "product" ? "produs" : "ritual"}:{" "}
                     <strong>
                       {(b.type === "product" ? productName.get(b.slug) : routineName.get(b.slug)) ??
                         `„${b.slug}” (nu există)`}
@@ -278,7 +278,7 @@ function MarkdownEditor({
       )}
       <p id={`${id}-hint`} className="text-sm text-ink-muted">
         Markdown · ~{readingTimeMinutes(value)} min de citit. Un card se adaugă pe un rând separat:{" "}
-        {"{{produs:slug}}"} sau {"{{rutina:slug}}"}.
+        {"{{produs:slug}}"} sau {"{{ritual:slug}}"}.
       </p>
       {claims.length ? (
         <p className="text-sm text-warning">Atenție la formulări medicale: {claims.join(", ")}.</p>
@@ -471,7 +471,7 @@ export function ArticleForm({
             ))}
           </fieldset>
           <fieldset className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-semibold">Rutine legate</legend>
+            <legend className="mb-2 text-sm font-semibold">Ritualuri legate</legend>
             {options.routines.map((r) => (
               <Checkbox
                 key={r.id}

@@ -24,7 +24,7 @@ export type PageSeo = {
   /** Page title (the layout template adds the site name). */
   title: string;
   description?: string | null;
-  /** Site path of the page, e.g. `/rutine/seara`. */
+  /** Site path of the page, e.g. `/ritualuri/seara`. */
   path: string;
   /** Editor-provided canonical (path or absolute URL); defaults to `path`. */
   canonical?: string | null;

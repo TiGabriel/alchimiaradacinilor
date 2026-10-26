@@ -58,10 +58,10 @@ export default function FaqPage() {
               piele, uleiurile esențiale se diluează într-un ulei purtător. Fiecare produs are o
               secțiune „Utilizare” și una „Siguranță” — citește-le înainte de prima folosire și
               păstrează sticluțele departe de copii și animale.{" "}
-              <Link href="/rutine" className={link}>
-                Rutinele
+              <Link href="/ritualuri" className={link}>
+                Ritualurile
               </Link>{" "}
-              arată pas cu pas câteva ritualuri simple.
+              noastre arată pas cu pas cum le folosim.
             </p>
           ),
         },
@@ -106,12 +106,37 @@ export default function FaqPage() {
           ),
         },
         {
-          q: "La ce îmi folosește un cont?",
-          text: "Cu un cont îți salvezi produsele favorite, ritualurile și rezultatele quiz-ului și poți scrie recenzii.",
+          q: "Plătesc mai mult dacă folosesc linkurile voastre?",
+          text: "Nu. Butoanele „Cumpără de pe doTERRA” sunt linkuri de recomandare: noi primim o recompensă de la doTERRA, iar prețul pentru tine rămâne același.",
           a: (
             <p>
-              Cu un cont îți salvezi produsele favorite, ritualurile și rezultatele quiz-ului și
-              poți scrie recenzii.{" "}
+              Nu. Butoanele „Cumpără de pe doTERRA” sunt linkuri de recomandare: dacă un produs este
+              cumpărat prin ele, primim o recompensă de la doTERRA, iar prețul pentru tine rămâne
+              același. Detalii în{" "}
+              <Link href="/transparenta-afiliere" className={link}>
+                Transparență afiliere
+              </Link>
+              .
+            </p>
+          ),
+        },
+        {
+          q: "Ce înseamnă „Link în curând”?",
+          text: "Încă nu am adăugat linkul către acel produs pe site-ul doTERRA. Până atunci îl găsești căutându-l direct pe site-ul doTERRA.",
+          a: (
+            <p>
+              Încă nu am adăugat linkul către acel produs pe site-ul doTERRA. Până atunci îl găsești
+              căutându-l direct pe site-ul doTERRA, după nume.
+            </p>
+          ),
+        },
+        {
+          q: "La ce îmi folosește un cont?",
+          text: "Cu un cont îți salvezi produsele, ritualurile și rezultatele quiz-ului și poți scrie recenzii.",
+          a: (
+            <p>
+              Cu un cont îți salvezi produsele, ritualurile și rezultatele quiz-ului și poți scrie
+              recenzii.{" "}
               <Link href="/cont/inregistrare" className={link}>
                 Creează un cont
               </Link>{" "}

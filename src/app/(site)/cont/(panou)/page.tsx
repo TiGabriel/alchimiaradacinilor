@@ -45,7 +45,7 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
         <p className="text-eyebrow text-clay">Contul meu</p>
         <h1 className="text-display-lg">Salut, {user.firstName}</h1>
         <p className="text-ink-muted">
-          Aici găsești favoritele, ritualurile salvate și recomandările tale.
+          Aici găsești produsele și ritualurile salvate și recomandările tale.
         </p>
       </header>
 
@@ -66,7 +66,7 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
           title="Produse salvate"
           action={
             overview.savedCount ? (
-              <Link href="/cont/favorite" className="text-sm font-semibold text-forest">
+              <Link href="/cont/salvate" className="text-sm font-semibold text-forest">
                 Vezi toate ({overview.savedCount})
               </Link>
             ) : undefined
@@ -95,7 +95,7 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
           ) : (
             <Empty
               icon={Heart}
-              text="Încă nu ai produse favorite."
+              text="Încă nu ai salvat niciun produs."
               cta={{ href: "/produse", label: "Descoperă produsele" }}
             />
           )}
@@ -133,17 +133,17 @@ export default async function AccountOverviewPage(props: PageProps<"/cont">) {
           )}
         </AccountCard>
 
-        <AccountCard title="Rutină salvată">
+        <AccountCard title="Ritual salvat">
           {overview.savedRoutine ? (
-            <Link href={`/rutine/${overview.savedRoutine.slug}`} className="flex flex-col gap-1">
+            <Link href={`/ritualuri/${overview.savedRoutine.slug}`} className="flex flex-col gap-1">
               <span className="font-display text-lg">{overview.savedRoutine.title}</span>
               <span className="text-sm text-ink-muted">{overview.savedRoutine.summary}</span>
             </Link>
           ) : (
             <Empty
               icon={Moon}
-              text="Nu ai salvat încă nicio rutină."
-              cta={{ href: "/rutine", label: "Vezi rutinele" }}
+              text="Nu ai salvat încă niciun ritual."
+              cta={{ href: "/ritualuri", label: "Vezi ritualurile" }}
             />
           )}
         </AccountCard>

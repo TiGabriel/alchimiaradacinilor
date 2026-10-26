@@ -35,7 +35,7 @@ export async function organizationJsonLd() {
       ...(sameAs.length ? { sameAs } : {}),
       contactPoint: {
         "@type": "ContactPoint",
-        contactType: "customer service",
+        contactType: "general inquiries",
         email: contact.email,
         ...(contact.phone ? { telephone: contact.phone } : {}),
         availableLanguage: ["ro"],

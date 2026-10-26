@@ -20,8 +20,8 @@ import { logoutAction } from "../auth/actions";
 
 export const accountSections = [
   { href: "/cont", label: "Prezentare generală", icon: LayoutDashboard },
-  { href: "/cont/favorite", label: "Favorite", icon: Heart },
-  { href: "/cont/rutine", label: "Rutinele mele", icon: Moon },
+  { href: "/cont/salvate", label: "Salvate", icon: Heart },
+  { href: "/cont/ritualuri", label: "Ritualurile mele", icon: Moon },
   { href: "/cont/quiz", label: "Rezultate quiz", icon: Sparkles },
   { href: "/cont/recomandari", label: "Recomandări", icon: Wand2 },
   { href: "/cont/date-personale", label: "Date personale", icon: UserRound },

@@ -13,7 +13,7 @@ export function ReviewsSection({ reviews }: { reviews: HomeReview[] }) {
         <Reveal className="mb-10 flex max-w-2xl flex-col gap-3 md:mb-14">
           <p className="text-eyebrow text-clay">Din recenzii</p>
           <h2 id="recenzii" className="text-display-lg">
-            Ce spun clienții noștri
+            Ce spun cei care le folosesc
           </h2>
         </Reveal>
         <Stagger as="ul" className="grid gap-5 md:grid-cols-3 md:gap-6">

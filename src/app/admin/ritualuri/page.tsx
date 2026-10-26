@@ -8,7 +8,7 @@ import { requirePermission } from "@/features/auth/session";
 import { listAdminRoutines } from "@/services/admin/content";
 import { timeOfDayLabels } from "@/services/routines/routines";
 
-export const metadata: Metadata = { title: "Rutine" };
+export const metadata: Metadata = { title: "Ritualuri" };
 
 export default async function RoutinesAdminPage() {
   const { user } = await requirePermission("content:edit");
@@ -16,20 +16,20 @@ export default async function RoutinesAdminPage() {
   return (
     <>
       <AdminPageHeader
-        title="Rutine"
+        title="Ritualuri"
         description="Ritualuri pas cu pas, cu produsele lor."
         actions={
           <Button asChild>
-            <Link href="/admin/rutine/nou">
-              <Plus aria-hidden /> Rutină nouă
+            <Link href="/admin/ritualuri/nou">
+              <Plus aria-hidden /> Ritual nou
             </Link>
           </Button>
         }
       />
-      <AdminTable caption="Lista rutinelor">
+      <AdminTable caption="Lista ritualurilor">
         <thead className="border-b border-line bg-paper-deep/50">
           <tr>
-            <th className={th}>Rutină</th>
+            <th className={th}>Ritual</th>
             <th className={th}>Moment</th>
             <th className={`${th} text-right`}>Pași</th>
             <th className={`${th} text-right`}>Produse</th>
@@ -42,12 +42,12 @@ export default async function RoutinesAdminPage() {
             <tr key={r.id} className="hover:bg-paper-deep/40">
               <td className={td}>
                 <Link
-                  href={`/admin/rutine/${r.id}`}
+                  href={`/admin/ritualuri/${r.id}`}
                   className="flex flex-col font-semibold hover:text-forest"
                 >
                   {r.title}
                   <span className="text-xs font-normal text-ink-muted">
-                    /rutine/{r.slug}
+                    /ritualuri/{r.slug}
                     {r.isDemo ? " · demo" : ""}
                     {r.featured ? " · recomandată" : ""}
                   </span>

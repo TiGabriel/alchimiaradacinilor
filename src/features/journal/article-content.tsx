@@ -67,10 +67,10 @@ export async function ArticleContent({ content }: { content: string }) {
         return (
           <aside key={i} className="flex flex-col gap-2 rounded-xl bg-forest p-6 text-ink-inverse">
             <span className="text-xs font-bold tracking-[0.12em] text-ink-inverse/70 uppercase">
-              Rutină
+              Ritual
             </span>
             <Link
-              href={`/rutine/${r.slug}`}
+              href={`/ritualuri/${r.slug}`}
               className="font-display text-2xl text-ink-inverse hover:underline"
             >
               {r.title}
@@ -83,10 +83,10 @@ export async function ArticleContent({ content }: { content: string }) {
                 </span>
               ) : null}
               <Link
-                href={`/rutine/${r.slug}`}
+                href={`/ritualuri/${r.slug}`}
                 className="inline-flex items-center gap-1 font-semibold text-ink-inverse"
               >
-                Vezi rutina <ArrowRight aria-hidden className="size-4" />
+                Vezi ritualul <ArrowRight aria-hidden className="size-4" />
               </Link>
             </p>
           </aside>

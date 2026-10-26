@@ -25,9 +25,20 @@ export type EmailContent = {
 
 export type RenderedEmail = { subject: string; html: string; text: string };
 
-export type EmailBrand = { siteName: string; siteUrl: string };
+export type EmailColors = {
+  paper: string;
+  surface: string;
+  ink: string;
+  muted: string;
+  line: string;
+  forest: string;
+  inverse: string;
+};
 
-const colors = {
+/** `colors` comes from the site palette (Setări › Culori site); the defaults match globals.css. */
+export type EmailBrand = { siteName: string; siteUrl: string; colors?: EmailColors };
+
+export const defaultEmailColors: EmailColors = {
   paper: "#f8f4ec",
   surface: "#fffdf9",
   ink: "#1e2620",
@@ -53,7 +64,7 @@ function safeHref(href: string): string {
   return /^(https?:|mailto:)/i.test(href) ? escapeHtml(href) : "#";
 }
 
-function renderBlock(block: EmailBlock): string {
+function renderBlock(block: EmailBlock, colors: EmailColors): string {
   switch (block.type) {
     case "paragraph":
       return `<p style="margin:0 0 16px;font:16px/1.65 ${fontSans};color:${colors.ink};">${escapeHtml(block.text)}</p>`;
@@ -99,6 +110,7 @@ function renderBlockText(block: EmailBlock): string {
 }
 
 export function renderEmail(content: EmailContent, brand: EmailBrand): RenderedEmail {
+  const colors = brand.colors ?? defaultEmailColors;
   const footer =
     content.footer ??
     `Primești acest email deoarece ai interacționat cu ${brand.siteName}. Dacă nu tu ai făcut această acțiune, poți ignora mesajul.`;
@@ -121,7 +133,7 @@ export function renderEmail(content: EmailContent, brand: EmailBrand): RenderedE
 </td></tr>
 <tr><td style="background:${colors.surface};border:1px solid ${colors.line};border-radius:16px;padding:36px 32px;">
 <h1 style="margin:0 0 20px;font:400 28px/1.2 ${fontSerif};color:${colors.ink};">${escapeHtml(content.heading)}</h1>
-${content.blocks.map(renderBlock).join("\n")}
+${content.blocks.map((block) => renderBlock(block, colors)).join("\n")}
 </td></tr>
 <tr><td style="padding:20px 8px 0;font:12px/1.6 ${fontSans};color:${colors.muted};">
 ${escapeHtml(footer)}<br />

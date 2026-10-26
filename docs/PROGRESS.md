@@ -13,8 +13,8 @@ owner's review. No commit, push or deploy without explicit approval.
 | 1     | Inspection and pivot plan                                                             | Done, approved 2026-10-25 |
 | 2     | Remove commerce (backup, archive migration, code removal, redirects)                  | Done, waiting for review  |
 | 3     | doTERRA outbound links (link per product, affiliate setting, click counter)           | Done, waiting for review  |
-| 4     | Restructure and rewrite (navigation, new pages, copy, legal, SEO schema)              | Not started               |
-| 5     | Colour palette editor                                                                 | Not started               |
+| 4     | Restructure and rewrite (navigation, new pages, copy, legal, SEO schema)              | Done, waiting for review  |
+| 5     | Colour palette editor                                                                 | Done, waiting for review  |
 | 6     | Products and packages (kits, curated packages, editorial reviews, contract migration) | Not started               |
 | 7     | Newsletter rewrite                                                                    | Not started               |
 | 8     | Accounts and audience growth (follows, saved articles, notifications)                 | Not started               |
@@ -123,6 +123,50 @@ owner's review. No commit, push or deploy without explicit approval.
 **Before deploying phase 3**: deploy together with or after phase 2; `prisma migrate deploy`
 applies the additive migration.
 
+## Phase 4: Restructure and rewrite
+
+- **Renamed sections** (Q5, Q6): Rutine → Ritualuri (`/ritualuri`, `/cont/ritualuri`,
+  `/admin/ritualuri`), Favorite → Salvate (`/salvate`, `/cont/salvate`), Clienți → Membri
+  (`/admin/membri`). The old URLs answer 301 (`next.config.ts`); `/cos` now goes to `/salvate`.
+- **Navigation** as in PIVOT_PLAN § 3.2: header Jurnal · Recenzii · Ritualuri · Produse ·
+  Descoperă · Despre, "Cum cumpăr de pe doTERRA" under the Produse menu; mobile bottom nav Acasă ·
+  Jurnal · Caută · Salvate · Cont; footer with the newsletter first, Explorează / Despre / Legal
+  columns and the disclosure line. The ANPC consumer link is gone (no sales).
+- **New pages**: `/recenzii` (member reviews; editorial reviews join in phase 6) and
+  `/transparenta-afiliere`. Both are in the sitemap and the footer.
+- **Copy** rewritten where it assumed selling: home, product page, FAQ, about, contact, auth and
+  account pages, empty states, emails, admin labels, default SEO description. Terms, privacy and
+  cookies rewritten for a content + referral site (still marked for the lawyer).
+- **SEO**: `Product` JSON-LD has no `Offer`; sitemap and robots use the new paths.
+- Intentional: the journal category slug `rutine` and the `{{rutina:…}}` embed tag stay so existing
+  articles keep working.
+
+## Phase 5: Colour palette editor
+
+- New `theme` setting (no migration: site settings are JSON): the palette plus up to 12 saved
+  themes. Every colour is validated as `#rrggbb` and the whole palette must pass the WCAG AA pairs
+  in `src/lib/palette.ts`; saving a failing palette is refused with the pair and its ratio.
+- The root layout writes overridden tokens as CSS variables in a `<style>` tag (only when they
+  differ from `globals.css`) and uses `paper` as the browser theme colour. `style-src` already
+  allows inline styles, so no nonce is needed.
+- `/admin/setari/culori` (Setări and the admin sidebar link to it): pickers grouped by role, live
+  preview (buttons, cards, product card, article, email header), contrast check per pair, reset to
+  default, built-in and saved themes.
+- Emails read the same palette (`emailBrand()` in `src/services/email.ts`).
+- **Product photo backdrop** (owner request, 2026-10-26): every product photo has the cream
+  backdrop baked in (`#f0e9dc`, opaque), so a CSS colour cannot show through. New colour "Fundalul
+  fotografiilor de produs": when it differs, an SVG colour matrix tints product photos (cards,
+  gallery, quick view, search, category tiles) so the baked cream lands exactly on it; shading and
+  shadows stay. It must pass ink contrast, which keeps it light (the tint looks wrong on dark
+  colours). Themes saved before it existed take their `paperDeep`. Photos in emails keep the cream.
+
+**Checks (2026-10-26)**: `pnpm typecheck`, `pnpm lint`, `prettier` on changed files, `pnpm test`
+(49 files, 287 tests), `pnpm test:integration` (13 suites, 84 tests), `pnpm build`; public pages,
+the sitemap and every renamed-URL redirect checked with curl against the local copy of production
+data. Not done yet: a browser pass on the changed pages and on `/admin/setari/culori`.
+
+**Before deploying phases 4–5**: no migration; deploy after phases 2–3.
+
 ## Local copy of production data (2026-10-25)
 
 - The local `alchimia` database (port 5433) was replaced by the production dump (backup of the
@@ -159,4 +203,3 @@ Commerce-looking names that stay on purpose after phase 2 (with the reason) go h
 - `legacy_commerce` foreign keys to `users` and `products` stay: deleting a user removes their
   archived cart and addresses (cascade) and nulls the user on archived orders; deleting a product
   nulls it on archived order lines (their snapshot stays).
-- "Clienți" in the admin: renamed to "Membri" in phase 4.

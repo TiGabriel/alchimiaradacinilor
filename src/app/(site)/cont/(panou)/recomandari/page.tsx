@@ -60,14 +60,14 @@ export default async function RecommendationsPage() {
         )}
       </section>
 
-      <section aria-labelledby="din-favorite" className="flex flex-col gap-5">
-        <h2 id="din-favorite" className="font-display text-2xl">
-          Pe baza favoritelor tale
+      <section aria-labelledby="din-salvate" className="flex flex-col gap-5">
+        <h2 id="din-salvate" className="font-display text-2xl">
+          Pe baza produselor salvate
         </h2>
         {!consent ? (
           <p className="rounded-xl border border-line bg-surface p-5 text-ink-muted">
-            Poți primi sugestii bazate pe favoritele și rutinele tale dacă activezi recomandările
-            personalizate din{" "}
+            Poți primi sugestii bazate pe produsele salvate și ritualurile tale dacă activezi
+            recomandările personalizate din{" "}
             <Link
               href="/cont/newsletter"
               className="font-semibold text-forest underline underline-offset-2"
@@ -86,7 +86,7 @@ export default async function RecommendationsPage() {
           </ul>
         ) : (
           <p className="rounded-xl border border-line bg-surface p-5 text-ink-muted">
-            Salvează câteva produse la favorite și îți vom sugera altele care li se potrivesc.
+            Salvează câteva produse și îți vom sugera altele care li se potrivesc.
           </p>
         )}
       </section>

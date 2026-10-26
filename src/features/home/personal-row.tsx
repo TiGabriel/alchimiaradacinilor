@@ -28,7 +28,7 @@ export function PersonalRowSection({
               <p className="text-ink-muted">
                 {row.source === "quiz"
                   ? "Pe baza răspunsurilor din ultimul tău quiz aromatic."
-                  : "Pe baza produselor tale favorite."}
+                  : "Pe baza produselor tale salvate."}
               </p>
             ) : null}
           </Reveal>

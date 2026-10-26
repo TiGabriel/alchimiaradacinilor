@@ -79,7 +79,7 @@ describe("reviewerName", () => {
     expect(reviewerName("Ioana", "Mureșan")).toBe("Ioana M.");
     expect(reviewerName("Ștefan", "țurcanu")).toBe("Ștefan Ț.");
     expect(reviewerName("Ana", null)).toBe("Ana");
-    expect(reviewerName(null, "Pop")).toBe("Client verificat");
-    expect(reviewerName("  ", "")).toBe("Client verificat");
+    expect(reviewerName(null, "Pop")).toBe("Membru al comunității");
+    expect(reviewerName("  ", "")).toBe("Membru al comunității");
   });
 });

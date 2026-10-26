@@ -32,28 +32,28 @@ export function SaveRoutineButton({
           if (!result.ok) {
             if (result.reason === "signed-out") {
               toast({
-                title: "Autentifică-te pentru a salva rutina",
+                title: "Autentifică-te pentru a salva ritualul",
                 action: {
                   label: "Autentificare",
                   onClick: () =>
                     router.push(`/cont/autentificare?next=${encodeURIComponent(pathname)}`),
                 },
               });
-            } else toast({ title: "Nu am putut salva rutina.", variant: "error" });
+            } else toast({ title: "Nu am putut salva ritualul.", variant: "error" });
             return;
           }
           setSaved(result.saved);
           toast({
             title: result.saved
-              ? "Rutina a fost salvată în contul tău"
-              : "Rutina a fost scoasă din lista ta",
+              ? "Ritualul a fost salvat în contul tău"
+              : "Ritualul a fost scos din lista ta",
             variant: "success",
           });
         })
       }
     >
       {saved ? <BookmarkCheck aria-hidden /> : <Bookmark aria-hidden />}
-      {saved ? "Salvată" : "Salvează rutina"}
+      {saved ? "Salvat" : "Salvează ritualul"}
     </Button>
   );
 }

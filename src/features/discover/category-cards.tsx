@@ -32,7 +32,7 @@ export function CategoryTiles({ categories }: { categories: CategoryNode[] }) {
                   alt=""
                   fill
                   sizes="(min-width: 768px) 33vw, 50vw"
-                  className="object-cover"
+                  className="object-cover product-photo"
                 />
               ) : (
                 <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
@@ -70,7 +70,13 @@ export function CategoryDirectory({ categories }: { categories: CategoryNode[] }
           <div className="flex items-start gap-4">
             <div className="relative size-16 shrink-0 overflow-hidden rounded-lg">
               {category.image ? (
-                <Image src={category.image} alt="" fill sizes="64px" className="object-cover" />
+                <Image
+                  src={category.image}
+                  alt=""
+                  fill
+                  sizes="64px"
+                  className="object-cover product-photo"
+                />
               ) : (
                 <ImagePlaceholder kind={categoryArt[category.slug] ?? "leaf"} />
               )}

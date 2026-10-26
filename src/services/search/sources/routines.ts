@@ -6,7 +6,7 @@ import type { SearchSource } from "./types";
 
 export const routineSource: SearchSource = {
   type: "routine",
-  label: "Rutine",
+  label: "Ritualuri",
   async load() {
     const rows = await db.routine.findMany({
       where: { active: true },
@@ -25,7 +25,7 @@ export const routineSource: SearchSource = {
       type: "routine",
       title: r.title,
       subtitle: r.summary,
-      href: `/rutine/${r.slug}`,
+      href: `/ritualuri/${r.slug}`,
       // Product names make "lav" find the routines that use Lavandă.
       keywords: [
         ...r.needs.map((n) => n.need.name),

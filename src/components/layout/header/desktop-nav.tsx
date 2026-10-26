@@ -9,7 +9,7 @@ import { Sprig } from "@/components/botanical";
 import { categoryHref, type CategoryNode } from "@/services/catalog/category-tree";
 import { cn } from "@/lib/utils";
 
-import { discoverLinks, isActivePath, primaryLinks } from "../nav-config";
+import { discoverLinks, howToBuyLink, isActivePath, primaryLinks } from "../nav-config";
 
 const topLink =
   "relative inline-flex h-10 items-center gap-1 rounded-full px-3.5 text-[0.9375rem] font-semibold text-ink transition-colors hover:text-forest focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest data-[active=true]:text-forest data-[state=open]:text-forest";
@@ -60,7 +60,9 @@ export function DesktopNav({ categories }: { categories: CategoryNode[] }) {
       aria-label="Navigare principală"
     >
       <NavigationMenu.List className="flex items-center gap-0.5">
-        <SimpleLink {...primaryLinks.home} pathname={pathname} />
+        <SimpleLink {...primaryLinks.journal} pathname={pathname} />
+        <SimpleLink {...primaryLinks.reviews} pathname={pathname} />
+        <SimpleLink {...primaryLinks.rituals} pathname={pathname} />
 
         <NavigationMenu.Item>
           <NavigationMenu.Trigger className={cn(topLink, "group")} data-active={productsActive}>
@@ -108,6 +110,17 @@ export function DesktopNav({ categories }: { categories: CategoryNode[] }) {
                     ) : null}
                   </div>
                 ))}
+                <NavigationMenu.Link asChild>
+                  <Link
+                    href={howToBuyLink.href}
+                    className="col-span-3 flex flex-col gap-0.5 border-t border-line pt-5 transition-colors hover:text-forest"
+                  >
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-ink">
+                      {howToBuyLink.label} <ArrowRight aria-hidden className="size-4" />
+                    </span>
+                    <span className="text-sm text-ink-muted">{howToBuyLink.description}</span>
+                  </Link>
+                </NavigationMenu.Link>
               </div>
               <div className="relative flex flex-col justify-between overflow-hidden rounded-lg bg-forest p-6 text-ink-inverse">
                 <Sprig className="absolute -right-6 -bottom-4 h-44 text-ink-inverse/20" />
@@ -170,10 +183,7 @@ export function DesktopNav({ categories }: { categories: CategoryNode[] }) {
           </NavigationMenu.Content>
         </NavigationMenu.Item>
 
-        <SimpleLink {...primaryLinks.routines} pathname={pathname} />
-        <SimpleLink {...primaryLinks.journal} pathname={pathname} />
         <SimpleLink {...primaryLinks.about} pathname={pathname} />
-        <SimpleLink {...primaryLinks.contact} pathname={pathname} />
       </NavigationMenu.List>
 
       <div className="absolute top-full left-1/2 z-40 flex -translate-x-1/2 justify-center pt-3">

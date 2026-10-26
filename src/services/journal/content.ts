@@ -5,11 +5,12 @@ export type ContentBlock =
   | { type: "product"; slug: string }
   | { type: "routine"; slug: string };
 
-const EMBED = /^\{\{(produs|rutina):([a-z0-9-]{1,80})\}\}$/;
+const EMBED = /^\{\{(produs|ritual|rutina):([a-z0-9-]{1,80})\}\}$/;
 
 /**
  * Splits Markdown into prose and embedded cards. An embed is a line of its
- * own: {{produs:slug}} or {{rutina:slug}}. Everything else stays Markdown
+ * own: {{produs:slug}} or {{ritual:slug}} ({{rutina:slug}}, written before
+ * routines were renamed rituals, still works). Everything else stays Markdown
  * (rendered without raw HTML).
  */
 export function parseArticleContent(content: string): ContentBlock[] {

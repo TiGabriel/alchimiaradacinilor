@@ -15,6 +15,7 @@ import {
   LayoutDashboard,
   Menu,
   Package,
+  Palette,
   Tag,
   UserRound,
   Users,
@@ -44,6 +45,7 @@ const icons: Record<string, React.ComponentType<{ className?: string }>> = {
   star: Star,
   mail: Mail,
   settings: Settings,
+  palette: Palette,
 };
 
 function NavList({ groups, onNavigate }: { groups: AdminNavGroup[]; onNavigate?: () => void }) {

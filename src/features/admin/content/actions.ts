@@ -21,11 +21,11 @@ export async function saveRoutineAction(input: unknown, id?: string) {
   const result = await adminAction(
     "content:edit",
     (actor) => saveRoutine(actor, input, optionalId(id)),
-    "Rutina a fost salvată.",
+    "Ritualul a fost salvat.",
   );
   if (result.ok) {
-    revalidatePath("/admin/rutine");
-    revalidatePath(`/rutine/${result.data.slug}`);
+    revalidatePath("/admin/ritualuri");
+    revalidatePath(`/ritualuri/${result.data.slug}`);
   }
   return result;
 }
@@ -35,7 +35,7 @@ export async function deleteRoutineAction(id: string) {
     await deleteRoutine(actor, z.uuid().parse(id));
     return null;
   });
-  if (result.ok) revalidatePath("/admin/rutine");
+  if (result.ok) revalidatePath("/admin/ritualuri");
   return result;
 }
 

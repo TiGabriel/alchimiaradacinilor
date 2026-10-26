@@ -43,7 +43,7 @@ export function ProductCard({
 
   return (
     <article className={cn("group/card relative flex flex-col", className)}>
-      <div className="relative overflow-hidden rounded-lg bg-paper-deep">
+      <div className="relative overflow-hidden rounded-lg bg-product-backdrop">
         <div className="block">
           <div className="transition-transform duration-700 ease-(--ease-botanical) group-hover/card:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover/card:scale-100">
             <ProductImage
@@ -63,6 +63,7 @@ export function ProductCard({
               aspect="portrait"
               sizes={sizes}
               placeholderSprig={false}
+              productPhoto
               wrapperClassName="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover/card:opacity-100"
             />
           ) : null}

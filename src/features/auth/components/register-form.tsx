@@ -103,8 +103,8 @@ export function RegisterForm({ next }: { next?: string }) {
             defaultChecked={false}
             label={
               <>
-                Vreau să primesc newslettere, oferte speciale, recomandări personalizate și reduceri
-                pe email. <span className="text-xs text-ink-muted">(opțional)</span>
+                Vreau să primesc newsletterul pe email: articole noi, recenzii, ritualuri și
+                recomandări de produse. <span className="text-xs text-ink-muted">(opțional)</span>
               </>
             }
             description="Te poți dezabona oricând din contul tău sau din orice email."

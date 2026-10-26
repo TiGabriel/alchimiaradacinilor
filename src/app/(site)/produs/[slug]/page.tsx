@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { after } from "next/server";
 
 import { TrackEvent } from "@/features/analytics/track-event";
-import { SectionDivider, Sprig } from "@/components/botanical";
+import { SectionDivider } from "@/components/botanical";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Reveal } from "@/components/motion";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -249,17 +249,14 @@ export default async function ProductPage(props: Props) {
             </span>
           </div>
 
-          <DoterraButton product={product} source="produs" size="lg" block />
-
-          <div className="flex items-start gap-3 rounded-lg border border-line bg-surface p-4 text-sm text-ink-muted">
-            <span aria-hidden className="grid size-4 shrink-0 place-items-center pt-0.5">
-              <Sprig className="h-4 text-forest" />
-            </span>
-            <p>
+          <div className="flex flex-col gap-2">
+            <DoterraButton product={product} source="produs" size="lg" block />
+            {/* The referral disclosure stays next to the button, but as quiet small print. */}
+            <p className="text-center text-xs text-ink-muted">
               {product.hasDoterraLink
                 ? affiliate.disclosureShort
                 : "Nu vindem produse: îl cumperi direct de pe site-ul oficial doTERRA. Linkul către produs va fi disponibil în curând."}{" "}
-              <Link href="/cum-cumpar" className="font-semibold text-forest hover:underline">
+              <Link href="/cum-cumpar" className="underline underline-offset-2 hover:text-ink">
                 Cum cumpăr
               </Link>
             </p>
@@ -355,7 +352,7 @@ export default async function ProductPage(props: Props) {
           </Section>
         ) : null}
 
-        <Section id="rutine" title="Rutine care includ acest produs" eyebrow="Rutine">
+        <Section id="rutine" title="Ritualuri care includ acest produs" eyebrow="Ritualuri">
           {routines.length > 0 ? (
             <ul className="grid gap-5 sm:grid-cols-2">
               {routines.map((routine) => (
@@ -369,11 +366,11 @@ export default async function ProductPage(props: Props) {
               size="sm"
               headingLevel="h3"
               className="mx-0 items-start text-left"
-              title="Încă nu există o rutină cu acest produs"
-              description="Descoperă ritualurile noastre pas cu pas — poți folosi produsul și în rutinele tale."
+              title="Încă nu există un ritual cu acest produs"
+              description="Descoperă ritualurile noastre pas cu pas — poți folosi produsul și în ritualurile tale."
               actions={
                 <Button asChild variant="outline" size="sm">
-                  <Link href="/rutine">Vezi rutinele</Link>
+                  <Link href="/ritualuri">Vezi ritualurile</Link>
                 </Button>
               }
             />

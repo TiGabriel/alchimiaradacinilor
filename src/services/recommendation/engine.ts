@@ -157,14 +157,14 @@ export function rankProducts(
 
     if (ctx?.wishlistIds?.includes(product.id)) {
       contributions.push({
-        label: "produsele tale favorite",
+        label: "produsele tale salvate",
         points: weights.wishlistAffinity,
         source: "context",
       });
     }
     if (ctx?.routineProductIds?.includes(product.id)) {
       contributions.push({
-        label: "rutinele tale salvate",
+        label: "ritualurile tale salvate",
         points: weights.routineAffinity,
         source: "context",
       });

@@ -101,7 +101,7 @@ describe("email templates", () => {
     const welcome = welcomeEmail(
       {
         firstName: "Ana",
-        shopUrl: "https://example.ro/produse",
+        journalUrl: "https://example.ro/jurnal",
         quizUrl: "https://example.ro/quiz",
       },
       brand,

@@ -38,7 +38,7 @@ const rows = [
   {
     name: "ar:wishlist",
     kind: "Stocare locală (browser)",
-    purpose: "Păstrează lista de favorite pentru vizitatorii fără cont.",
+    purpose: "Păstrează lista produselor salvate pentru vizitatorii fără cont.",
     duration: "Până la ștergere",
     category: "Funcțional",
   },
@@ -105,10 +105,10 @@ export default async function CookiePolicyPage() {
             <>
               <p>
                 <strong>Analiză (doar cu acordul tău).</strong> Dacă accepți, înregistrăm anonim
-                câteva evenimente — produse vizualizate, căutări, produse salvate la favorite,
-                începerea și finalizarea quiz-ului — împreună cu un identificator aleator. Datele
-                rămân pe serverele noastre, nu includ adresa IP, numele sau emailul tău și nu sunt
-                legate de contul tău. Nu folosim servicii de analiză ale unor terți.
+                câteva evenimente — produse vizualizate, căutări, produse salvate, începerea și
+                finalizarea quiz-ului — împreună cu un identificator aleator. Datele rămân pe
+                serverele noastre, nu includ adresa IP, numele sau emailul tău și nu sunt legate de
+                contul tău. Nu folosim servicii de analiză ale unor terți.
               </p>
               <p>
                 <strong>Marketing.</strong> Momentan nu folosim cookie-uri de marketing sau reclame

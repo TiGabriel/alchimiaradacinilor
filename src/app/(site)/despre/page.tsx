@@ -27,11 +27,11 @@ const principles = [
   },
   {
     title: "Ritualuri, nu reguli",
-    body: "Rutinele noastre durează câteva minute și se potrivesc cu ziua ta: o dimineață luminoasă, o pauză de concentrare, o seară liniștită.",
+    body: "Ritualurile noastre durează câteva minute și se potrivesc cu ziua ta: o dimineață luminoasă, o pauză de concentrare, o seară liniștită.",
   },
   {
     title: "Totul la vedere",
-    body: "Nu vindem produse: îți spunem ce ne place și de ce, cu prețul exact de pe site-ul doTERRA, de unde le cumperi. Datele tale personale le folosim doar cu acordul tău.",
+    body: "Nu vindem produse: îți spunem ce ne place și de ce, cu prețul exact de pe site-ul doTERRA, de unde le cumperi. Butoanele către doTERRA sunt linkuri de recomandare și scrie asta lângă fiecare. Datele tale personale le folosim doar cu acordul tău.",
   },
 ];
 
@@ -83,7 +83,7 @@ export default function AboutPage() {
         </h2>
         <p className="max-w-2xl text-ink-muted">
           Dacă ești la început, quiz-ul îți propune câteva arome și îți explică alegerea. Dacă știi
-          deja ce cauți, catalogul și rutinele te așteaptă.
+          deja ce cauți, jurnalul, ritualurile și paginile de produs te așteaptă.
         </p>
         <div className="flex flex-wrap gap-3">
           <Button asChild size="lg">

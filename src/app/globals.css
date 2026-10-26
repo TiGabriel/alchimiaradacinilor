@@ -11,6 +11,7 @@
   --color-paper: #f8f4ec;
   --color-paper-deep: #f0e9dc;
   --color-surface: #fffdf9;
+  --color-product-backdrop: #f0e9dc; /* the backdrop baked into product photos */
 
   /* Text */
   --color-ink: #1e2620;
@@ -273,6 +274,11 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Utilities
    ───────────────────────────────────────────────────────────────────────────── */
+
+/* Product photos: tinted to the palette's photo backdrop (src/lib/palette.ts). */
+@utility product-photo {
+  filter: var(--product-photo-filter, none);
+}
 
 @utility container-page {
   width: 100%;

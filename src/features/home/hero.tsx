@@ -25,24 +25,24 @@ export function HomeHero({ image, brand }: HeroProps) {
       <div className="container-page grid items-center gap-10 pt-8 pb-14 md:pt-14 lg:grid-cols-[1.1fr_1fr] lg:gap-10 lg:pb-24">
         <div className="relative z-10 flex flex-col gap-6">
           <p className="animate-rise text-eyebrow text-clay motion-reduce:animate-none">
-            Uleiuri esențiale · Ritualuri botanice
+            Jurnal botanic · Ritualuri · Recenzii
           </p>
           <h1 className="text-display-xl text-balance">
             Ritualuri simple.{" "}
             <em className="font-normal text-forest italic">Arome care îți transformă rutina.</em>
           </h1>
           <p className="max-w-lg animate-rise text-lg text-ink-muted [animation-delay:120ms] motion-reduce:animate-none md:text-xl">
-            Uleiuri esențiale, amestecuri și ritualuri pas cu pas, alese cu grijă pentru diminețile,
-            pauzele și serile tale.
+            Un jurnal despre uleiuri esențiale: povești despre plante, recenzii și ritualuri pas cu
+            pas pentru diminețile, pauzele și serile tale.
           </p>
           <div className="mt-2 flex animate-rise flex-col gap-3 [animation-delay:220ms] motion-reduce:animate-none sm:flex-row sm:flex-wrap">
             <Button asChild size="lg">
-              <Link href="/produse">
-                Descoperă produsele <ArrowRight aria-hidden />
+              <Link href="/jurnal">
+                Citește jurnalul <ArrowRight aria-hidden />
               </Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/quiz">Găsește ce ți se potrivește</Link>
+              <Link href="/produse">Descoperă produsele</Link>
             </Button>
           </div>
         </div>

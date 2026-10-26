@@ -64,16 +64,16 @@ export default async function DiscoverPage() {
           </span>
         </Link>
         <Link
-          href="/rutine"
+          href="/ritualuri"
           className="group flex flex-col gap-3 rounded-xl border border-line bg-surface p-8"
         >
           <Moon aria-hidden className="size-6 text-forest" />
-          <h2 className="text-3xl">Rutine</h2>
+          <h2 className="text-3xl">Ritualuri</h2>
           <p className="max-w-sm text-ink-muted">
             Ritualuri simple, pas cu pas, pentru dimineți luminoase și seri liniștite.
           </p>
           <span className="mt-2 inline-flex items-center gap-1.5 font-semibold text-forest">
-            Vezi rutinele{" "}
+            Vezi ritualurile{" "}
             <ArrowRight
               aria-hidden
               className="size-4 transition-transform group-hover:translate-x-1"

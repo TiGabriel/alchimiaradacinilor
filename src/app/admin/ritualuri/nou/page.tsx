@@ -6,14 +6,14 @@ import { AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
 import { getContentOptions } from "@/services/admin/content";
 
-export const metadata: Metadata = { title: "Rutină nouă" };
+export const metadata: Metadata = { title: "Ritual nou" };
 
 export default async function NewRoutinePage() {
   const { user } = await requirePermission("content:edit");
   const options = await getContentOptions({ id: user.id, roles: user.roles });
   return (
     <>
-      <AdminPageHeader title="Rutină nouă" back={{ href: "/admin/rutine", label: "Rutine" }} />
+      <AdminPageHeader title="Ritual nou" back={{ href: "/admin/ritualuri", label: "Ritualuri" }} />
       <RoutineForm initial={emptyRoutine()} options={options} />
     </>
   );

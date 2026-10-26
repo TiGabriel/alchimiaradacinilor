@@ -172,7 +172,7 @@ export default async function AdminDashboard() {
             title="Conturi recente"
             actions={
               <Link
-                href="/admin/clienti"
+                href="/admin/membri"
                 className="text-sm font-semibold text-forest hover:underline"
               >
                 Toți membrii
@@ -184,7 +184,7 @@ export default async function AdminDashboard() {
                 <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
                   <span className="flex min-w-0 flex-col">
                     <Link
-                      href={`/admin/clienti/${u.id}`}
+                      href={`/admin/membri/${u.id}`}
                       className="truncate font-semibold hover:text-forest"
                     >
                       {u.firstName} {u.lastName}

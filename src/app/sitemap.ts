@@ -20,8 +20,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/descopera/nevoi",
     "/descopera/categorii",
     "/quiz",
-    "/rutine",
+    "/ritualuri",
     "/jurnal",
+    "/recenzii",
     "/despre",
     "/intrebari-frecvente",
     "/contact",
@@ -31,6 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/termeni-si-conditii",
     "/politica-de-confidentialitate",
     "/politica-cookies",
+    "/transparenta-afiliere",
   ];
   return [
     ...staticPaths.map((path) => ({
@@ -62,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         })),
     ]),
     ...routines.map((r) => ({
-      url: siteUrl(`/rutine/${r.slug}`),
+      url: siteUrl(`/ritualuri/${r.slug}`),
       lastModified: r.updatedAt,
       changeFrequency: "monthly" as const,
       priority: 0.7,

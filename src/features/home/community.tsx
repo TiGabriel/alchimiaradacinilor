@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
 import { Blossom, Leaf } from "@/components/botanical";
 import { FacebookIcon } from "@/components/icons/facebook";
@@ -7,10 +8,17 @@ import { Reveal } from "@/components/motion";
 import { cn } from "@/lib/utils";
 
 /**
- * Newsletter invitation plus, when configured in settings, a link to the Facebook
- * community. Nothing is embedded or fabricated: it is a plain outbound link.
+ * Newsletter invitation (plus an account invitation for guests) and, when configured in
+ * settings, a link to the Facebook community. Nothing is embedded or fabricated: it is a
+ * plain outbound link.
  */
-export function CommunitySection({ facebookUrl }: { facebookUrl?: string }) {
+export function CommunitySection({
+  facebookUrl,
+  signedIn,
+}: {
+  facebookUrl?: string;
+  signedIn: boolean;
+}) {
   return (
     <section aria-labelledby="scrisori" className="bg-paper-deep py-(--spacing-section)">
       <div
@@ -27,12 +35,25 @@ export function CommunitySection({ facebookUrl }: { facebookUrl?: string }) {
               O scrisoare botanică, în fiecare lună
             </h2>
             <p className="text-ink-muted">
-              Ritualuri de sezon, povești despre plante și noutățile din atelier. Fără zgomot — doar
-              ce merită citit, cu o ceașcă de ceai alături.
+              Articole noi din jurnal, recenzii, ritualuri de sezon și povești despre plante. Fără
+              zgomot, doar ce merită citit, cu o ceașcă de ceai alături.
             </p>
             <div className="pt-2">
               <NewsletterForm tone="ink" source="homepage" />
             </div>
+            {signedIn ? null : (
+              <p className="text-sm text-ink-muted">
+                Sau{" "}
+                <Link
+                  href="/cont/inregistrare"
+                  className="font-semibold text-forest underline underline-offset-2"
+                >
+                  fă-ți un cont gratuit
+                </Link>
+                : îți salvezi produsele și ritualurile preferate și primești recomandări potrivite
+                ție.
+              </p>
+            )}
           </div>
         </Reveal>
 

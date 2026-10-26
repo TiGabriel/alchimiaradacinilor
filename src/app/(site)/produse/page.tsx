@@ -25,9 +25,9 @@ export default async function ProductsPage(props: PageProps<"/produse">) {
 
   return (
     <CatalogView
-      eyebrow="Catalog"
+      eyebrow="Ghid de produse"
       title="Toate produsele"
-      description="Uleiuri esențiale, amestecuri, kit-uri, difuzoare și accesorii — alese pentru ritualurile tale de zi cu zi."
+      description="Uleiuri esențiale, amestecuri, kit-uri, difuzoare și accesorii: cum miros, când le folosim și de unde le cumperi de pe doTERRA."
       breadcrumbs={[{ label: "Produse" }]}
       basePath="/produse"
       data={data}

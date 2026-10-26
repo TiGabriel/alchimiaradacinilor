@@ -27,7 +27,11 @@ export async function sendWelcomeEmail(user: {
   return sendShopEmail({
     to: user.email,
     ...welcomeEmail(
-      { firstName: user.firstName, shopUrl: `${b.siteUrl}/produse`, quizUrl: `${b.siteUrl}/quiz` },
+      {
+        firstName: user.firstName,
+        journalUrl: `${b.siteUrl}/jurnal`,
+        quizUrl: `${b.siteUrl}/quiz`,
+      },
       b,
     ),
   });

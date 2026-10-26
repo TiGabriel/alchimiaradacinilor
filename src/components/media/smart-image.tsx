@@ -16,6 +16,8 @@ type SmartImageProps = Omit<ImageProps, "src" | "alt"> & {
   placeholderSprig?: boolean;
   /** Classes for the wrapper (which sets the aspect ratio). */
   wrapperClassName?: string;
+  /** A product photo: tinted to the palette's photo backdrop, on that backdrop. */
+  productPhoto?: boolean;
   aspect?: "square" | "portrait" | "landscape" | "wide" | "auto";
 };
 
@@ -38,6 +40,7 @@ export function SmartImage({
   placeholderTone,
   placeholderSprig = true,
   wrapperClassName,
+  productPhoto = false,
   aspect = "square",
   className,
   sizes = "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw",
@@ -49,7 +52,12 @@ export function SmartImage({
 
   return (
     <div
-      className={cn("relative overflow-hidden bg-paper-deep", aspects[aspect], wrapperClassName)}
+      className={cn(
+        "relative overflow-hidden",
+        productPhoto ? "bg-product-backdrop" : "bg-paper-deep",
+        aspects[aspect],
+        wrapperClassName,
+      )}
     >
       {showImage ? (
         <Image
@@ -60,6 +68,7 @@ export function SmartImage({
           className={cn(
             "object-cover transition-opacity duration-500",
             loaded ? "opacity-100" : "opacity-0",
+            productPhoto && "product-photo",
             className,
           )}
           onLoad={() => setLoaded(true)}

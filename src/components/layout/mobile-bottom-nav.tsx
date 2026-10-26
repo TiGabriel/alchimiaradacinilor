@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, Heart, House, Search, UserRound } from "lucide-react";
+import { BookOpen, Heart, House, Search, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -77,9 +77,9 @@ export function MobileBottomNav() {
           <House aria-hidden strokeWidth={1.75} />,
         )}
         {link(
-          primaryLinks.discover.href,
-          primaryLinks.discover.label,
-          <Compass aria-hidden strokeWidth={1.75} />,
+          primaryLinks.journal.href,
+          primaryLinks.journal.label,
+          <BookOpen aria-hidden strokeWidth={1.75} />,
         )}
         <button type="button" className={itemClass} onClick={openSearch}>
           <Search aria-hidden strokeWidth={1.75} />

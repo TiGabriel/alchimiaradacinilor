@@ -56,7 +56,7 @@ export function RoutineCard({
       <div className="flex flex-1 flex-col gap-2 p-5">
         <h3 className="text-xl">
           <Link
-            href={`/rutine/${routine.slug}`}
+            href={`/ritualuri/${routine.slug}`}
             className="after:absolute after:inset-0 hover:text-forest"
           >
             {routine.title}

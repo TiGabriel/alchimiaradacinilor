@@ -125,7 +125,7 @@ export function StyleguideDemos() {
           <Button size="sm">Mic</Button>
           <Button size="md">Mediu</Button>
           <Button size="lg">Mare</Button>
-          <Button size="icon" variant="outline" aria-label="Favorite">
+          <Button size="icon" variant="outline" aria-label="Salvate">
             <Heart aria-hidden />
           </Button>
           <Button size="icon-sm" variant="ghost" aria-label="Salvează">
@@ -305,13 +305,13 @@ export function StyleguideDemos() {
               <Button variant="outline">Sertar dreapta</Button>
             </DrawerTrigger>
             <DrawerContent
-              title="Favoritele tale"
+              title="Produsele tale salvate"
               description="Exemplu de sertar lateral."
-              footer={<Button block>Vezi toate favoritele</Button>}
+              footer={<Button block>Vezi toate produsele salvate</Button>}
             >
               <EmptyState
                 size="sm"
-                title="Nu ai încă favorite"
+                title="Nu ai salvat încă nimic"
                 description="Salvează produse pentru a le vedea aici."
               />
             </DrawerContent>
@@ -326,7 +326,7 @@ export function StyleguideDemos() {
           </Drawer>
           <Button
             variant="secondary"
-            onClick={() => toast({ title: "Produs salvat la favorite", variant: "success" })}
+            onClick={() => toast({ title: "Produs salvat", variant: "success" })}
           >
             Toast succes
           </Button>
@@ -346,7 +346,7 @@ export function StyleguideDemos() {
             variant="secondary"
             onClick={() =>
               toast({
-                title: "Eliminat din favorite",
+                title: "Scos din salvate",
                 action: { label: "Anulează", onClick: () => toast({ title: "Readăugat" }) },
               })
             }
@@ -417,7 +417,7 @@ export function StyleguideDemos() {
           </div>
           <EmptyState
             size="sm"
-            title="Încă nu ai produse favorite."
+            title="Încă nu ai salvat niciun produs."
             description="Apasă pe inimioară pentru a salva produsele care îți plac."
             actions={
               <Button asChild size="sm">

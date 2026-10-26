@@ -104,7 +104,7 @@ export function NewsletterForm({
         <p
           id={`${id}-error`}
           role="alert"
-          className={cn("text-sm font-medium", inverse ? "text-[#f3c9bd]" : "text-danger")}
+          className={cn("text-sm font-medium", inverse ? "text-danger-soft" : "text-danger")}
         >
           {error}
         </p>

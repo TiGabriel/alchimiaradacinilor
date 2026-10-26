@@ -20,7 +20,14 @@ import { easeBotanical } from "@/lib/motion";
 import { categoryHref, type CategoryNode } from "@/services/catalog/category-tree";
 import type { SettingValue } from "@/validation/settings";
 
-import { accountLinks, discoverLinks, isActivePath, primaryLinks } from "../nav-config";
+import {
+  accountLinks,
+  discoverLinks,
+  howToBuyLink,
+  isActivePath,
+  NEWSLETTER_ANCHOR,
+  primaryLinks,
+} from "../nav-config";
 
 type MobileMenuProps = {
   categories: CategoryNode[];
@@ -81,7 +88,10 @@ export function MobileMenu({ categories, contact, social }: MobileMenuProps) {
         <nav aria-label="Navigare principală" className="flex min-h-full flex-col">
           <ul className="flex flex-col divide-y divide-line px-6">
             <Item index={0}>{link(primaryLinks.home.href, primaryLinks.home.label)}</Item>
-            <Item index={1}>
+            <Item index={1}>{link(primaryLinks.journal.href, primaryLinks.journal.label)}</Item>
+            <Item index={2}>{link(primaryLinks.reviews.href, primaryLinks.reviews.label)}</Item>
+            <Item index={3}>{link(primaryLinks.rituals.href, primaryLinks.rituals.label)}</Item>
+            <Item index={4}>
               <Accordion type="single" collapsible>
                 <AccordionItem value="produse" className="border-0">
                   <AccordionTrigger className="py-3 text-[1.625rem] leading-tight">
@@ -127,12 +137,22 @@ export function MobileMenu({ categories, contact, social }: MobileMenuProps) {
                           ) : null}
                         </li>
                       ))}
+                      <li className="mt-2 border-t border-line pt-2">
+                        <DrawerClose asChild>
+                          <Link
+                            href={howToBuyLink.href}
+                            className="block py-1.5 font-semibold text-forest"
+                          >
+                            {howToBuyLink.label}
+                          </Link>
+                        </DrawerClose>
+                      </li>
                     </ul>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
             </Item>
-            <Item index={2}>
+            <Item index={5}>
               <Accordion type="single" collapsible>
                 <AccordionItem value="descopera" className="border-0">
                   <AccordionTrigger className="py-3 text-[1.625rem] leading-tight">
@@ -155,10 +175,8 @@ export function MobileMenu({ categories, contact, social }: MobileMenuProps) {
                 </AccordionItem>
               </Accordion>
             </Item>
-            <Item index={3}>{link(primaryLinks.routines.href, primaryLinks.routines.label)}</Item>
-            <Item index={4}>{link(primaryLinks.journal.href, primaryLinks.journal.label)}</Item>
-            <Item index={5}>{link(primaryLinks.about.href, primaryLinks.about.label)}</Item>
-            <Item index={6}>{link(primaryLinks.contact.href, primaryLinks.contact.label)}</Item>
+            <Item index={6}>{link(primaryLinks.about.href, primaryLinks.about.label)}</Item>
+            <Item index={7}>{link(primaryLinks.contact.href, primaryLinks.contact.label)}</Item>
           </ul>
 
           <div className="mt-6 grid grid-cols-2 gap-3 px-6">
@@ -179,6 +197,16 @@ export function MobileMenu({ categories, contact, social }: MobileMenuProps) {
                 <Heart aria-hidden className="size-5 text-forest" strokeWidth={1.75} />
                 {accountLinks.wishlist.label}
               </Link>
+            </DrawerClose>
+          </div>
+          <div className="mt-3 px-6">
+            <DrawerClose asChild>
+              <a
+                href={`#${NEWSLETTER_ANCHOR}`}
+                className="flex h-12 items-center justify-center rounded-full bg-forest text-sm font-semibold text-ink-inverse"
+              >
+                Abonează-te la scrisorile botanice
+              </a>
             </DrawerClose>
           </div>
 

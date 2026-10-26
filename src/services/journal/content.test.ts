@@ -25,6 +25,12 @@ describe("parseArticleContent", () => {
     });
   });
 
+  it("reads {{ritual:slug}} like the older {{rutina:slug}}", () => {
+    expect(parseArticleContent("{{ritual:ritual-de-seara}}")).toEqual([
+      { type: "routine", slug: "ritual-de-seara" },
+    ]);
+  });
+
   it("only treats whole, well-formed lines as embeds", () => {
     const blocks = parseArticleContent(
       "Vezi {{produs:lavender}} aici\n{{produs:<script>}}\n{{altceva:x}}",

@@ -1,5 +1,49 @@
 import { z } from "zod";
 
+import {
+  completePalette,
+  DEFAULT_PALETTE,
+  failingPairs,
+  formatRatio,
+  HEX_COLOR,
+  PALETTE_KEYS,
+  type Palette,
+  type PaletteKey,
+} from "@/lib/palette";
+
+const hexColor = z
+  .string()
+  .trim()
+  .regex(HEX_COLOR, "Culoare invalidă (format #rrggbb).")
+  .transform((v) => v.toLowerCase());
+
+/**
+ * A full palette that passes every WCAG AA pair the site uses (src/lib/palette.ts).
+ * Themes saved before a colour was added get it filled in, so they keep working.
+ */
+const paletteSchema = z.preprocess(
+  (value) =>
+    value && typeof value === "object" && !Array.isArray(value)
+      ? completePalette(value as Partial<Record<PaletteKey, unknown>>)
+      : value,
+  z
+    .object(
+      Object.fromEntries(PALETTE_KEYS.map((key) => [key, hexColor])) as Record<
+        PaletteKey,
+        typeof hexColor
+      >,
+    )
+    .superRefine((palette, ctx) => {
+      for (const pair of failingPairs(palette as Palette)) {
+        ctx.addIssue({
+          code: "custom",
+          path: [typeof pair.fg === "string" ? pair.fg : pair.bg],
+          message: `Contrast prea mic: ${pair.label} (${formatRatio(pair.ratio)}, minim ${pair.min}:1).`,
+        });
+      }
+    }),
+);
+
 /**
  * Registry of SiteSetting keys. Each key's JSON value is validated by its
  * schema; defaults keep the site usable before anything is stored.
@@ -103,6 +147,20 @@ export const settingSchemas = {
     /** Shown on /cum-cumpar and in the terms. */
     disclosureLong: z.string().trim().min(10).max(2000),
   }),
+  /** Site colours (Setări › Culori site); the root layout writes them as CSS variables. */
+  theme: z.object({
+    colors: paletteSchema,
+    /** Palettes the admin saved to reuse later. */
+    presets: z
+      .array(
+        z.object({
+          id: z.string().regex(/^[a-z0-9-]{1,40}$/),
+          name: z.string().trim().min(1, "Dă un nume temei.").max(60),
+          colors: paletteSchema,
+        }),
+      )
+      .max(12, "Cel mult 12 teme salvate."),
+  }),
 } as const;
 
 export type SettingKey = keyof typeof settingSchemas;
@@ -128,7 +186,7 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
     defaultTitle: "Alchimia Rădăcinilor — Uleiuri esențiale și ritualuri botanice",
     titleTemplate: "%s · Alchimia Rădăcinilor",
     defaultDescription:
-      "Uleiuri esențiale, amestecuri, kit-uri și difuzoare, alese cu grijă pentru ritualurile tale de zi cu zi.",
+      "Jurnal despre uleiuri esențiale: povești despre plante, recenzii și ritualuri simple pentru fiecare zi.",
     ogImageUrl: null,
   },
   email: {
@@ -172,6 +230,7 @@ export const settingDefaults: { [K in SettingKey]: SettingValue<K> } = {
     disclosureLong:
       "Butoanele „Cumpără de pe doTERRA” de pe acest site sunt linkuri de recomandare. Dacă deschizi un produs prin ele și îl cumperi, Alchimia Rădăcinilor primește o recompensă de la doTERRA. Pentru tine prețul și condițiile de cumpărare rămân aceleași, iar comanda o plasezi direct la doTERRA. Numărăm de câte ori este apăsat fiecare buton, fără să păstrăm date despre tine.",
   },
+  theme: { colors: DEFAULT_PALETTE, presets: [] },
 };
 
 export function isSettingKey(key: string): key is SettingKey {

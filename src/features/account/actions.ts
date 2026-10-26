@@ -94,7 +94,7 @@ export async function setPersonalizationAction(
   return {
     status: "success",
     message: granted
-      ? "Vom folosi favoritele și rutinele tale pentru recomandări mai potrivite."
+      ? "Vom folosi produsele salvate și ritualurile tale pentru recomandări mai potrivite."
       : "Recomandările nu vor mai folosi activitatea ta din cont.",
   };
 }

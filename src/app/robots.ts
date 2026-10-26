@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/cautare",
           "/cont",
-          "/favorite",
+          "/salvate",
           "/newsletter/",
           "/quiz/rezultat/",
           "/spre-doterra/",

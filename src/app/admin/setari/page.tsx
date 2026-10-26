@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import {
   AffiliateForm,
@@ -52,6 +53,12 @@ export default async function SettingsPage() {
             {label}
           </a>
         ))}
+        <Link
+          href="/admin/setari/culori"
+          className="rounded-full border border-forest bg-forest-soft px-3 py-1.5 text-sm font-semibold text-forest-deep hover:bg-sage-soft"
+        >
+          Culori site →
+        </Link>
       </nav>
       <div id="brand" className="scroll-mt-6">
         <BrandForm initial={s.brand} />

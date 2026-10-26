@@ -197,7 +197,7 @@ describe("rankProducts", () => {
     const criteria = { signals: [sig("need", "seara", 1)], context: { wishlistIds: ["blend"] } };
     const ranked = rankProducts(criteria, [lavender, blend], weights);
     expect(ranked[0]!.item.id).toBe("blend");
-    expect(ranked[0]!.explanation).toContain("produsele tale favorite");
+    expect(ranked[0]!.explanation).toContain("produsele tale salvate");
   });
 
   it("respects the limit", () => {
@@ -231,9 +231,9 @@ describe("explanations", () => {
     expect(
       explain([
         { label: "Floral", points: 2, source: "choice" },
-        { label: "produsele tale favorite", points: 1, source: "context" },
+        { label: "produsele tale salvate", points: 1, source: "context" },
       ]),
-    ).toBe("Recomandat pentru că ai ales: Floral. Se potrivește și cu produsele tale favorite.");
+    ).toBe("Recomandat pentru că ai ales: Floral. Se potrivește și cu produsele tale salvate.");
   });
 });
 

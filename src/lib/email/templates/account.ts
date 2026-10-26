@@ -28,7 +28,7 @@ export function verificationEmail(
 }
 
 export function welcomeEmail(
-  p: { firstName: string; shopUrl: string; quizUrl: string },
+  p: { firstName: string; journalUrl: string; quizUrl: string },
   brand: EmailBrand,
 ): RenderedEmail {
   return renderEmail(
@@ -44,12 +44,12 @@ export function welcomeEmail(
         {
           type: "list",
           items: [
-            "Salvează produsele preferate și regăsește-le oricând.",
+            "Salvează produsele și ritualurile care îți plac și regăsește-le oricând.",
             "Fă quiz-ul aromatic pentru recomandări potrivite ție.",
-            "Păstrează ritualurile care îți plac și scrie recenzii despre produse.",
+            "Scrie recenzii despre produsele încercate și citește articolele noi din jurnal.",
           ],
         },
-        { type: "button", label: "Descoperă produsele", href: p.shopUrl },
+        { type: "button", label: "Citește jurnalul", href: p.journalUrl },
         { type: "note", text: `Nu știi de unde să începi? Quiz-ul durează un minut: ${p.quizUrl}` },
       ],
     },

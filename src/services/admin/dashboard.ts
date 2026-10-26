@@ -15,7 +15,7 @@ const sourceLabels: Record<string, string> = {
   previzualizare: "Previzualizare rapidă",
   quiz: "Rezultatul quizului",
   ritual: "Ritualuri",
-  favorite: "Favorite",
+  favorite: "Salvate",
   jurnal: "Jurnal",
   newsletter: "Newsletter",
   altul: "Altă sursă",
@@ -132,7 +132,7 @@ export async function getDashboard(actor: Actor) {
     activity: [
       { label: "Vizualizări produs", count: eventCount("product_view"), rate: null },
       { label: "Căutări", count: eventCount("search"), rate: null },
-      { label: "Produse salvate la favorite", count: eventCount("wishlist_add"), rate: null },
+      { label: "Produse salvate", count: eventCount("wishlist_add"), rate: null },
       { label: "Quiz început", count: quizStarted, rate: null },
       { label: "Quiz terminat", count: quizCompleted, rate: rate(quizCompleted, quizStarted) },
     ],

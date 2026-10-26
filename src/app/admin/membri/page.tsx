@@ -13,7 +13,7 @@ import {
 import { requirePermission } from "@/features/auth/session";
 import { listCustomers } from "@/services/admin/customers";
 
-export const metadata: Metadata = { title: "Clienți" };
+export const metadata: Metadata = { title: "Membri" };
 
 const date = new Intl.DateTimeFormat("ro-RO", {
   day: "numeric",
@@ -38,17 +38,17 @@ export default async function CustomersPage({
   return (
     <>
       <AdminPageHeader
-        title="Clienți"
+        title="Membri"
         description={`${total} ${total === 1 ? "cont" : "conturi"}`}
       />
-      <AdminSearchForm action="/admin/clienti" query={q} placeholder="Nume sau email" />
-      <AdminTable caption="Lista clienților">
+      <AdminSearchForm action="/admin/membri" query={q} placeholder="Nume sau email" />
+      <AdminTable caption="Lista membrilor">
         <thead className="border-b border-line bg-paper-deep/50">
           <tr>
             <th className={th}>Client</th>
             <th className={th}>Cont</th>
             <th className={th}>Newsletter</th>
-            <th className={`${th} text-right`}>Rutine salvate</th>
+            <th className={`${th} text-right`}>Ritualuri salvate</th>
             <th className={`${th} text-right`}>Recenzii</th>
           </tr>
         </thead>
@@ -57,7 +57,7 @@ export default async function CustomersPage({
             <tr key={c.id} className="hover:bg-paper-deep/40">
               <td className={td}>
                 <Link
-                  href={`/admin/clienti/${c.id}`}
+                  href={`/admin/membri/${c.id}`}
                   className="flex flex-col font-semibold hover:text-forest"
                 >
                   {c.firstName} {c.lastName}
@@ -91,7 +91,7 @@ export default async function CustomersPage({
           {customers.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-4 py-10 text-center text-ink-muted">
-                Niciun client găsit.
+                Niciun membru găsit.
               </td>
             </tr>
           ) : null}
@@ -101,7 +101,7 @@ export default async function CustomersPage({
         page={page}
         pageCount={pageCount}
         href={(p) =>
-          `/admin/clienti?${new URLSearchParams({ ...(q ? { q } : {}), page: String(p) })}`
+          `/admin/membri?${new URLSearchParams({ ...(q ? { q } : {}), page: String(p) })}`
         }
       />
     </>

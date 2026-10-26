@@ -128,7 +128,7 @@ export async function deleteQuizAnswer(actor: Actor, id: string) {
   assertCan(actor, "content:edit");
   if (await db.quizResultAnswer.count({ where: { answerId: id } }))
     throw new AdminError(
-      "Răspunsul apare în rezultatele clienților. Modifică-l în loc să-l ștergi.",
+      "Răspunsul apare în rezultatele vizitatorilor. Modifică-l în loc să-l ștergi.",
     );
   await db.quizAnswer.deleteMany({ where: { id } });
 }
@@ -137,7 +137,7 @@ export async function deleteQuizQuestion(actor: Actor, id: string) {
   assertCan(actor, "content:edit");
   if (await db.quizResultAnswer.count({ where: { answer: { questionId: id } } }))
     throw new AdminError(
-      "Întrebarea are răspunsuri folosite de clienți. Modifică-o în loc s-o ștergi.",
+      "Întrebarea are răspunsuri folosite de vizitatori. Modifică-o în loc s-o ștergi.",
     );
   await db.quizQuestion.deleteMany({ where: { id } });
 }

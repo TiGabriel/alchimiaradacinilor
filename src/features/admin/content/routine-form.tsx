@@ -94,14 +94,14 @@ export function RoutineForm({
       }
       setErrors({});
       toast({ title: result.message ?? "Salvat", variant: "success" });
-      if (!routineId) router.push(`/admin/rutine/${result.data.id}`);
+      if (!routineId) router.push(`/admin/ritualuri/${result.data.id}`);
       else router.refresh();
     });
   };
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-6">
-      <AdminCard title="Despre rutină">
+      <AdminCard title="Despre ritual">
         <div className="grid gap-4 md:grid-cols-2">
           <Field id={fid("title")} label="Titlu" required error={errors.title}>
             {(p) => (
@@ -123,7 +123,7 @@ export function RoutineForm({
             label="Slug"
             required
             error={errors.slug}
-            hint={`/rutine/${v.slug || "…"}`}
+            hint={`/ritualuri/${v.slug || "…"}`}
           >
             {(p) => (
               <Input {...p} value={v.slug} onChange={(e) => setV({ ...v, slug: e.target.value })} />
@@ -349,9 +349,9 @@ export function RoutineForm({
         </Button>
       </AdminCard>
 
-      <AdminCard title="Produsele rutinei">
+      <AdminCard title="Produsele ritualului">
         <p className="-mt-2 text-sm text-ink-muted">
-          Produsele apar pe pagina rutinei în această ordine (cele opționale sunt marcate).
+          Produsele apar pe pagina ritualului în această ordine (cele opționale sunt marcate).
         </p>
         {errors.products ? <p className="text-sm text-danger">{errors.products}</p> : null}
         <ul className="flex flex-col gap-2">
@@ -466,9 +466,9 @@ export function RoutineForm({
             onChange={(seo) => setV({ ...v, seo })}
             errors={errors}
             fallbacks={{
-              title: "titlul rutinei",
+              title: "titlul ritualului",
               description: "rezumatul",
-              image: "imaginea rutinei, apoi imaginea implicită a site-ului",
+              image: "imaginea ritualului, apoi imaginea implicită a site-ului",
             }}
           />
         </div>
@@ -476,7 +476,7 @@ export function RoutineForm({
 
       <div className="sticky bottom-0 z-10 -mx-4 flex justify-end gap-3 border-t border-line bg-paper/95 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
         <Button type="submit" loading={pending}>
-          {routineId ? "Salvează rutina" : "Creează rutina"}
+          {routineId ? "Salvează ritualul" : "Creează ritualul"}
         </Button>
       </div>
     </form>

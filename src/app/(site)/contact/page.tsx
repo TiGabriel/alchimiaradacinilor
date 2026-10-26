@@ -41,7 +41,7 @@ export default async function ContactPage() {
         <p className="text-eyebrow text-clay">Contact</p>
         <h1 className="text-display-lg">Hai să vorbim</h1>
         <p className="max-w-md text-lg text-ink-muted">
-          Ai o întrebare despre un produs sau vrei un sfat pentru rutina ta? Scrie-ne și îți
+          Ai o întrebare despre un produs sau vrei un sfat pentru ritualul tău? Scrie-ne și îți
           răspundem cât de repede putem.
         </p>
         <Leaf className="mt-4 size-16 text-sage" />

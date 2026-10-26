@@ -12,7 +12,7 @@ import { AdminCard, AdminPageHeader } from "@/features/admin/ui";
 import { requirePermission } from "@/features/auth/session";
 import { getAdminRoutine, getContentOptions } from "@/services/admin/content";
 
-export const metadata: Metadata = { title: "Rutină" };
+export const metadata: Metadata = { title: "Ritual" };
 
 export default async function RoutineAdminPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -28,12 +28,12 @@ export default async function RoutineAdminPage({ params }: { params: Promise<{ i
     <>
       <AdminPageHeader
         title={routine.title}
-        description={routine.isDemo ? "Rutină demonstrativă" : undefined}
-        back={{ href: "/admin/rutine", label: "Rutine" }}
+        description={routine.isDemo ? "Ritual demonstrativ" : undefined}
+        back={{ href: "/admin/ritualuri", label: "Ritualuri" }}
         actions={
           routine.active ? (
             <Button asChild variant="outline" size="sm">
-              <Link href={`/rutine/${routine.slug}`} target="_blank">
+              <Link href={`/ritualuri/${routine.slug}`} target="_blank">
                 Vezi pe site <ExternalLink aria-hidden />
               </Link>
             </Button>
@@ -43,14 +43,14 @@ export default async function RoutineAdminPage({ params }: { params: Promise<{ i
       <RoutineForm routineId={routine.id} initial={routineToDraft(routine)} options={options} />
       <AdminCard title="Zonă periculoasă" className="border-danger/30">
         <p className="text-sm text-ink-muted">
-          Ștergerea elimină și rutina din listele salvate de clienți. Poți doar s-o dezactivezi.
+          Ștergerea elimină și ritualul din listele salvate de membri. Poți doar să-l dezactivezi.
         </p>
         <div>
           <DeleteButton
             action={deleteRoutineAction.bind(null, routine.id)}
             confirmText={`Ștergi definitiv „${routine.title}”?`}
-            redirectTo="/admin/rutine"
-            label="Șterge rutina"
+            redirectTo="/admin/ritualuri"
+            label="Șterge ritualul"
           />
         </div>
       </AdminCard>

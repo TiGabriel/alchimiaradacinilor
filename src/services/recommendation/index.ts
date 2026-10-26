@@ -127,7 +127,7 @@ export async function recommendForNeed(
 }
 
 /**
- * "Pe baza favoritelor tale": criteria built from the taxonomy of the
+ * "Pe baza produselor salvate": criteria built from the taxonomy of the
  * customer's favourites — only with personalisation consent.
  */
 export async function recommendFromFavourites(

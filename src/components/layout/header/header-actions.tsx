@@ -9,7 +9,7 @@ import { useWishlist } from "@/features/wishlist/wishlist-context";
 import { pluralRo } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 
-import { accountLinks } from "../nav-config";
+import { accountLinks, NEWSLETTER_ANCHOR } from "../nav-config";
 
 import { CountBadge } from "./count-badge";
 
@@ -23,7 +23,7 @@ export function SearchButton({ className }: { className?: string }) {
       type="button"
       className={cn(iconButton, className)}
       onClick={openSearch}
-      aria-label="Caută produse"
+      aria-label="Caută pe site"
     >
       <Search aria-hidden strokeWidth={1.75} />
     </button>
@@ -56,24 +56,29 @@ export function HeaderActions() {
     <div className="flex items-center gap-0.5">
       <SearchButton />
       <Link
+        href={accountLinks.wishlist.href}
+        className={cn(iconButton, "hidden md:grid")}
+        aria-label={
+          wishlistCount > 0 ? `Salvate, ${pluralRo(wishlistCount, "produs", "produse")}` : "Salvate"
+        }
+      >
+        <Heart aria-hidden strokeWidth={1.75} />
+        <CountBadge count={wishlistCount} />
+      </Link>
+      <Link
         href={accountLinks.account.href}
         className={cn(iconButton, "hidden md:grid")}
         aria-label="Contul meu"
       >
         <UserRound aria-hidden strokeWidth={1.75} />
       </Link>
-      <Link
-        href={accountLinks.wishlist.href}
-        className={cn(iconButton, "hidden md:grid")}
-        aria-label={
-          wishlistCount > 0
-            ? `Favorite, ${pluralRo(wishlistCount, "produs", "produse")}`
-            : "Favorite"
-        }
+      {/* The sign-up form lives in the footer of every page. */}
+      <a
+        href={`#${NEWSLETTER_ANCHOR}`}
+        className="ml-2 hidden h-10 items-center rounded-full bg-forest px-5 text-sm font-semibold whitespace-nowrap text-ink-inverse transition-colors hover:bg-forest-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest xl:inline-flex"
       >
-        <Heart aria-hidden strokeWidth={1.75} />
-        <CountBadge count={wishlistCount} />
-      </Link>
+        Abonează-te
+      </a>
     </div>
   );
 }

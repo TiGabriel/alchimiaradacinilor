@@ -16,6 +16,6 @@ export async function toggleSaveRoutineAction(routineId: string): Promise<SaveRo
   const id = z.uuid().safeParse(routineId);
   if (!id.success) return { ok: false, reason: "error" };
   const saved = await toggleSavedRoutine(user.id, id.data);
-  revalidatePath("/cont/rutine");
+  revalidatePath("/cont/ritualuri");
   return { ok: true, saved };
 }

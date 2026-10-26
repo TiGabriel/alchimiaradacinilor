@@ -53,7 +53,7 @@ export function FavoritesView() {
       <EmptyState
         size="lg"
         illustration={<EmptyHeart />}
-        title="Încă nu ai produse favorite."
+        title="Încă nu ai salvat niciun produs."
         description="Apasă pe inimioara de pe orice produs pentru a-l păstra aici și a reveni la el oricând."
         actions={
           <Button asChild>

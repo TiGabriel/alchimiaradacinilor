@@ -137,6 +137,48 @@ export default async function HomePage() {
         </section>
       ) : null}
 
+      {/* Latest articles */}
+      {articles.length > 0 ? (
+        <section aria-labelledby="jurnal" className="bg-paper-deep py-(--spacing-section)">
+          <div className="container-page">
+            <SectionHeading
+              id="jurnal"
+              eyebrow="Din jurnal"
+              title="Povești despre plante și arome"
+              link={{ href: "/jurnal", label: "Toate articolele" }}
+            />
+            <Stagger as="ul" className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
+              {articles.map((article) => (
+                <StaggerItem as="li" key={article.id}>
+                  <ArticleCard article={article} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </section>
+      ) : null}
+
+      {/* Featured rituals */}
+      {routines.length > 0 ? (
+        <section aria-labelledby="ritualuri" className="py-(--spacing-section)">
+          <div className="container-page">
+            <SectionHeading
+              id="ritualuri"
+              eyebrow="Ritualuri"
+              title="Ritualuri mici, făcute cu intenție"
+              link={{ href: "/ritualuri", label: "Toate ritualurile" }}
+            />
+            <Stagger as="ul" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {routines.map((routine) => (
+                <StaggerItem as="li" key={routine.id}>
+                  <RoutineCard routine={routine} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+          </div>
+        </section>
+      ) : null}
+
       {/* Need picker → quiz */}
       <section aria-labelledby="de-unde" className="bg-paper-deep py-(--spacing-section)">
         <div className="container-page grid gap-10 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-16">
@@ -178,14 +220,25 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {essentials.length > 0 ? <EssentialsSection items={essentials} /> : null}
+
+      {reviews.length > 0 ? (
+        <>
+          <div className="container-page">
+            <SectionDivider />
+          </div>
+          <ReviewsSection reviews={reviews} />
+        </>
+      ) : null}
+
       {/* Popular categories */}
       {categories.length > 0 ? (
         <section aria-labelledby="categorii" className="py-(--spacing-section)">
           <div className="container-page">
             <SectionHeading
               id="categorii"
-              eyebrow="Categorii populare"
-              title="Explorează colecția"
+              eyebrow="Categorii"
+              title="Explorează după categorie"
               link={{ href: "/descopera/categorii", label: "Toate categoriile" }}
             />
             <CategoryTiles categories={categories} />
@@ -217,60 +270,7 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {essentials.length > 0 ? <EssentialsSection items={essentials} /> : null}
-
-      {/* Featured routines */}
-      {routines.length > 0 ? (
-        <section aria-labelledby="rutine" className="py-(--spacing-section)">
-          <div className="container-page">
-            <SectionHeading
-              id="rutine"
-              eyebrow="Rutine"
-              title="Ritualuri mici, făcute cu intenție"
-              link={{ href: "/rutine", label: "Toate rutinele" }}
-            />
-            <Stagger as="ul" className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {routines.map((routine) => (
-                <StaggerItem as="li" key={routine.id}>
-                  <RoutineCard routine={routine} />
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </div>
-        </section>
-      ) : null}
-
-      {reviews.length > 0 ? (
-        <>
-          <div className="container-page">
-            <SectionDivider />
-          </div>
-          <ReviewsSection reviews={reviews} />
-        </>
-      ) : null}
-
-      {/* Latest articles */}
-      {articles.length > 0 ? (
-        <section aria-labelledby="jurnal" className="bg-paper-deep py-(--spacing-section)">
-          <div className="container-page">
-            <SectionHeading
-              id="jurnal"
-              eyebrow="Din jurnal"
-              title="Povești despre plante și arome"
-              link={{ href: "/jurnal", label: "Toate articolele" }}
-            />
-            <Stagger as="ul" className="grid gap-x-8 gap-y-12 md:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
-                <StaggerItem as="li" key={article.id}>
-                  <ArticleCard article={article} />
-                </StaggerItem>
-              ))}
-            </Stagger>
-          </div>
-        </section>
-      ) : null}
-
-      <CommunitySection facebookUrl={settings.social.facebookUrl} />
+      <CommunitySection facebookUrl={settings.social.facebookUrl} signedIn={Boolean(user)} />
 
       {/* Promise */}
       <section className="py-(--spacing-section)">

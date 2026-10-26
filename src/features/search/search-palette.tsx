@@ -86,6 +86,7 @@ function HitVisual({ hit }: { hit: SearchApiHit }) {
             aspect="square"
             sizes="48px"
             placeholderKind={placeholderKindFor(type)}
+            productPhoto
           />
         ) : (
           <ImagePlaceholder kind={placeholderKindFor(type)} tone={tone} className="size-12" />

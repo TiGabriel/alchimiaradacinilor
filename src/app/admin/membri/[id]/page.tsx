@@ -40,12 +40,12 @@ export default async function CustomerPage({ params }: { params: Promise<{ id: s
       <AdminPageHeader
         title={`${c.firstName} ${c.lastName}`}
         description={`${c.email} · cont creat pe ${date.format(c.createdAt)}`}
-        back={{ href: "/admin/clienti", label: "Clienți" }}
+        back={{ href: "/admin/membri", label: "Membri" }}
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          ["Favorite", String(c.wishlistCount)],
-          ["Rutine salvate", String(c._count.savedRoutines)],
+          ["Produse salvate", String(c.wishlistCount)],
+          ["Ritualuri salvate", String(c._count.savedRoutines)],
           ["Rezultate quiz", String(c._count.quizResults)],
           ["Recenzii", String(c.reviews.length)],
         ].map(([label, value]) => (

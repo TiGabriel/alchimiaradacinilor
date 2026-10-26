@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const purposeLabels: Record<string, string> = {
   PRIVACY_POLICY: "Prelucrarea datelor (Politica de confidențialitate)",
-  NEWSLETTER: "Emailuri de marketing (newsletter, oferte, recomandări, reduceri)",
+  NEWSLETTER: "Newsletter (articole noi, recenzii, ritualuri, recomandări de produse)",
   PERSONALIZATION: "Recomandări personalizate pe baza activității din cont",
   TERMS: "Termeni și condiții",
   ANALYTICS: "Cookie-uri de analiză",
@@ -60,7 +60,8 @@ export default async function NewsletterPage() {
         }
       >
         <p className="text-ink-muted">
-          Newslettere, oferte speciale, recomandări personalizate și reduceri pe email.
+          Scrisori pe email cu articole noi din jurnal, recenzii, ritualuri și recomandări de
+          produse.
           {newsletter.consentedAt
             ? ` Consimțământ acordat pe ${dateTime.format(newsletter.consentedAt)}.`
             : ""}
@@ -85,7 +86,7 @@ export default async function NewsletterPage() {
         }
       >
         <p className="text-ink-muted">
-          Cu acordul tău, recomandările din site țin cont de favoritele și rutinele tale salvate.
+          Cu acordul tău, recomandările din site țin cont de produsele și ritualurile tale salvate.
           Fără acord, folosim doar ce alegi în quiz sau pe pagini.
         </p>
         <PersonalizationToggle granted={personalization} />

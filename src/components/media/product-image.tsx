@@ -53,6 +53,7 @@ export function ProductImage({
       placeholderTone={tone}
       placeholderSprig={placeholderSprig}
       wrapperClassName={className}
+      productPhoto
     />
   );
 }

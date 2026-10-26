@@ -197,11 +197,11 @@ describe("personal context requires consent", () => {
     };
 
     const without = await recommendProducts(criteria, { limit: 5, userId: user.id });
-    expect(without.every((r) => !r.explanation.includes("favorite"))).toBe(true);
+    expect(without.every((r) => !r.explanation.includes("salvate"))).toBe(true);
 
     await setPersonalizationConsent(user.id, true, meta);
     const withConsent = await recommendProducts(criteria, { limit: 5, userId: user.id });
     const blend = withConsent.find((r) => r.product.id === products.blend.id);
-    expect(blend?.explanation).toContain("produsele tale favorite");
+    expect(blend?.explanation).toContain("produsele tale salvate");
   });
 });

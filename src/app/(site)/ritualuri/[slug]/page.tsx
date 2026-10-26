@@ -25,7 +25,7 @@ import {
   timeOfDayLabels,
 } from "@/services/routines/routines";
 
-type Props = PageProps<"/rutine/[slug]">;
+type Props = PageProps<"/ritualuri/[slug]">;
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const routine = await getRoutineBySlug((await props.params).slug);
@@ -33,7 +33,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return pageMetadata({
     title: routine.seo?.seoTitle ?? routine.title,
     description: routine.seo?.metaDescription ?? routine.summary,
-    path: `/rutine/${routine.slug}`,
+    path: `/ritualuri/${routine.slug}`,
     canonical: routine.seo?.canonicalUrl,
     image: routine.seo?.ogImage?.url ?? routine.image?.url,
     imageAlt: routine.image?.alt,
@@ -64,7 +64,7 @@ export default async function RoutinePage(props: Props) {
           inLanguage: "ro-RO",
           name: routine.title,
           description: routine.summary,
-          url: siteUrl(`/rutine/${routine.slug}`),
+          url: siteUrl(`/ritualuri/${routine.slug}`),
           ...(routine.image ? { image: absoluteUrl(routine.image.url) } : {}),
           ...(routine.durationMinutes ? { totalTime: `PT${routine.durationMinutes}M` } : {}),
           step: routine.steps.map((s, i) => ({
@@ -76,13 +76,15 @@ export default async function RoutinePage(props: Props) {
         }}
       />
       <div className="container-page pt-6 md:pt-8">
-        <Breadcrumbs items={[{ label: "Rutine", href: "/rutine" }, { label: routine.title }]} />
+        <Breadcrumbs
+          items={[{ label: "Ritualuri", href: "/ritualuri" }, { label: routine.title }]}
+        />
       </div>
 
       <header className="container-page grid gap-8 pt-8 pb-12 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-16">
         <Reveal className="flex flex-col gap-5">
           <div className="flex flex-wrap gap-2">
-            <p className="text-eyebrow text-clay">Rutină</p>
+            <p className="text-eyebrow text-clay">Ritual</p>
           </div>
           <h1 className="text-display-lg">{routine.title}</h1>
           <p className="text-lg text-ink-muted">{routine.summary}</p>
@@ -190,7 +192,7 @@ export default async function RoutinePage(props: Props) {
           className="flex flex-col gap-5 lg:sticky lg:top-28 lg:self-start"
         >
           <h2 id="produse-rutina" className="text-2xl">
-            Produsele rutinei
+            Produsele ritualului
           </h2>
           <ul className="grid grid-cols-2 gap-x-4 gap-y-8">
             {routine.productItems.map(({ product, optional, note }) => (

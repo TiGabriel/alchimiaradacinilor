@@ -63,13 +63,13 @@ export const TAXONOMY_CONFIG: Record<
   etichete: {
     title: "Etichete",
     singular: "etichetă",
-    description: "Etichete folosite de produse, rutine, articole și quiz.",
+    description: "Etichete folosite de produse, ritualuri, articole și quiz.",
     fields: common,
   },
   nevoi: {
     title: "Nevoi",
     singular: "nevoie",
-    description: "Momentele pentru care clienții caută arome (folosite de quiz și recomandări).",
+    description: "Momentele pentru care vizitatorii caută arome (folosite de quiz și recomandări).",
     fields: [...common, description, position],
   },
   arome: {

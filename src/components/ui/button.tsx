@@ -15,9 +15,10 @@ export const buttonVariants = cva(
         outline:
           "border border-line-strong bg-transparent text-ink hover:border-forest hover:bg-surface",
         ghost: "bg-transparent text-ink hover:bg-paper-deep",
-        accent: "bg-clay text-white shadow-xs hover:bg-[#853f24] hover:shadow-soft",
+        accent:
+          "bg-clay text-white shadow-xs hover:bg-[color-mix(in_oklab,var(--color-clay),black_14%)] hover:shadow-soft",
         subtle: "bg-surface text-ink shadow-xs ring-1 ring-line hover:ring-line-strong",
-        danger: "bg-danger text-white hover:bg-[#8a2f21]",
+        danger: "bg-danger text-white hover:bg-[color-mix(in_oklab,var(--color-danger),black_14%)]",
         link: "h-auto rounded-none p-0 text-forest underline decoration-line-strong underline-offset-4 hover:decoration-forest active:scale-100",
       },
       size: {

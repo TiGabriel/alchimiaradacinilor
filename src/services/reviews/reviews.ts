@@ -163,3 +163,36 @@ export async function getProductReviews(
     })),
   };
 }
+
+export type ReviewWithProduct = PublicReview & { product: { slug: string; name: string } };
+
+/** Approved member reviews across all active products, newest first (/recenzii). */
+export async function listApprovedReviews(take = 30): Promise<ReviewWithProduct[]> {
+  const rows = await db.review.findMany({
+    where: { status: "APPROVED", product: { active: true } },
+    orderBy: { createdAt: "desc" },
+    take,
+    select: {
+      id: true,
+      rating: true,
+      title: true,
+      body: true,
+      orderItemId: true,
+      createdAt: true,
+      user: { select: { firstName: true, lastName: true } },
+      image: { select: { url: true, width: true, height: true } },
+      product: { select: { slug: true, name: true } },
+    },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    rating: r.rating,
+    title: r.title,
+    body: r.body,
+    author: reviewerName(r.user.firstName, r.user.lastName),
+    verified: r.orderItemId !== null,
+    createdAt: r.createdAt,
+    image: r.image,
+    product: r.product,
+  }));
+}

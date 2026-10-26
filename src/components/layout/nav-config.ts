@@ -6,7 +6,7 @@ export const discoverLinks: NavLink[] = [
   {
     label: "Quiz aromatic",
     href: "/quiz",
-    description: "Câteva întrebări și îți recomandăm aromele potrivite.",
+    description: "Câteva întrebări și îți arătăm aromele potrivite.",
   },
   {
     label: "După nevoie",
@@ -18,46 +18,56 @@ export const discoverLinks: NavLink[] = [
     href: "/descopera/categorii",
     description: "Uleiuri, amestecuri, kit-uri, difuzoare.",
   },
-  {
-    label: "Rutine",
-    href: "/rutine",
-    description: "Ritualuri simple pentru fiecare moment al zilei.",
-  },
 ];
 
 export const primaryLinks = {
   home: { label: "Acasă", href: "/" },
+  journal: { label: "Jurnal", href: "/jurnal" },
+  reviews: { label: "Recenzii", href: "/recenzii" },
+  rituals: { label: "Ritualuri", href: "/ritualuri" },
   products: { label: "Produse", href: "/produse" },
   discover: { label: "Descoperă", href: "/descopera" },
-  routines: { label: "Rutine", href: "/rutine" },
-  journal: { label: "Jurnal", href: "/jurnal" },
   about: { label: "Despre", href: "/despre" },
   contact: { label: "Contact", href: "/contact" },
 } satisfies Record<string, NavLink>;
 
+/** Under the categories in the "Produse" menu. */
+export const howToBuyLink: NavLink = {
+  label: "Cum cumpăr de pe doTERRA",
+  href: "/cum-cumpar",
+  description: "Nu vindem produse: le cumperi direct de pe site-ul oficial doTERRA.",
+};
+
 export const accountLinks = {
   account: { label: "Contul meu", href: "/cont" },
-  wishlist: { label: "Favorite", href: "/favorite" },
+  wishlist: { label: "Salvate", href: "/salvate" },
   search: { label: "Caută", href: "/cautare" },
 } satisfies Record<string, NavLink>;
+
+/** The newsletter sign-up in the footer, present on every page. */
+export const NEWSLETTER_ANCHOR = "newsletter";
+
+export const exploreLinks: NavLink[] = [
+  primaryLinks.journal,
+  primaryLinks.reviews,
+  primaryLinks.rituals,
+  primaryLinks.products,
+  { label: "Quiz aromatic", href: "/quiz" },
+];
+
+export const aboutLinks: NavLink[] = [
+  { label: "Despre noi", href: "/despre" },
+  { label: "Cum cumpăr", href: "/cum-cumpar" },
+  { label: "Contact", href: "/contact" },
+  { label: "Întrebări frecvente", href: "/intrebari-frecvente" },
+];
 
 export const legalLinks: NavLink[] = [
   { label: "Termeni și condiții", href: "/termeni-si-conditii" },
   { label: "Politica de confidențialitate", href: "/politica-de-confidentialitate" },
   { label: "Politica de cookies", href: "/politica-cookies" },
+  { label: "Transparență afiliere", href: "/transparenta-afiliere" },
 ];
-
-export const helpLinks: NavLink[] = [
-  { label: "Contact", href: "/contact" },
-  { label: "Întrebări frecvente", href: "/intrebari-frecvente" },
-  { label: "Cum cumpăr", href: "/cum-cumpar" },
-];
-
-/**
- * Consumer-protection links. The exact set (ANPC SAL, badges, …) must be
- * confirmed with a legal review before launch — see docs/PROGRESS.md.
- */
-export const consumerLinks: NavLink[] = [{ label: "ANPC", href: "https://anpc.ro/" }];
 
 export function isActivePath(pathname: string, href: string) {
   if (href === "/") return pathname === "/";

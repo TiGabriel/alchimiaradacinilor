@@ -74,6 +74,6 @@ export function buildPersonalRow<P extends ProductLike>(
 export function reviewerName(firstName: string | null, lastName: string | null): string {
   const first = firstName?.trim();
   const initial = lastName?.trim().charAt(0);
-  if (!first) return "Client verificat";
+  if (!first) return "Membru al comunității";
   return initial ? `${first} ${initial.toLocaleUpperCase("ro-RO")}.` : first;
 }

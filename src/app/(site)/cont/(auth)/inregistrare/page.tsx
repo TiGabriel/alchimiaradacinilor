@@ -19,7 +19,7 @@ export default async function RegisterPage(props: PageProps<"/cont/inregistrare"
     <AuthShell
       eyebrow="Cont nou"
       title="Creează-ți contul"
-      intro="Salvează favoritele, rezultatele quiz-ului și ritualurile, și scrie recenzii despre produsele încercate."
+      intro="Salvează produse, ritualuri și rezultatele quiz-ului, și scrie recenzii despre produsele încercate."
     >
       <RegisterForm next={nextPath} />
     </AuthShell>

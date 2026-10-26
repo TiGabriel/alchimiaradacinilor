@@ -16,9 +16,7 @@ type WishlistButtonProps = {
 export function WishlistButton({ product, variant = "floating", className }: WishlistButtonProps) {
   const { has, toggle } = useWishlist();
   const active = has(product.id);
-  const label = active
-    ? `Elimină ${product.name} din favorite`
-    : `Adaugă ${product.name} la favorite`;
+  const label = active ? `Scoate ${product.name} din salvate` : `Salvează ${product.name}`;
 
   if (variant === "inline") {
     return (
@@ -36,7 +34,7 @@ export function WishlistButton({ product, variant = "floating", className }: Wis
           aria-hidden
           className={cn("size-5 transition-transform", active && "animate-pop fill-current")}
         />
-        {active ? "În favorite" : "Adaugă la favorite"}
+        {active ? "Salvat" : "Salvează"}
       </button>
     );
   }
@@ -51,7 +49,7 @@ export function WishlistButton({ product, variant = "floating", className }: Wis
       }}
       aria-pressed={active}
       aria-label={label}
-      title={active ? "Elimină din favorite" : "Adaugă la favorite"}
+      title={active ? "Scoate din salvate" : "Salvează"}
       className={cn(
         "grid size-10 place-items-center rounded-full bg-surface/90 text-ink shadow-xs backdrop-blur-sm transition-[color,transform,background-color] hover:scale-105 hover:text-clay focus-visible:outline-2 focus-visible:outline-forest motion-reduce:hover:scale-100",
         active && "text-clay",

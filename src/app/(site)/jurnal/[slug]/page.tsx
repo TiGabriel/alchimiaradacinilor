@@ -229,7 +229,7 @@ export default async function JournalSlugPage(props: Props) {
           className="container-page mt-16 flex flex-col gap-8"
         >
           <h2 id="rutine-articol" className="text-display-md">
-            Rutine legate
+            Ritualuri legate
           </h2>
           <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {routines.map((r) => (

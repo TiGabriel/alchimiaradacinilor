@@ -12,7 +12,7 @@ export function newsletterConfirmEmail(
       blocks: [
         {
           type: "paragraph",
-          text: "Mulțumim pentru interes! Confirmă că vrei să primești newsletterul nostru: ritualuri de sezon, povești despre plante și noutăți, cam o dată pe lună.",
+          text: "Mulțumim pentru interes! Confirmă că vrei să primești newsletterul nostru: articole noi din jurnal, recenzii, ritualuri de sezon și povești despre plante, cam o dată pe lună.",
         },
         { type: "button", label: "Confirmă abonarea", href: p.url },
         {

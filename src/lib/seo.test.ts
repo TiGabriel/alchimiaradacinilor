@@ -40,11 +40,11 @@ describe("buildMetadata", () => {
   });
 
   it("falls back to the default description and image", () => {
-    const meta = buildMetadata({ title: "Rutine", path: "/rutine", description: " " }, defaults);
+    const meta = buildMetadata({ title: "Rutine", path: "/ritualuri", description: " " }, defaults);
     expect(meta.description).toBe("Descriere implicită.");
     expect(meta.openGraph?.images).toEqual([{ url: DEFAULT_OG_IMAGE, alt: "Rutine" }]);
     const withSetting = buildMetadata(
-      { title: "Rutine", path: "/rutine" },
+      { title: "Rutine", path: "/ritualuri" },
       { ...defaults, image: "/uploads/site/og.webp" },
     );
     expect(withSetting.openGraph?.images).toEqual([

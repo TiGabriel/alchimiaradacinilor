@@ -628,8 +628,8 @@ const weightLabels: Record<keyof SettingValue<"recommendation">, string> = {
   productType: "Tip produs",
   budgetPenalty: "Penalizare peste buget (puncte)",
   needSelection: "Greutatea unei nevoi alese pe /descopera",
-  wishlistAffinity: "Afinitate: favorite",
-  routineAffinity: "Afinitate: rutine salvate",
+  wishlistAffinity: "Afinitate: produse salvate",
+  routineAffinity: "Afinitate: ritualuri salvate",
   viewedAffinity: "Afinitate: produse văzute",
 };
 

@@ -11,10 +11,10 @@ import { pageMetadata } from "@/services/seo";
 
 export async function generateMetadata(): Promise<Metadata> {
   return pageMetadata({
-    title: "Rutine",
+    title: "Ritualuri",
     description:
       "Ritualuri simple, pas cu pas, pentru dimineți luminoase, zile concentrate și seri liniștite.",
-    path: "/rutine",
+    path: "/ritualuri",
   });
 }
 
@@ -27,7 +27,7 @@ export default async function RoutinesPage() {
           <Sprig className="w-full text-sage/70" />
         </BotanicalFloat>
         <Reveal className="container-page flex max-w-3xl flex-col gap-4 py-14 md:py-20">
-          <p className="text-eyebrow text-clay">Rutine</p>
+          <p className="text-eyebrow text-clay">Ritualuri</p>
           <h1 className="text-display-xl">Ritualuri mici, făcute cu intenție</h1>
           <p className="text-lg text-ink-muted">
             Nu ai nevoie de multe produse. Ai nevoie de câteva gesturi repetate în momentele
@@ -40,7 +40,7 @@ export default async function RoutinesPage() {
           <p className="font-semibold">Caută după nevoie</p>
           <NeedPicker needs={needs} />
         </div>
-        <h2 className="sr-only">Toate rutinele</h2>
+        <h2 className="sr-only">Toate ritualurile</h2>
         {routines.length ? (
           <Stagger className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {routines.map((r) => (
@@ -51,7 +51,7 @@ export default async function RoutinesPage() {
           </Stagger>
         ) : (
           <EmptyState
-            title="Rutinele sunt în pregătire"
+            title="Ritualurile sunt în pregătire"
             description="Revino curând pentru primele ritualuri pas cu pas."
           />
         )}

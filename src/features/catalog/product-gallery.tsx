@@ -53,6 +53,7 @@ export function ProductGallery({
         placeholderKind={kind}
         placeholderTone={tone}
         placeholderSprig={false}
+        productPhoto
       />
     ) : (
       <ImagePlaceholder
@@ -66,7 +67,7 @@ export function ProductGallery({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative overflow-hidden rounded-xl bg-paper-deep">
+      <div className="relative overflow-hidden rounded-xl bg-product-backdrop">
         {/* Mobile swipe track */}
         <div
           ref={track}
@@ -160,6 +161,7 @@ export function ProductGallery({
                     aspect="square"
                     sizes="120px"
                     placeholderKind={kind}
+                    productPhoto
                   />
                 ) : (
                   <ImagePlaceholder kind={kind} tone={tone} className="aspect-square" />

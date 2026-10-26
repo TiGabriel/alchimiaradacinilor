@@ -47,15 +47,28 @@ export default async function PrivacyPolicyPage() {
                 formă de hash argon2id, niciodată în clar), telefon (opțional).
               </li>
               <li>
-                <strong>Activitate în cont:</strong> produse favorite, rezultatele quiz-ului, rutine
-                salvate, recenziile pe care le scrii.
+                <strong>Activitate în cont:</strong> produse salvate, rezultatele quiz-ului,
+                ritualuri salvate, recenziile pe care le scrii.
               </li>
               <li>
                 <strong>Consimțăminte:</strong> ce ai acceptat sau retras, data, versiunea politicii
                 și un identificator pseudonimizat al adresei IP.
               </li>
               <li>
+                <strong>Recenzii:</strong> textul, nota și fotografia opțională pe care le trimiți.
+                Lângă o recenzie publicată apar doar prenumele tău și inițiala numelui.
+              </li>
+              <li>
+                <strong>Newsletter fără cont:</strong> adresa de email, interesele alese și locul
+                din site de unde te-ai abonat.
+              </li>
+              <li>
                 <strong>Mesaje:</strong> datele din formularul de contact (nume, email, mesaj).
+              </li>
+              <li>
+                <strong>Statistici de folosire:</strong> doar dacă accepți cookie-urile de analiză,
+                câteva evenimente anonime (pagini și produse vizualizate, căutări), păstrate în baza
+                noastră de date, fără servicii terțe de analiză.
               </li>
               <li>
                 <strong>Cumpărături:</strong> nu prelucrăm date de comandă sau de plată. Produsele
@@ -97,7 +110,8 @@ export default async function PrivacyPolicyPage() {
           body: (
             <>
               <p>
-                Îți trimitem newslettere, oferte, recomandări personalizate și reduceri pe email{" "}
+                Îți trimitem pe email newsletterul (articole noi, recenzii, ritualuri și recomandări
+                de produse, cu linkuri de recomandare către doTERRA){" "}
                 <strong>doar dacă ți-ai dat acordul</strong>, bifând opțiunea dedicată (nebifată
                 implicit). Acordul se activează după confirmarea adresei de email.
               </p>
@@ -117,10 +131,10 @@ export default async function PrivacyPolicyPage() {
           title: "Recomandări personalizate",
           body: (
             <p>
-              Recomandările din site pot ține cont de favoritele și rutinele tale salvate doar dacă
-              activezi această opțiune din cont. Fără acord, recomandările folosesc doar alegerile
-              pe care le faci în quiz sau pe paginile site-ului. Recomandările sunt calculate după
-              reguli fixe (fără decizii automate cu efecte juridice).
+              Recomandările din site pot ține cont de produsele și ritualurile tale salvate doar
+              dacă activezi această opțiune din cont. Fără acord, recomandările folosesc doar
+              alegerile pe care le faci în quiz sau pe paginile site-ului. Recomandările sunt
+              calculate după reguli fixe (fără decizii automate cu efecte juridice).
             </p>
           ),
         },
@@ -130,10 +144,16 @@ export default async function PrivacyPolicyPage() {
           body: (
             <ul>
               <li>
-                Furnizorul de găzduire și baza de date: <ToComplete>furnizor, țară</ToComplete>
+                Găzduirea site-ului și stocarea imaginilor: Netlify.{" "}
+                <ToComplete>țara, garanțiile pentru transferul în afara UE</ToComplete>
               </li>
               <li>
-                Furnizorul de trimitere a emailurilor: <ToComplete>furnizor, țară</ToComplete>
+                Baza de date: Neon. <ToComplete>regiunea serverelor</ToComplete>
+              </li>
+              <li>
+                Trimiterea newsletterului: Brevo (adresa de email și numele abonaților care și-au
+                dat acordul). Emailurile legate de cont:{" "}
+                <ToComplete>furnizorul de email tranzacțional, țara</ToComplete>
               </li>
               <li>
                 Nu transmitem datele tale către doTERRA. Când deschizi un link către site-ul

@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TermsPage() {
-  const { legal, contact, affiliate } = await getSettings();
+  const { legal, contact, affiliate, brand } = await getSettings();
   return (
     <LegalDocument
       title="Termeni și condiții"
@@ -31,22 +31,48 @@ export default async function TermsPage() {
           title: "Contul de membru",
           body: (
             <p>
-              Contul este gratuit și îți permite să salvezi produse favorite și ritualuri, să
-              păstrezi rezultatele quiz-ului și să scrii recenzii după confirmarea adresei de email.
-              Ești responsabil pentru păstrarea confidențialității parolei.{" "}
+              Contul este gratuit și îți permite să salvezi produse și ritualuri, să păstrezi
+              rezultatele quiz-ului și să scrii recenzii după confirmarea adresei de email. Ești
+              responsabil pentru păstrarea confidențialității parolei.{" "}
               <ToComplete>condiții de suspendare/închidere a contului</ToComplete>
             </p>
           ),
         },
         {
-          id: "produse",
-          title: "Produse și informații",
+          id: "continut",
+          title: "Conținutul site-ului",
           body: (
-            <p>
-              Descrierile produselor prezintă aroma și modul de folosire recomandat de producător.
-              Informațiile nu reprezintă sfaturi medicale.{" "}
-              <ToComplete>clauze privind acuratețea informațiilor și imaginilor</ToComplete>
-            </p>
+            <>
+              <p>
+                Articolele, ritualurile, recenziile și descrierile de produs au scop informativ.
+                Descriem aroma, atmosfera și momentele în care folosim produsele; informațiile nu
+                reprezintă sfaturi medicale și nu înlocuiesc consultul unui specialist. Pentru
+                instrucțiunile de folosire și siguranță, ține cont de eticheta produsului și de
+                informațiile doTERRA.
+              </p>
+              <p>
+                <ToComplete>clauze privind acuratețea informațiilor și imaginilor</ToComplete>
+              </p>
+            </>
+          ),
+        },
+        {
+          id: "recenzii",
+          title: "Recenziile membrilor",
+          body: (
+            <>
+              <p>
+                Membrii cu adresa de email confirmată pot scrie câte o recenzie pentru fiecare
+                produs. Citim fiecare recenzie înainte de publicare și nu publicăm texte jignitoare,
+                publicitate, date personale ale altor persoane sau afirmații că un produs tratează
+                ori vindecă o afecțiune. Lângă recenzie apar prenumele tău și inițiala numelui.
+              </p>
+              <p>
+                <ToComplete>
+                  dreptul de a folosi textul și fotografia recenziei, retragerea unei recenzii
+                </ToComplete>
+              </p>
+            </>
           ),
         },
         {
@@ -79,6 +105,29 @@ export default async function TermsPage() {
           ),
         },
         {
+          id: "linkuri",
+          title: "Linkuri către alte site-uri",
+          body: (
+            <p>
+              Site-ul conține linkuri către site-ul doTERRA și, uneori, către alte site-uri. Nu
+              răspundem pentru conținutul, prețurile sau politicile acestora.
+            </p>
+          ),
+        },
+        {
+          id: "proprietate",
+          title: "Proprietate intelectuală",
+          body: (
+            <p>
+              Textele, fotografiile proprii și grafica site-ului aparțin {brand.siteName}. doTERRA
+              și denumirile produselor sunt mărci ale proprietarilor lor.{" "}
+              <ToComplete>
+                condițiile de folosire a fotografiilor de produs și a mărcii doTERRA
+              </ToComplete>
+            </p>
+          ),
+        },
+        {
           id: "raspundere",
           title: "Răspundere și garanții",
           body: (
@@ -89,7 +138,7 @@ export default async function TermsPage() {
         },
         {
           id: "litigii",
-          title: "Soluționarea reclamațiilor",
+          title: "Contact și reclamații",
           body: (
             <p>
               Ne poți scrie oricând la{" "}
@@ -99,18 +148,10 @@ export default async function TermsPage() {
               >
                 {contact.email}
               </a>
-              . Informații despre protecția consumatorilor găsești pe site-ul{" "}
-              <a
-                href="https://anpc.ro/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-forest underline underline-offset-2"
-              >
-                ANPC
-              </a>
               .{" "}
               <ToComplete>
-                proceduri alternative de soluționare, legea aplicabilă, instanța competentă
+                legea aplicabilă, instanța competentă; dacă mai este nevoie de linkul ANPC, acum că
+                site-ul nu vinde
               </ToComplete>
             </p>
           ),

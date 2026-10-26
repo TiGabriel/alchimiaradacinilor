@@ -112,7 +112,7 @@ export async function listTaxonomy(actor: Actor, kind: TaxonomyKind): Promise<Ta
         id: r.id,
         name: r.name,
         slug: r.slug,
-        usage: `${plural(r._count.products, "produs", "produse")}, ${plural(r._count.routines, "rutină", "rutine")}, ${plural(r._count.articles, "articol", "articole")}`,
+        usage: `${plural(r._count.products, "produs", "produse")}, ${plural(r._count.routines, "ritual", "ritualuri")}, ${plural(r._count.articles, "articol", "articole")}`,
       }));
     }
     case "nevoi": {
